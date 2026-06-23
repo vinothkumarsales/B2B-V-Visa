@@ -1,0 +1,976 @@
+     1→# VVisa.in — Business Visa Portal: Master Build Prompt
+     2→**For: Bolt.new / Lovable / v0 / Cursor / Codex**
+     3→**Version: 1.0 | Brand: business.vvisa.in**
+     4→
+     5→---
+     6→
+     7→## 🎯 THE MISSION
+     8→
+     9→Build a **premium, production-ready B2B visa services platform** for `business.vvisa.in` — targeting Indian travel agencies, visa consultants, and B2B travel companies. The product is a direct competitor to `business.atlys.com`, but with a richer, more modern UI inspired by `growthx.club/learn` (dark-first, high-density information, clean card-based layout, Lucide icons, smooth micro-animations).
+    10→
+    11→This is not a prototype. Deliver a fully routed, multi-page application with real component depth, TypeScript strict mode, and production-grade code quality.
+    12→
+    13→---
+    14→
+    15→## 🧱 TECH STACK (Best-in-class from reference analysis)
+    16→
+    17→### Core Framework
+    18→- **Next.js 15** (App Router, RSC where applicable)
+    19→- **TypeScript** — strict mode, no `any`
+    20→- **React 19**
+    21→
+    22→### Styling & UI
+    23→- **Tailwind CSS v4** — utility-first, JIT
+    24→- **shadcn/ui** — base component library (Radix UI primitives underneath)
+    25→- **Framer Motion** — page transitions, micro-interactions, scroll-triggered reveals
+    26→- **Lucide React** — icon system (same as GrowthX, consistent outline style)
+    27→- **Geist Font** (Vercel) — `Geist Sans` for UI, `Geist Mono` for data/codes
+    28→
+    29→### State & Data
+    30→- **Zustand** — lightweight global state (auth, cart, application flow)
+    31→- **TanStack Query v5** — server state, caching, background refetch
+    32→- **React Hook Form + Zod** — all forms with schema validation
+    33→
+    34→### Auth & Backend
+    35→- **Firebase v10** — Auth (phone OTP + email), Firestore for real-time data
+    36→- **Firebase Storage** — passport/document uploads
+    37→
+    38→### Payments
+    39→- **Razorpay** — wallet top-up, visa payments (Indian payment gateway)
+    40→
+    41→### Analytics & Monitoring
+    42→- **PostHog** — product analytics, session replay
+    43→- **Sentry** — error tracking
+    44→- **Google Tag Manager** — tag container
+    45→
+    46→### Infrastructure
+    47→- **Cloudflare** — CDN, edge caching
+    48→- **Vercel** — deployment (zero-config Next.js)
+    49→
+    50→### Dev Quality
+    51→- **ESLint + Prettier** — enforced formatting
+    52→- **Husky + lint-staged** — pre-commit hooks
+    53→
+    54→---
+    55→
+    56→## 🎨 DESIGN SYSTEM
+    57→
+    58→### Visual DNA
+    59→Inspired by **GrowthX** (dark, premium, high-information density) combined with **Atlys Business** (clean workflow, trust signals). The result: a **dark-first SaaS portal** that feels like a Bloomberg terminal meets a modern fintech app.
+    60→
+    61→### Color Palette
+    62→```
+    63→Primary Background:   #0A0A0F  (near-black, not pure black)
+    64→Secondary Surface:    #111118  (cards, panels)
+    65→Tertiary Surface:     #1A1A24  (hover states, sidebars)
+    66→Border Default:       #2A2A38  (subtle, low contrast)
+    67→Border Active:        #3D3D54  (focused, selected)
+    68→
+    69→Brand Indigo:         #4F46E5  (primary CTA, active states)
+    70→Brand Indigo Light:   #6366F1  (hover)
+    71→Brand Indigo Glow:    rgba(79, 70, 229, 0.15)  (glow effects)
+    72→
+    73→Accent Gold:          #F59E0B  (premium badges, earnings)
+    74→Accent Green:         #10B981  (approved, success states)
+    75→Accent Red:           #EF4444  (rejected, error states)
+    76→Accent Blue:          #3B82F6  (info, links)
+    77→
+    78→Text Primary:         #F9FAFB  (headings, primary content)
+    79→Text Secondary:       #9CA3AF  (labels, captions)
+    80→Text Muted:           #6B7280  (placeholders, disabled)
+    81→```
+    82→
+    83→### Typography
+    84→```
+    85→Display / Hero:      Geist Sans, 800 weight, -0.04em letter-spacing
+    86→Headings (H1-H3):   Geist Sans, 700 weight, -0.02em letter-spacing
+    87→Body:               Geist Sans, 400 weight, 1.6 line-height
+    88→Data / Reference:   Geist Mono, 500 weight (passport numbers, amounts, codes)
+    89→Labels / Caps:      Geist Sans, 600 weight, 0.08em letter-spacing, uppercase, 11px
+    90→```
+    91→
+    92→### Component Signature
+    93→- **Cards**: `bg-[#111118] border border-[#2A2A38] rounded-xl` — no drop shadow, only border
+    94→- **CTAs**: `bg-indigo-600 hover:bg-indigo-500 transition-all duration-150 rounded-lg font-semibold`
+    95→- **Inputs**: `bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white`
+    96→- **Badges**: Pill shape, 11px uppercase caps, color-coded by status
+    97→- **Tables**: Zebra-striped with `#111118` / `#0A0A0F` alternating rows
+    98→- **Sidebar nav**: Active item gets `bg-indigo-950 text-indigo-400 border-l-2 border-indigo-500`
+    99→
+   100→### Animation Conventions
+   101→```
+   102→Page entry:        Framer Motion, opacity 0→1, y: 8→0, duration: 0.3s ease-out
+   103→Card hover:        scale(1.005), border-color transition, 150ms
+   104→Button press:      scale(0.97), 100ms
+   105→Status badge pulse: Tailwind `animate-pulse` on dot indicator only
+   106→Skeleton loading:  Custom shimmer animation, `#1A1A24` → `#222230` gradient sweep
+   107→```
+   108→
+   109→---
+   110→
+   111→## 📁 PROJECT STRUCTURE
+   112→
+   113→```
+   114→business.vvisa.in/
+   115→├── app/
+   116→│   ├── (marketing)/           # Public pages (no auth required)
+   117→│   │   ├── page.tsx           # Landing / Home
+   118→│   │   ├── layout.tsx         # Marketing layout (header + footer)
+   119→│   │   └── pricing/page.tsx
+   120→│   ├── (auth)/
+   121→│   │   ├── login/page.tsx
+   122→│   │   └── signup/page.tsx
+   123→│   ├── (dashboard)/           # Protected routes
+   124→│   │   ├── layout.tsx         # Dashboard shell with sidebar
+   125→│   │   ├── dashboard/page.tsx # Main dashboard (post-login landing)
+   126→│   │   ├── explore/page.tsx   # Visa search + category browse
+   127→│   │   ├── apply/
+   128→│   │   │   ├── page.tsx       # Visa type selection
+   129→│   │   │   └── [applicationId]/
+   130→│   │   │       └── page.tsx   # Application form
+   131→│   │   ├── applications/
+   132→│   │   │   ├── page.tsx       # All applications list
+   133→│   │   │   └── [groupId]/page.tsx  # Group application detail
+   134→│   │   ├── wallet/page.tsx
+   135→│   │   ├── alliance/page.tsx
+   136→│   │   ├── overstay/page.tsx
+   137→│   │   └── profile/page.tsx
+   138→│   ├── api/
+   139→│   │   ├── auth/[...nextauth]/route.ts
+   140→│   │   ├── applications/route.ts
+   141→│   │   ├── wallet/route.ts
+   142→│   │   └── upload/route.ts
+   143→│   ├── globals.css
+   144→│   └── layout.tsx             # Root layout
+   145→├── components/
+   146→│   ├── ui/                    # shadcn/ui components
+   147→│   ├── marketing/             # Landing page sections
+   148→│   │   ├── HeroSection.tsx
+   149→│   │   ├── TrustBar.tsx
+   150→│   │   ├── WhyChooseSection.tsx
+   151→│   │   ├── StatsSection.tsx
+   152→│   │   ├── HowItWorksSection.tsx
+   153→│   │   ├── TestimonialsSection.tsx
+   154→│   │   └── FAQSection.tsx
+   155→│   ├── dashboard/             # Dashboard-specific components
+   156→│   │   ├── Sidebar.tsx
+   157→│   │   ├── TopNav.tsx
+   158→│   │   ├── WalletBadge.tsx
+   159→│   │   └── NotificationBell.tsx
+   160→│   ├── applications/
+   161→│   │   ├── ApplicationCard.tsx
+   162→│   │   ├── GroupApplicationCard.tsx
+   163→│   │   ├── StatusBadge.tsx
+   164→│   │   ├── ApplicationTimeline.tsx
+   165→│   │   └── ProgressStepper.tsx
+   166→│   ├── explore/
+   167→│   │   ├── VisaSearchBar.tsx
+   168→│   │   ├── VisaCategoryCard.tsx
+   169→│   │   └── VisaResultCard.tsx
+   170→│   ├── forms/
+   171→│   │   ├── PassportUploader.tsx
+   172→│   │   ├── DocumentUploader.tsx
+   173→│   │   ├── TravelerForm.tsx
+   174→│   │   └── ApplicationFormShell.tsx
+   175→│   ├── wallet/
+   176→│   │   ├── WalletBalance.tsx
+   177→│   │   ├── DepositModal.tsx
+   178→│   │   └── TransactionTable.tsx
+   179→│   └── shared/
+   180→│       ├── PageHeader.tsx
+   181→│       ├── EmptyState.tsx
+   182→│       ├── DataTable.tsx
+   183→│       └── ConfirmModal.tsx
+   184→├── lib/
+   185→│   ├── firebase.ts
+   186→│   ├── razorpay.ts
+   187→│   ├── utils.ts
+   188→│   └── validators/
+   189→│       ├── application.schema.ts
+   190→│       └── profile.schema.ts
+   191→├── store/
+   192→│   ├── auth.store.ts
+   193→│   ├── application.store.ts
+   194→│   └── wallet.store.ts
+   195→├── hooks/
+   196→│   ├── useAuth.ts
+   197→│   ├── useApplications.ts
+   198→│   ├── useWallet.ts
+   199→│   └── usePassportOCR.ts
+   200→├── types/
+   201→│   ├── application.types.ts
+   202→│   ├── visa.types.ts
+   203→│   └── user.types.ts
+   204→└── middleware.ts              # Auth protection
+   205→```
+   206→
+   207→---
+   208→
+   209→## 📄 PAGE-BY-PAGE SPECIFICATION
+   210→
+   211→---
+   212→
+   213→### PAGE 1: MARKETING HOME (`/`)
+   214→**Reference**: `business.atlys.com` (Page_1_portal_Home_page_.pdf)
+   215→**UI Inspiration**: GrowthX dark premium aesthetic
+   216→
+   217→#### Layout
+   218→Full-width dark page. No sidebar. Marketing header with logo + "Log In" button (ghost style).
+   219→
+   220→#### Section 1 — Hero
+   221→- **Headline** (display/H1): `"Visas Done Right,`  
+   222→  `Every Time."` (two lines, 72px, 800 weight, white)
+   223→- **Subheadline**: `"India's most trusted B2B visa platform for travel agencies. Guaranteed processing. Zero errors."` (18px, muted gray)
+   224→- **CTA row**: `[Get Started Free →]` (indigo filled, large) + `[Watch Demo]` (ghost, with ▶ icon)
+   225→- **Social proof pill**: `"Trusted by 5,000+ Travel Agents"` — small pill above headline with a green dot
+   226→- **Hero visual** (right side): Animated dashboard mockup — a floating card showing "Visa Approved ✓" with confetti particle burst on load. Behind it: faint grid pattern overlay. Add subtle floating stat cards: "₹15,000 Cashback Earned" and "Total Earnings ₹12,570 ↑ 30%"
+   227→- **Ticker bar** (below hero): scrolling marquee — "Best Prices for Travel Agents • Quick & Easy Applications • 24/7 Support, Anytime"
+   228→
+   229→#### Section 2 — Trust Bar
+   230→- 4 agency logos in a row (Veena World, Affinco, Travel Best, The Journeys) with city labels
+   231→- Label above: `"5,000+ Travel Agents trust VVisa for On Time Visas"` — `5,000+` in indigo
+   232→
+   233→#### Section 3 — Why Choose VVisa
+   234→- Left: 3 feature blocks (each with indigo icon, bold title, 2 bullet points):
+   235→  1. **Best Prices for Travel Agents** — Save more with unbeatable rates · Extra discounts on bulk applications
+   236→  2. **Quick & Easy Applications** — Passport scanner to reduce errors · Apply for up to 500 visa applications in one click
+   237→  3. **24/7 Support, Anytime** — Your dedicated Account Manager is just a call away · Emergency help around the clock
+   238→- Right: Animated product screenshot showing "Guaranteed visa on [date]" notification card. Use Framer Motion slide-in-from-right
+   239→
+   240→#### Section 4 — Stats (Dark band, full-width)
+   241→```
+   242→99.2% Visas Delivered On Time
+   243→[ 5,00,000+ Visas ]  [ 65 Types of Visas ]  [ 5,000+ Agents ]
+   244→```
+   245→All numbers in indigo, bold. Labels in gray below.
+   246→
+   247→#### Section 5 — How to Apply in 30 Seconds
+   248→4-step horizontal process. Each step is a numbered card:
+   249→1. Select destination & travel dates → (search form mini preview)
+   250→2. Upload passport & photo → (passport OCR preview)
+   251→3. Pay from VVisa Wallet → (price breakdown preview)
+   252→4. Get your visa within ETA → (approved visa card)
+   253→
+   254→Steps connected by dotted line with arrow. Step number in indigo circle.
+   255→
+   256→#### Section 6 — Travel Insurance Banner
+   257→- Full-width indigo gradient band
+   258→- `"Looking for travel insurance?"` — large white heading
+   259→- Two stats: `98% settlement rate` | `1 Day digital claims`
+   260→- CTA: `[Sign up for free]`
+   261→
+   262→#### Section 7 — Testimonials
+   263→- Carousel with 5 agency names as tab pills (Burnmiles, RV Holiday, Jetways, Family, Travozone)
+   264→- Quote below in large italic text
+   265→- Attribution: name + company logo
+   266→
+   267→#### Section 8 — FAQ (Accordion)
+   268→Dark accordion, 6 questions:
+   269→1. What is ETA and How is it Calculated?
+   270→2. Can I Track the Status of My Application?
+   271→3. Do You Provide Support After I Submit My Application?
+   272→4. How Do I Make a Payment?
+   273→5. Do I Get GST Invoices?
+   274→6. Do You Offer Support for Group Applications?
+   275→
+   276→Each accordion item: border-bottom divider, `+` → `−` icon transition with Framer Motion.
+   277→
+   278→#### Footer
+   279→- Logo + "Built for India ❤️" (use emoji)
+   280→- 4-column links: Company, Support, Legal, Social
+   281→- 3 office addresses (Mumbai, Delhi, New York)
+   282→- Social icons: Facebook, Instagram, Twitter, YouTube (Lucide)
+   283→- Copyright line
+   284→
+   285→---
+   286→
+   287→### PAGE 2: AUTH — LOGIN & SIGNUP (`/login`, `/signup`)
+   288→**Reference**: Page_2_sign-in-Signup_Page_.pdf
+   289→
+   290→#### Layout
+   291→Split layout: Left panel (indigo background) + Right panel (white/dark form area)
+   292→
+   293→#### Left Panel (Indigo)
+   294→- VVisa Business logo (white)
+   295→- Headline: `"Join 10,000+ Agents growing with VVisa!"`
+   296→- 3 feature cards (rounded, semi-transparent white):
+   297→  1. Best Prices for Travel Agents
+   298→  2. Quick & Easy Applications  
+   299→  3. 24/7 Support, Anytime
+   300→- Each card: icon + title + 2 bullet points
+   301→
+   302→#### Right Panel (Form)
+   303→**Login form:**
+   304→- Header: "Login to VVisa"
+   305→- Email field (label + input)
+   306→- Password field (label + input + show/hide toggle eye icon)
+   307→- "Reset My Password" link (small, indigo)
+   308→- `[Sign In]` button (full-width, indigo)
+   309→- Divider "OR"
+   310→- `[Continue with Google]` (ghost button with Google icon)
+   311→- Bottom: "Don't have an account? Sign up" link
+   312→
+   313→**Signup form (tab switch):**
+   314→- Mobile number field (with India flag + dial code picker)
+   315→- `[Send OTP]` → OTP input 6-digit pincode field
+   316→- Agency name, Email
+   317→- Password + Confirm Password
+   318→- `[Create Account]` CTA
+   319→- Terms acceptance checkbox
+   320→
+   321→**Validation**: All fields use React Hook Form + Zod. Real-time inline validation. Error messages below each field in red.
+   322→
+   323→---
+   324→
+   325→### PAGE 3: DASHBOARD LANDING (`/dashboard`)
+   326→**Reference**: Page_3_landing_page_.pdf — post-login home screen
+   327→
+   328→#### Shell (Persistent across all dashboard pages)
+   329→**Sidebar** (left, 240px wide, dark `#111118`):
+   330→- Agency logo/avatar circle with initials + agency name + email (truncated)
+   331→- `[Explore Visas]` button — full-width, indigo
+   332→- Nav items (with Lucide icons):
+   333→  - Profile
+   334→  - Alliance Dashboard
+   335→  - Old Dashboard (gray, deprecated label)
+   336→  - Wallet (with balance badge)
+   337→  - Overstay
+   338→  - Change Password
+   339→  - Sign Out (red text, at bottom)
+   340→- Active item: left indigo border + indigo-tinted background
+   341→
+   342→**Top Nav** (right of sidebar):
+   343→- `[Need help?]` link
+   344→- Wallet balance chip: `₹70` with wallet icon
+   345→- Notification bell
+   346→- User avatar
+   347→
+   348→#### Dashboard Hero (Main content)
+   349→- Search bar prominently: `[🏠 India]` `[✈ Going to...]` `[📅 Travel Date]` `[📅 Return Date]` `[🔍 Search]`
+   350→- Tab under search: `[✈ Visas]` (underline active tab)
+   351→- **Alliance Program Popup/Card**: Floating card (right side) — "Atlys Alliance Program" with badge illustration. "Introducing the VVisa Alliance Program" with benefit bullets and "Connect with the Alliance Specialist Team" CTA. Dismissible with × button.
+   352→- **Quick Stats Row** (below search): 3 cards — Total Applications, Approved This Month, Wallet Balance
+   353→- **Recent Applications** (below stats): Last 3-5 applications in compact list view
+   354→
+   355→---
+   356→
+   357→### PAGE 4: EXPLORE / VISA SEARCH RESULTS (`/explore`)
+   358→**Reference**: Country_category_page_after_selecting_county_and_date.pdf
+   359→
+   360→#### Layout
+   361→Full content area (no hero). Sticky search bar at top (same inputs, always visible).
+   362→
+   363→#### Results List
+   364→Each result is a category card with a colored header band:
+   365→```
+   366→┌─────────────────────────────────────────────────────────────────┐
+   367→│ 🔵 Lighting Fast (6 Business Hours - Apply Before 11:30 AM)      │
+   368→│    Estimated visa arrival by 15th Apr, 2026 (date in indigo)     │
+   369→│─────────────────────────────────────────────────────────────────│
+   370→│ Entry   Validity   Duration   Documents       Processing Time     │
+   371→│ Single  30 days    30 days    [View Here ↗]   6 Business Hours   │
+   372→│                                                        ₹8,999 ℹ  [Select →] │
+   373→└─────────────────────────────────────────────────────────────────┘
+   374→```
+   375→
+   376→- Header band color: **Blue** for fast-track, **Default/Purple** for standard, **Green** for multi-entry
+   377→- Price in bold right-aligned. Info `ℹ` tooltip with breakdown on hover
+   378→- `[Select →]` button (indigo outline → fills on hover)
+   379→- "View Here" opens a slide-over panel with document checklist
+   380→
+   381→**Render at least 3 result cards** for Vietnam:
+   382→1. Lighting Fast (6 Business Hours) — ₹8,999
+   383→2. Evisa Vietnam 30 Days — ₹2,700
+   384→3. Vietnam 90 Days Multiple Entry E-Visa — ₹12,404
+   385→
+   386→---
+   387→
+   388→### PAGE 5: APPLICATION FORM (`/apply/[applicationId]`)
+   389→**Reference**: Business-atlys-agencies-customers-create-application-after_selecting_the_categary.pdf (9 pages)
+   390→
+   391→#### Step 0 — Application Setup
+   392→- `"Are You Applying For"` — segmented control: `[Individual]` `[Group]`
+   393→- If Individual: Internal ID field + Group Name field
+   394→- Visa Type dropdown (pre-filled from previous selection)
+   395→
+   396→#### Sidebar Progress Stepper (left panel, sticky)
+   397→Vertical stepper with all steps listed. Completed = green checkmark circle. Active = indigo filled circle. Future = gray empty circle.
+   398→```
+   399→✓ Internal ID
+   400→✓ Group Name
+   401→● Traveler 1
+   402→  ✓ Passport
+   403→  ○ Additional Questions
+   404→○ Traveler 2
+   405→○ Review
+   406→○ Submit
+   407→```
+   408→
+   409→#### Traveler Section (main content, white card)
+   410→**Step: "Traveler 1" / "Traveler 2"**
+   411→
+   412→**Subsection: Upload Passport**
+   413→- Instruction banner (amber): "Australia requires a scan of the traveler's passport. Upload a clear passport image and your details will be filled automatically. VVisa has built its own OCR which is 99.9% accurate. However, it is mandatory to review the information before submitting..."
+   414→
+   415→Two-column layout:
+   416→- Left: Drag-and-drop upload zone (dashed border, upload icon, "Drag and drop files to upload" / "or" / `[Select file]` button). Accepts JPEG, JPG, PDF, PNG. Max 5MB.
+   417→- Right: Auto-populated passport fields:
+   418→  - Passport Number (with audio/scan icon)
+   419→  - First Name, Last Name
+   420→  - Nationality (dropdown), Sex (dropdown), Date of Birth (date picker)
+   421→  - Place of Birth
+   422→  - Place of Issue
+   423→  - Marital Status (dropdown), Date of Issue, Date of Expiry
+   424→
+   425→**Subsection: Additional Required Questions**
+   426→Each document in a `<section>` with:
+   427→- Document title (bold, 16px)
+   428→- Optional: helper text in orange/amber
+   429→- Optional: `[Download format]` link in indigo
+   430→- Upload zone (same drag-drop pattern)
+   431→
+   432→Documents for Australia Visitors Visa (Subclass 600):
+   433→1. National ID (Aadhar or PAN Card) — required ✱
+   434→2. Last 3 Years ITR — required ✱
+   435→3. Last 6 Months Bank Statement — required ✱ — "Please provide up to date e-statement only, with minimum of 5 Lakhs INR balance maintained for at least last 3 months."
+   436→4. Last 3 Months Salary Slip — "Please upload last 3 months salary slip, mandatory if traveller is employed."
+   437→5. Leave Letter from the Company or Letter of Employment — `[Download format]`
+   438→6. GST Certificate - Company Bank Statement 6 Months — "mandatory if the traveller is self employed or has own business"
+   439→7. COVID Vaccination Certificate
+   440→8. Marriage Certificate (Optional)
+   441→9. All Passport Old & New Used Pages Copies/Scanned Copies — required ✱
+   442→10. Covering Letter (Address to Australia High Commission, New Delhi) — required ✱ — `[Download format]`
+   443→11. Net Worth Certificate (Optional) — `[Download format]`
+   444→12. Other Saving & Investment (PPF, Fix Deposit, Shares) — "Consider filling this in case of not very strong bank balance."
+   445→13. Form 54 — required ✱ — `[Download format]`
+   446→
+   447→**Add Traveler** button at bottom with `[+ Add Another Traveler]` and `[Review and Save →]`
+   448→
+   449→**Also at bottom: `[Remove This Traveler]`** (destructive, outlined red)
+   450→
+   451→#### Price Summary (right panel, sticky)
+   452→```
+   453→┌──────────────────┐
+   454→│ Price Details    │
+   455→│                  │
+   456→│ Traveler 1  ₹13,499 ▼ │
+   457→│ Traveler 2  ₹13,499 ▼ │
+   458→│ ─────────────────│
+   459→│ Total       ₹26,998 ▼ │
+   460→│ Current Wallet Balance ₹0 │
+   461→│                  │
+   462→│ [Review and Save →] │
+   463→└──────────────────┘
+   464→```
+   465→
+   466→#### Visa Info + Know Before You Pay (bottom)
+   467→```
+   468→Visa Information:
+   469→Australia - Australia Visitors Visa (Subclass 600)
+   470→Travelers: 2
+   471→Travel Dates: Mar 9, 2026 - Mar 26, 2026
+   472→
+   473→Expected Visa Approval:
+   474→📅 4/14/26, if submitted now!
+   475→
+   476→Know Before You Pay:
+   477→○ Auto-validation upon submission
+   478→  Atlys performs automated validation...
+   479→○ Visa processed within 30 seconds
+   480→○ Non-refundable after you pay
+   481→  If canceled after payment, you will not be refunded.
+   482→```
+   483→
+   484→---
+   485→
+   486→### PAGE 6: APPLICATIONS LIST (`/applications`)
+   487→**Reference**: applications.pdf
+   488→
+   489→#### Top area
+   490→- Page title: "Applications" (H1)
+   491→- Subtitle: "Track and manage visa applications"
+   492→- Search: `[🔍 Search name or passport]` `[📅 Travel date]` `[Destination ▼]`
+   493→- Tabs: `All (27)` | `Approved (25)` | `Pending Payment (2)` → each tab shows count badge
+   494→
+   495→#### Application Cards — Two variants
+   496→
+   497→**Variant A: Group Application Card** (most common)
+   498→```
+   499→┌──────────────────────────────────────────────────────────┐
+   500→│ SAPNA CHHAJER - C7612934 - Mar 24, 2026                   │
+   501→│ Created: Mar 7, 2026 at 6:43 PM                           │
+   502→│                                                           │
+   503→│ Vietnam                          Applicants: 8            │
+   504→│ Evisa Vietnam 30 Days            Approved: 8              │
+   505→│ Travel: Mar 24, 2026 → Apr 7, 2026                        │
+   506→│                                              [View Group →]│
+   507→└──────────────────────────────────────────────────────────┘
+   508→```
+   509→
+   510→- Approved count shows a green `✓ Approved` badge
+   511→- `[View Group →]` button dark/black, rounded
+   512→
+   513→**Variant B: Individual Application Card** (for approved visa — highlighted green banner)
+   514→```
+   515→┌─ VISA APPROVED ──────────────────────────────────────────┐
+   516→│ AKASH KOTHARI                                             │
+   517→│ Submitted: Mar 6, 2026 at 1:46 PM                        │
+   518→│ Passport: R1213598                                        │
+   519→│                                                           │
+   520→│ Vietnam — Visa: Evisa Vietnam 30 Days                     │
+   521→│ Travel: Feb 26, 2026 → Mar 12, 2026                      │
+   522→│ Reference No: E260308INDR12135939 7                       │
+   523→│                                                           │
+   524→│ Application Details:          Visa Approved Card:         │
+   525→│ ✅ Errors Fixed               ✅ Estimated on Mar 13, 2026│
+   526→│ ✅ Application Complete       ✅ Delivered on Mar 12, 2026│
+   527→│ ✅ Application Paid           ✓ before time               │
+   528→│ ✅ Submitted to Immigration                               │
+   529→│ ✅ Visa Approved                                         │
+   530→│                                                           │
+   531→│ [Generate Invoice] [View Application] [Download Visa ↓]  │
+   532→└──────────────────────────────────────────────────────────┘
+   533→```
+   534→
+   535→- "VISA APPROVED" green banner at top with shield icon
+   536→- Green checkmarks for each milestone
+   537→- Delivered "before time" badge (green pill)
+   538→- 3 action buttons aligned right
+   539→
+   540→#### Render in order:
+   541→1. All group cards first (Sapna Chhajer, Vishal Gireeya, Kaushik Jain)
+   542→2. Individual approved applications (Akash Kothari, Nisarga Shavahalli Prakash)
+   543→3. More group cards below
+   544→
+   545→---
+   546→
+   547→### PAGE 7: GROUP APPLICATION DETAIL (`/applications/[groupId]`)
+   548→**Reference**: groups-application-view_and_progress.pdf
+   549→
+   550→#### Breadcrumb
+   551→`← Go back to main Dashboard` (link)
+   552→
+   553→#### Header
+   554→```
+   555→SAPNA CHHAJER - C7612934 - Mar 24, 2026   🔒 Group Locked ℹ
+   556→Created On: Mar 7, 2026    Applicants: 8
+   557→```
+   558→
+   559→#### Left Sidebar Filters
+   560→- Popular Filters accordion:
+   561→  - ☐ Visas Only
+   562→  - ☐ Date Created On
+   563→  - ☐ Departure Date
+   564→  - ☐ Destination Country
+   565→
+   566→#### Top Actions Bar
+   567→- `[✓ Checking for visas...]` (animated spinner + text)
+   568→- `[↓ Download Group Invoice]`
+   569→- `[•••]` more options
+   570→
+   571→#### Individual Application Cards (list)
+   572→Each traveler in the group shown as a "VISA APPROVED" card:
+   573→```
+   574→┌─ VISA APPROVED ─────────────────────────────────────────────────┐
+   575→│ HIYANSH AMIT CHHAJER    👶 Child                                 │
+   576→│ Submitted On: Mar 8, 2026 at 1:54 PM                            │
+   577→│ Passport Number: C7819328                                        │
+   578→│                                                                  │
+   579→│ Vietnam                                                          │
+   580→│ Visa: Evisa Vietnam 30 Days                                      │
+   581→│ Travel: Mar 24, 2026 → Apr 7, 2026                              │
+   582→│ Reference No: E260308INDC761612472                              │
+   583→│                                                                  │
+   584→│ Application Details:              Visa Approved Card:            │
+   585→│ ✅ Errors Fixed                   ✅ Estimated on Mar 13, 2026  │
+   586→│ ✅ Application Complete           ✅ Delivered on Mar 12, 2026  │
+   587→│ ✅ Application Paid               ✓ before time                  │
+   588→│ ✅ Submitted to Immigration                                      │
+   589→│ ✅ Visa Approved                                [Download Visa ↓]│
+   590→└─────────────────────────────────────────────────────────────────┘
+   591→```
+   592→
+   593→Show 8 travelers: Hiyansh Amit Chhajer (Child), Pratiksha Jain, Mukesh Kumar, Sapna Chhajer, Hiyanshi Amit Chhajer (Child), Manya Bohra (Child), Purvansh Bohra (Child), Livi Chhajer (Child).
+   594→
+   595→Child travelers get a 👶 badge next to name.
+   596→
+   597→Error notification in top-right (toast): "Failed to check visa documents. Please refresh the page." with `[Retry]` button.
+   598→
+   599→---
+   600→
+   601→### PAGE 8: WALLET (`/wallet`)
+   602→**Reference**: wallet.pdf
+   603→
+   604→#### Header
+   605→- Page title: "Wallet"
+   606→- Subtitle: "Manage your balance, deposits, and withdrawals"
+   607→- Current Balance (top right, large): `₹0.00`
+   608→
+   609→#### Action Tabs
+   610→`[↓ Deposit]` (active, indigo) | `[↑ Withdraw]` | `[📋 Transactions]`
+   611→
+   612→#### Warning Banner
+   613→Amber banner: "Please wait **30 min – 2 hrs** for payments to reflect. If not received in 2 hrs, check for a refund or **create a support ticket**."
+   614→
+   615→#### Deposit Methods (Sub-tabs)
+   616→`[🏦 Bank Transfer (0% fee)]` | `[📱 UPI (0% fee)]` | `[💳 Credit Card (2% fee)]`
+   617→
+   618→**Bank Transfer Tab:**
+   619→- Info text: "Only add money to the details below. VVisa is not responsible for transfers to other accounts."
+   620→- Two bank account cards side by side:
+   621→
+   622→```
+   623→┌─────────────────────┐  ┌─────────────────────┐
+   624→│ VVisa Bank 1 [preferred]│  │ VVisa Bank 2         │
+   625→│ Account Number      │  │ Account Number      │
+   626→│ 1111232280258381... │  │ 2223228247548584    │
+   627→│ IFSC Code           │  │ IFSC Code           │
+   628→│ YESB0CHSN0C         │  │ UTIB000RAZP         │
+   629→│ Account Name        │  │ Account Name        │
+   630→│ VVisa               │  │ VVisa               │
+   631→└─────────────────────┘  └─────────────────────┘
+   632→```
+   633→
+   634→- Tips box: "For instant transfers up to Rs. 2L, use IMPS. For larger transactions use NEFT."
+   635→- Footer note about adding as beneficiary
+   636→
+   637→**UPI Tab:**
+   638→- UPI ID field with QR code
+   639→- Copy button
+   640→
+   641→**Credit Card Tab:**
+   642→- Razorpay embedded form
+   643→
+   644→---
+   645→
+   646→### PAGE 9: ALLIANCE (`/alliance`)
+   647→**Reference**: alliance.pdf
+   648→
+   649→#### Header
+   650→- Page title: "Alliance"
+   651→- Subtitle: "View and filter alliance links created for your clients"
+   652→
+   653→#### Filters Bar
+   654→- `[Customer phone or name]` input
+   655→- `[Destination ▼]` dropdown
+   656→- `[📅 Travel On]` date filter
+   657→- `[📅 Created At]` date filter
+   658→
+   659→#### Empty State (shown when no links)
+   660→- Centered email icon illustration
+   661→- `"No alliance links found"`
+   662→- `"No alliance links have been created yet."`
+   663→- `[+ Create Alliance Link]` indigo CTA
+   664→
+   665→#### When populated (for preview/demo):
+   666→Table with columns: Customer, Destination, Travel On, Link, Created At, Actions
+   667→
+   668→---
+   669→
+   670→### PAGE 10: OVERSTAY (`/overstay`)
+   671→**Reference**: overstay.pdf
+   672→
+   673→#### Header
+   674→- Page title: "Overstay"
+   675→- Subtitle: "Manage UAE overstay cases and history"
+   676→
+   677→#### Tabs
+   678→`[Overstay]` (active) | `[History]`
+   679→
+   680→#### Search + Table
+   681→- Search: `[🔍 Search names...]`
+   682→- Table columns: NAME ↕ | PASSPORT NUMBER | DAYS LEFT TO OVERSTAY ↕ | ENTRY DATE ↕ | STATUS | AMOUNT TO PAY | ACTIONS
+   683→
+   684→#### Empty State
+   685→```
+   686→"No overstay cases"
+   687→"None of your travellers have overstayed or absconded."
+   688→```
+   689→Pagination footer: "Page 1 of 0"
+   690→
+   691→---
+   692→
+   693→### PAGE 11: PROFILE (`/profile`)
+   694→**Reference**: profile.pdf
+   695→
+   696→#### Section 1: Agency Logo
+   697→- Upload zone for logo: "JPO, JPEG, PNG or SVG — max 1 MB"
+   698→- `[Choose file]` link
+   699→- Preview square (right side)
+   700→
+   701→#### Section 2: Agency Information
+   702→- "Update your GST, PAN, and address details" subtitle
+   703→- Purple/indigo decorative gradient band (right edge)
+   704→
+   705→**Basic Details:**
+   706→- Country: India (dropdown)
+   707→- Account Type: b2b (read-only)
+   708→- Contact Number: +918553094348
+   709→
+   710→**Tax Details:**
+   711→- GST Number (text input)
+   712→- PAN Card (text input)
+   713→
+   714→**Documents:**
+   715→- Warning: "GST Input Credit will not be available if the GST certificate is not uploaded." (amber banner)
+   716→- GST Certificate (PDF only) — upload zone
+   717→- Cancelled Cheque (JPG, PNG or PDF) — upload zone
+   718→
+   719→**Address:**
+   720→- Address Line 1 (pre-filled)
+   721→- Address Line 2
+   722→- City, State (dropdown), Zip Code
+   723→
+   724→`[💾 Save Changes]` button (dark, right-aligned)
+   725→
+   726→#### Section 3: Aadhar Details
+   727→- "Identity verification information"
+   728→- Name as per Aadhar (read-only, shows —)
+   729→- Aadhar Number (read-only, shows —)
+   730→- Address (read-only, shows —)
+   731→
+   732→---
+   733→
+   734→## 🔄 KEY WORKFLOWS & BUSINESS LOGIC
+   735→
+   736→### Application State Machine
+   737→```typescript
+   738→type ApplicationStatus =
+   739→  | 'DRAFT'           // Not yet submitted
+   740→  | 'RECEIVED'        // Submitted, not yet validated
+   741→  | 'VALIDATED'       // Passed automated checks
+   742→  | 'QUEUED'          // In processing queue
+   743→  | 'PAYMENT_PENDING' // Awaiting payment
+   744→  | 'PAID'            // Payment received
+   745→  | 'SUBMITTED'       // Submitted to immigration
+   746→  | 'OTP_PENDING'     // Waiting for embassy OTP
+   747→  | 'APPROVED'        // Visa approved
+   748→  | 'REJECTED'        // Visa rejected
+   749→  | 'FAILED'          // System error
+   750→  | 'CANCELLED'       // Cancelled by agent
+   751→```
+   752→
+   753→### Passport OCR Flow
+   754→1. Agent uploads passport image to Firebase Storage
+   755→2. Call internal API `/api/ocr` with storage URL
+   756→3. Parse extracted fields (name, DOB, expiry, nationality, passport number)
+   757→4. Auto-populate form fields
+   758→5. Show "OCR confidence" indicator — fields auto-filled shown with light indigo background
+   759→6. Agent reviews + edits + confirms
+   760→
+   761→### Wallet Flow
+   762→1. Agent initiates deposit (bank transfer / UPI / credit card)
+   763→2. Razorpay processes payment
+   764→3. Webhook updates Firestore wallet balance
+   765→4. Real-time balance update in UI (Firestore listener)
+   766→5. All visa payments deducted from wallet
+   767→
+   768→### Group Application Flow
+   769→1. Agent searches destination + dates
+   770→2. Selects visa category
+   771→3. Chooses "Individual" or "Group"
+   772→4. For Group: adds multiple travelers (each with passport + docs)
+   773→5. Review page shows all travelers + total price
+   774→6. Pays from wallet or triggers Razorpay
+   775→7. System processes all travelers simultaneously
+   776→8. Status updates in real-time via Firestore listeners
+   777→
+   778→---
+   779→
+   780→## 🔒 AUTH & MIDDLEWARE
+   781→
+   782→```typescript
+   783→// middleware.ts
+   784→import { NextResponse } from 'next/server'
+   785→import type { NextRequest } from 'next/server'
+   786→
+   787→const PUBLIC_PATHS = ['/', '/login', '/signup', '/pricing']
+   788→
+   789→export function middleware(request: NextRequest) {
+   790→  const token = request.cookies.get('vvisa-auth-token')
+   791→  const isPublicPath = PUBLIC_PATHS.some(path =>
+   792→    request.nextUrl.pathname === path
+   793→  )
+   794→
+   795→  if (!isPublicPath && !token) {
+   796→    return NextResponse.redirect(new URL('/login', request.url))
+   797→  }
+   798→
+   799→  if (token && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
+   800→    return NextResponse.redirect(new URL('/dashboard', request.url))
+   801→  }
+   802→
+   803→  return NextResponse.next()
+   804→}
+   805→```
+   806→
+   807→---
+   808→
+   809→## 🧩 KEY COMPONENTS — DETAILED SPECS
+   810→
+   811→### `<StatusBadge status={status} />`
+   812→```typescript
+   813→const statusConfig = {
+   814→  APPROVED:  { label: 'Approved',  bg: 'bg-emerald-950', text: 'text-emerald-400', dot: 'bg-emerald-400' },
+   815→  REJECTED:  { label: 'Rejected',  bg: 'bg-red-950',     text: 'text-red-400',     dot: 'bg-red-400' },
+   816→  PENDING:   { label: 'Pending',   bg: 'bg-amber-950',   text: 'text-amber-400',   dot: 'bg-amber-400' },
+   817→  SUBMITTED: { label: 'Submitted', bg: 'bg-blue-950',    text: 'text-blue-400',    dot: 'bg-blue-400' },
+   818→  DRAFT:     { label: 'Draft',     bg: 'bg-gray-900',    text: 'text-gray-400',    dot: 'bg-gray-400' },
+   819→}
+   820→// Render: pill with animated dot + label + uppercase 11px caps font
+   821→```
+   822→
+   823→### `<PassportUploader onExtracted={fields => void} />`
+   824→- Drag-and-drop zone with dashed border (dashes animate on drag-over)
+   825→- File type validation (JPEG, JPG, PDF, PNG, max 5MB)
+   826→- Upload progress bar (thin indigo line, bottom of zone)
+   827→- On complete: calls OCR API, returns extracted fields
+   828→- Shows thumbnail preview of uploaded document (blurred slightly for security)
+   829→
+   830→### `<DocumentUploader label="" helperText="" required={bool} downloadFormat={url} />`
+   831→- Same drag-drop pattern as passport uploader
+   832→- Shows `[Download format]` link if `downloadFormat` prop provided
+   833→- Helper text in amber below label
+   834→- Required asterisk (`✱`) in red next to label
+   835→
+   836→### `<ApplicationTimeline steps={[]} />`
+   837→Vertical timeline component:
+   838→```
+   839→● Errors Fixed         ✅
+   840→● Application Complete ✅
+   841→● Application Paid     ✅
+   842→● Submitted to Immigration ✅
+   843→● Visa Approved        ✅
+   844→```
+   845→Each step: dot (colored by status) + label + timestamp on hover
+   846→
+   847→### `<DataTable columns={[]} data={[]} />`
+   848→- Sortable columns with ↕ icon
+   849→- Search/filter integration
+   850→- Pagination (page X of Y)
+   851→- Row hover highlight
+   852→- Empty state slot
+   853→
+   854→---
+   855→
+   856→## 📱 RESPONSIVE BEHAVIOR
+   857→
+   858→### Breakpoints
+   859→- **Mobile** (< 768px): Single column, bottom tab nav replaces sidebar, search stacks vertically
+   860→- **Tablet** (768–1024px): Sidebar collapses to icon-only (48px), main content adapts
+   861→- **Desktop** (> 1024px): Full sidebar (240px) + content area + optional right panel
+   862→
+   863→### Sidebar Mobile
+   864→- Drawer pattern: swipe-right or hamburger button opens full sidebar
+   865→- Overlay backdrop, Framer Motion slide-in from left
+   866→
+   867→### Forms on Mobile
+   868→- Full-width inputs
+   869→- Date pickers: native mobile picker
+   870→- Upload zones: tap to open file picker (no drag-drop)
+   871→
+   872→---
+   873→
+   874→## ⚡ PERFORMANCE REQUIREMENTS
+   875→
+   876→- **LCP** < 2.5s on 4G
+   877→- **INP** < 200ms
+   878→- **CLS** < 0.1
+   879→- All images: `next/image` with `priority` for above-fold
+   880→- Route prefetching: `next/link` default behavior
+   881→- Code splitting: dynamic imports for heavy components (passport uploader, document viewer)
+   882→- Suspense boundaries with skeleton loaders on all data-fetching pages
+   883→
+   884→---
+   885→
+   886→## 🌐 SEO & METADATA
+   887→
+   888→```typescript
+   889→// app/layout.tsx
+   890→export const metadata = {
+   891→  title: {
+   892→    template: '%s | VVisa Business',
+   893→    default: 'VVisa Business — Best Prices, Effortless Bookings',
+   894→  },
+   895→  description: 'India\'s most trusted B2B visa platform for travel agencies. 500,000+ visas delivered. 65 visa types. 5,000+ agents.',
+   896→  keywords: ['visa for travel agents', 'b2b visa platform', 'bulk visa applications', 'india visa services'],
+   897→  openGraph: {
+   898→    siteName: 'VVisa Business',
+   899→    locale: 'en_IN',
+   900→  },
+   901→}
+   902→```
+   903→
+   904→---
+   905→
+   906→## 🧪 MOCK DATA FOR DEMO
+   907→
+   908→Seed the app with realistic dummy data:
+   909→
+   910→**Agencies**: "Vindox Travels", "Sapna Tours", "Delhi Dreams Travel"
+   911→**Applications**: Mix of Vietnam, Australia, UAE, Singapore visas in various states
+   912→**Wallet**: Starting balance ₹28,040 with 10 historical transactions
+   913→**Travelers**: 5-8 travelers across 3-4 group applications
+   914→
+   915→All dummy data in `/lib/mock-data.ts` — toggle via `NEXT_PUBLIC_USE_MOCK_DATA=true` env var.
+   916→
+   917→---
+   918→
+   919→## 🚀 ENVIRONMENT VARIABLES
+   920→
+   921→```env
+   922→# Firebase
+   923→NEXT_PUBLIC_FIREBASE_API_KEY=
+   924→NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+   925→NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+   926→NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+   927→NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+   928→NEXT_PUBLIC_FIREBASE_APP_ID=
+   929→
+   930→# Razorpay
+   931→RAZORPAY_KEY_ID=
+   932→RAZORPAY_KEY_SECRET=
+   933→NEXT_PUBLIC_RAZORPAY_KEY_ID=
+   934→
+   935→# Analytics
+   936→NEXT_PUBLIC_POSTHOG_KEY=
+   937→NEXT_PUBLIC_POSTHOG_HOST=
+   938→NEXT_PUBLIC_SENTRY_DSN=
+   939→NEXT_PUBLIC_GTM_ID=
+   940→
+   941→# App
+   942→NEXT_PUBLIC_APP_URL=https://business.vvisa.in
+   943→NEXT_PUBLIC_USE_MOCK_DATA=true
+   944→```
+   945→
+   946→---
+   947→
+   948→## ✅ ACCEPTANCE CRITERIA
+   949→
+   950→Before considering the build complete, verify:
+   951→
+   952→1. [ ] All 11 pages render without errors in production build
+   953→2. [ ] Auth flow: signup → login → dashboard → logout works end-to-end
+   954→3. [ ] Application form: can add 2 travelers, upload documents, reach review page
+   955→4. [ ] Wallet page: deposit flow initiates Razorpay checkout
+   956→5. [ ] Applications list: search, filter, pagination all functional
+   957→6. [ ] Group detail: all 8 travelers shown with correct data
+   958→7. [ ] Mobile responsive: all pages usable on 375px viewport
+   959→8. [ ] Dark mode: all text readable, no pure white backgrounds
+   960→9. [ ] Framer Motion: page transitions, card hovers, accordion animations all smooth
+   961→10. [ ] TypeScript: `tsc --noEmit` passes with zero errors
+   962→
+   963→---
+   964→
+   965→## 🎁 BONUS FEATURES (implement if time permits)
+   966→
+   967→1. **Passport Scanner Widget**: Live camera mode — agent holds phone to passport, real-time OCR extracts fields
+   968→2. **Bulk Application Upload**: CSV upload for 500 travelers at once — parse, validate, create group application
+   969→3. **Visa Status Tracker**: Public shareable link for end-customer to track their visa
+   970→4. **AI Checklist Generator**: Based on destination country, auto-generates required document checklist with explanations
+   971→5. **Invoice PDF Generator**: One-click GST invoice download for any application (use `@react-pdf/renderer`)
+   972→
+   973→---
+   974→
+   975→*Built for India 🇮🇳 | business.vvisa.in | VVisa AI Platform — Powered by the VVisa AI Orchestration Engine*
+   976→

@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Agency {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  password  String?
+  logo      String?
+  country   String   @default("India")
+  accountType String @default("b2b")
+  gstNumber String?
+  panCard   String?
+  addressLine1 String?
+  addressLine2 String?
+  city      String?
+  state     String?
+  zipCode   String?
+  aadharName String?
+  aadharNumber String?
+  aadharAddress String?
+  walletBalance Float @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  applications VisaApplication[]
+  transactions WalletTransaction[]
+}
+
+model VisaApplication {
+  id          String   @id @default(cuid())
+  agencyId    String
+  agency      Agency   @relation(fields: [agencyId], references: [id])
+  groupId     String?
+  internalId  String?
+  groupName   String?
+  destination String
+  visaType    String
+  travelDate  DateTime?
+  returnDate  DateTime?
+  status      String   @default("DRAFT")
+  totalPrice  Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  travelers   Traveler[]
+}
+
+model Traveler {
+  id              String   @id @default(cuid())
+  applicationId   String
+  application     VisaApplication @relation(fields: [applicationId], references: [id])
+  firstName       String
+  lastName        String
+  passportNumber  String
+  nationality     String   @default("Indian")
+  sex             String?
+  dateOfBirth     DateTime?
+  placeOfBirth    String?
+  placeOfIssue    String?
+  maritalStatus   String?
+  dateOfIssue     DateTime?
+  dateOfExpiry    DateTime?
+  isChild         Boolean  @default(false)
+  status          String   @default("DRAFT")
+  referenceNo     String?
+  estimatedArrival DateTime?
+  deliveredAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  agencyId    String
+  agency      Agency   @relation(fields: [agencyId], references: [id])
+  type        String   // DEPOSIT, WITHDRAWAL, PAYMENT, REFUND
+  amount      Float
+  method      String?  // BANK_TRANSFER, UPI, CREDIT_CARD
+  status      String   @default("COMPLETED")
+  description String?
+  createdAt   DateTime @default(now())
+}
+
+model VisaType {
+  id              String   @id @default(cuid())
+  destination     String
+  name            String
+  category        String   // LIGHTNING_FAST, STANDARD, MULTI_ENTRY
+  entry           String   // SINGLE, MULTIPLE
+  validity        String
+  duration        String
+  processingTime  String
+  price           Float
+  currency        String   @default("INR")
+  documents       String   // JSON array of required docs
+  cutoffTime      String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+}
