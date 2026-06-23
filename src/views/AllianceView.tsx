@@ -49,7 +49,7 @@ export default function AllianceView() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Customer phone or name..."
-            className="bg-vvisa-surface border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-10"
+            className="bg-vvisa-surface border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-10"
           />
         </div>
         <Select value={destination} onValueChange={setDestination}>
@@ -70,7 +70,7 @@ export default function AllianceView() {
             value={travelOn}
             onChange={(e) => setTravelOn(e.target.value)}
             placeholder="Travel On"
-            className="bg-vvisa-surface border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-10 w-44"
+            className="bg-vvisa-surface border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-10 w-44"
           />
         </div>
         <div className="relative">
@@ -80,7 +80,7 @@ export default function AllianceView() {
             value={createdAt}
             onChange={(e) => setCreatedAt(e.target.value)}
             placeholder="Created At"
-            className="bg-vvisa-surface border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-10 w-44"
+            className="bg-vvisa-surface border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-10 w-44"
           />
         </div>
       </div>
@@ -93,7 +93,7 @@ export default function AllianceView() {
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-1">No alliance links found</h3>
           <p className="text-sm text-vvisa-text-muted mb-6">No alliance links have been created yet.</p>
-          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center gap-2">
+          <Button className="bg-primary hover:bg-primary/90 text-white rounded-lg flex items-center gap-2">
             <Plus className="h-4 w-4" />
             Create Alliance Link
           </Button>

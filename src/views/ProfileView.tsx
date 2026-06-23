@@ -88,14 +88,14 @@ function DocUploadZone({ title, helper, docType, value, onUpload }: DocUploadZon
       />
       <div
         className={`border border-dashed rounded-lg p-4 flex flex-col items-center justify-center text-center transition-colors cursor-pointer h-20
-          ${value ? 'border-emerald-500/50 bg-emerald-950/10' : 'border-vvisa-border hover:border-indigo-500/50'}
+          ${value ? 'border-emerald-500/50 bg-emerald-950/10' : 'border-vvisa-border hover:border-primary/50'}
         `}
         onClick={() => inputRef.current?.click()}
       >
         {uploading ? (
           <>
-            <Loader2 className="h-3.5 w-3.5 text-indigo-400 animate-spin mb-1" />
-            <p className="text-xs text-indigo-400">Scanning with ocr.z.ai...</p>
+            <Loader2 className="h-3.5 w-3.5 text-primary animate-spin mb-1" />
+            <p className="text-xs text-primary">Scanning with ocr.z.ai...</p>
           </>
         ) : value ? (
           <>
@@ -107,7 +107,7 @@ function DocUploadZone({ title, helper, docType, value, onUpload }: DocUploadZon
           <>
             <Scan className="h-3.5 w-3.5 text-vvisa-text-muted mb-1" />
             <p className="text-xs text-vvisa-text-muted">Click to upload</p>
-            <span className="inline-flex items-center gap-0.5 text-[9px] text-indigo-400 mt-0.5">
+            <span className="inline-flex items-center gap-0.5 text-[9px] text-primary mt-0.5">
               <Scan className="h-2.5 w-2.5" /> ocr.z.ai ready
             </span>
           </>
@@ -185,15 +185,15 @@ export default function ProfileView() {
             />
             <div
               className={`border-2 border-dashed rounded-xl w-32 h-32 flex flex-col items-center justify-center text-center transition-all cursor-pointer shrink-0
-                ${logoFile ? 'border-emerald-500/50 bg-emerald-950/10' : 'border-vvisa-border hover:border-indigo-500/50'}
-                ${logoUploading ? 'border-indigo-500 bg-indigo-950/10' : ''}
+                ${logoFile ? 'border-emerald-500/50 bg-emerald-950/10' : 'border-vvisa-border hover:border-primary/50'}
+                ${logoUploading ? 'border-primary bg-primary/5' : ''}
               `}
               onClick={() => logoInputRef.current?.click()}
             >
               {logoUploading ? (
                 <>
-                  <Loader2 className="h-6 w-6 text-indigo-400 animate-spin mb-1" />
-                  <p className="text-xs text-indigo-400">Scanning...</p>
+                  <Loader2 className="h-6 w-6 text-primary animate-spin mb-1" />
+                  <p className="text-xs text-primary">Scanning...</p>
                 </>
               ) : logoFile ? (
                 <>
@@ -204,7 +204,7 @@ export default function ProfileView() {
                 <>
                   <Upload className="h-6 w-6 text-vvisa-text-muted mb-1" />
                   <p className="text-xs text-vvisa-text-muted">Upload</p>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-950/30 border border-indigo-800/30 text-[10px] text-indigo-400 font-medium mt-2">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] text-primary font-medium mt-2">
                     <Scan className="h-3 w-3" />
                     Powered by ocr.z.ai
                   </span>
@@ -247,7 +247,7 @@ export default function ProfileView() {
               <div>
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Country</Label>
                 <Select value={country} onValueChange={setCountry}>
-                  <SelectTrigger className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-10">
+                  <SelectTrigger className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-vvisa-surface border border-vvisa-border">
@@ -267,7 +267,7 @@ export default function ProfileView() {
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Contact Number</Label>
                 <Input
                   defaultValue={mockAgency.phone}
-                  className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-10"
+                  className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                 />
               </div>
             </div>
@@ -283,14 +283,14 @@ export default function ProfileView() {
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">GST Number</Label>
                 <Input
                   defaultValue={mockAgency.gstNumber}
-                  className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-10 font-mono"
+                  className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10 font-mono"
                 />
               </div>
               <div>
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">PAN Card</Label>
                 <Input
                   defaultValue={mockAgency.panCard}
-                  className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-10 font-mono"
+                  className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10 font-mono"
                 />
               </div>
             </div>
@@ -302,7 +302,7 @@ export default function ProfileView() {
             <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-950/30 border border-amber-800/30 mb-3">
               <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-200/80">
-                Upload your GST certificate to enable GST input credit on your invoices. All documents are scanned using <span className="text-indigo-400 font-medium">ocr.z.ai</span>.
+                Upload your GST certificate to enable GST input credit on your invoices. All documents are scanned using <span className="text-primary font-medium">ocr.z.ai</span>.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -333,14 +333,14 @@ export default function ProfileView() {
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Address Line 1</Label>
                 <Input
                   defaultValue={mockAgency.addressLine1}
-                  className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-10"
+                  className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                 />
               </div>
               <div>
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Address Line 2</Label>
                 <Input
                   defaultValue={mockAgency.addressLine2}
-                  className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-10"
+                  className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                 />
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -348,13 +348,13 @@ export default function ProfileView() {
                   <Label className="text-xs text-vvisa-text-muted mb-1.5 block">City</Label>
                   <Input
                     defaultValue={mockAgency.city}
-                    className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-10"
+                    className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                   />
                 </div>
                 <div>
                   <Label className="text-xs text-vvisa-text-muted mb-1.5 block">State</Label>
                   <Select value={state} onValueChange={setState}>
-                    <SelectTrigger className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-10">
+                    <SelectTrigger className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-vvisa-surface border border-vvisa-border max-h-60 overflow-y-auto">
@@ -368,14 +368,14 @@ export default function ProfileView() {
                   <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Zip Code</Label>
                   <Input
                     defaultValue={mockAgency.zipCode}
-                    className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-10"
+                    className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-10 px-6">
+          <Button className="bg-primary hover:bg-primary/90 text-white rounded-lg h-10 px-6">
             Save Changes
           </Button>
         </CardContent>

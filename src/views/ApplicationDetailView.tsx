@@ -54,7 +54,7 @@ export default function ApplicationDetailView() {
         <Button
           variant="ghost"
           onClick={() => navigate('applications')}
-          className="mt-4 text-indigo-400"
+          className="mt-4 text-primary"
         >
           <ArrowLeft className="h-4 w-4 mr-1" /> Back to Applications
         </Button>
@@ -109,7 +109,7 @@ export default function ApplicationDetailView() {
       <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
         <CardContent className="p-3 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm text-vvisa-text-secondary">
-            <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
+            <Loader2 className="h-4 w-4 animate-spin text-primary" />
             Checking for visas...
           </div>
           <div className="flex items-center gap-2">
@@ -188,10 +188,10 @@ export default function ApplicationDetailView() {
                       </div>
                     ))}
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-indigo-600/20 flex items-center justify-center shrink-0">
-                        <Check className="h-2.5 w-2.5 text-indigo-400" />
+                      <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                        <Check className="h-2.5 w-2.5 text-primary" />
                       </div>
-                      <span className="text-xs text-indigo-400 font-medium">Delivered before time</span>
+                      <span className="text-xs text-primary font-medium">Delivered before time</span>
                     </div>
                   </div>
                 )}

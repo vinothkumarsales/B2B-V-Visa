@@ -119,7 +119,7 @@ function SidebarNav({
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors cursor-pointer w-full text-left
               ${collapsed ? 'justify-center' : ''}
               ${isActive
-                ? 'bg-indigo-950/50 text-indigo-400 border-l-2 border-indigo-500'
+                ? 'bg-primary text-primary-foreground font-medium'
                 : 'text-vvisa-text-secondary hover:bg-vvisa-surface-2 hover:text-foreground'
               }
             `}
@@ -131,7 +131,7 @@ function SidebarNav({
             {!collapsed && item.badge && (
               <span className="text-xs text-vvisa-text-muted">{item.badge}</span>
             )}
-            {!collapsed && isActive && <ChevronRight className="size-3.5 shrink-0 text-indigo-500" />}
+            {!collapsed && isActive && <ChevronRight className="size-3.5 shrink-0 text-primary" />}
           </button>
         );
       })}
@@ -171,8 +171,8 @@ function SidebarContent({
       {/* Agency Info */}
       <div className={`p-4 ${collapsed ? 'flex justify-center' : ''}`}>
         <div className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
-          <Avatar className="size-9 shrink-0 bg-indigo-600">
-            <AvatarFallback className="bg-indigo-600 text-foreground text-xs font-semibold">
+          <Avatar className="size-9 shrink-0 bg-primary">
+            <AvatarFallback className="bg-primary text-foreground text-xs font-semibold">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -193,7 +193,7 @@ function SidebarContent({
       <div className={`px-4 mb-2 ${collapsed ? '' : ''}`}>
         <Button
           onClick={() => onNavigate('explore')}
-          className={`bg-indigo-600 hover:bg-indigo-500 text-foreground font-medium transition-colors cursor-pointer
+          className={`bg-primary hover:bg-indigo-500 text-foreground font-medium transition-colors cursor-pointer
             ${collapsed ? 'w-10 h-10 p-0 flex items-center justify-center' : 'w-full h-10'}
           `}
         >
@@ -293,7 +293,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex bg-vvisa-bg">
       {/* Desktop Sidebar — full on lg+, collapsed on md */}
-      <aside className="hidden md:flex flex-col w-60 lg:w-60 bg-vvisa-surface border-r border-vvisa-border shrink-0">
+      <aside className="hidden md:flex flex-col w-60 lg:w-60 bg-sidebar border-r border-sidebar-border shrink-0">
         <SidebarContent
           onNavigate={handleNavigate}
           activeRoute={currentView}
@@ -305,7 +305,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Nav */}
-        <header className="h-14 border-b border-vvisa-border bg-vvisa-bg flex items-center justify-between px-4 lg:px-6 shrink-0 sticky top-0 z-30">
+        <header className="h-14 border-b border-vvisa-border bg-background flex items-center justify-between px-4 lg:px-6 shrink-0 sticky top-0 z-30">
           {/* Left: Mobile hamburger + title */}
           <div className="flex items-center gap-3">
             {/* Mobile Sheet */}
@@ -321,7 +321,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
               </SheetTrigger>
               <SheetContent
                 side="left"
-                className="w-64 bg-vvisa-surface border-vvisa-border p-0"
+                className="w-64 bg-sidebar border-sidebar-border p-0"
               >
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <SidebarContent
@@ -360,15 +360,15 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
               className="relative text-vvisa-text-secondary hover:text-foreground hover:bg-vvisa-surface-2 cursor-pointer"
             >
               <Bell className="size-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full" />
             </Button>
 
             {/* Avatar Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 cursor-pointer">
-                  <Avatar className="size-8 bg-indigo-600">
-                    <AvatarFallback className="bg-indigo-600 text-foreground text-xs font-semibold">
+                  <Avatar className="size-8 bg-primary">
+                    <AvatarFallback className="bg-primary text-foreground text-xs font-semibold">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
@@ -384,21 +384,21 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                 <DropdownMenuSeparator className="bg-vvisa-border" />
                 <DropdownMenuItem
                   onClick={() => handleNavigate('profile')}
-                  className="text-sm text-vvisa-text-secondary focus:text-white focus:bg-vvisa-surface-2 cursor-pointer"
+                  className="text-sm text-vvisa-text-secondary focus:text-foreground focus:bg-vvisa-surface-2 cursor-pointer"
                 >
                   <User className="size-4 mr-2" />
                   Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleNavigate('wallet')}
-                  className="text-sm text-vvisa-text-secondary focus:text-white focus:bg-vvisa-surface-2 cursor-pointer"
+                  className="text-sm text-vvisa-text-secondary focus:text-foreground focus:bg-vvisa-surface-2 cursor-pointer"
                 >
                   <Wallet className="size-4 mr-2" />
                   Wallet
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleNavigate('change-password')}
-                  className="text-sm text-vvisa-text-secondary focus:text-white focus:bg-vvisa-surface-2 cursor-pointer"
+                  className="text-sm text-vvisa-text-secondary focus:text-foreground focus:bg-vvisa-surface-2 cursor-pointer"
                 >
                   <Lock className="size-4 mr-2" />
                   Change Password

@@ -60,7 +60,7 @@ export default function OverstayView() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search names..."
-          className="bg-vvisa-surface border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-10"
+          className="bg-vvisa-surface border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-10"
         />
       </div>
 

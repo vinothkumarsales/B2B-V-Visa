@@ -129,7 +129,7 @@ export default function ExploreView() {
                     onFocus={() => setShowDropdown(true)}
                     onKeyDown={handleKeyDown}
                     placeholder="Search destination..."
-                    className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-10"
+                    className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-10"
                   />
                   <AnimatePresence>
                     {showDropdown && goingTo.length > 0 && filteredDestinations.length > 0 && (
@@ -162,7 +162,7 @@ export default function ExploreView() {
                     type="date"
                     value={travelDate}
                     onChange={(e) => setTravelDate(e.target.value)}
-                    className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-10"
+                    className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-10"
                   />
                 </div>
               </div>
@@ -174,13 +174,13 @@ export default function ExploreView() {
                     type="date"
                     value={returnDate}
                     onChange={(e) => setReturnDate(e.target.value)}
-                    className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-10"
+                    className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-10"
                   />
                 </div>
               </div>
               <Button
                 onClick={handleSearch}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white h-10 px-5 rounded-lg flex items-center gap-2 shrink-0 w-full lg:w-auto"
+                className="bg-primary hover:bg-primary/90 text-white h-10 px-5 rounded-lg flex items-center gap-2 shrink-0 w-full lg:w-auto"
               >
                 <Search className="h-4 w-4" />
                 Search
@@ -232,7 +232,7 @@ export default function ExploreView() {
                   {visa.category === 'LIGHTNING_FAST' && (
                     <p className="text-xs text-vvisa-text-secondary mt-1 ml-6">
                       Estimated visa arrival by{' '}
-                      <span className="text-indigo-400 font-medium">{estArrival}</span>
+                      <span className="text-primary font-medium">{estArrival}</span>
                     </p>
                   )}
                 </div>
@@ -260,7 +260,7 @@ export default function ExploreView() {
                       <p className="text-xs text-vvisa-text-muted">Documents</p>
                       <button
                         onClick={() => handleViewDocs(visa)}
-                        className="text-sm text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1 transition-colors"
+                        className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1 transition-colors"
                       >
                         View Here <ArrowRight className="h-3 w-3" />
                       </button>
@@ -279,7 +279,7 @@ export default function ExploreView() {
                     <Button
                       onClick={() => handleSelectVisa(visa)}
                       variant="outline"
-                      className="border-indigo-600 text-indigo-400 hover:bg-indigo-600/10 hover:text-indigo-300 rounded-lg flex items-center gap-1.5"
+                      className="border-indigo-600 text-primary hover:bg-primary/10 hover:text-primary/80 rounded-lg flex items-center gap-1.5"
                     >
                       Select <ArrowRight className="h-3.5 w-3.5" />
                     </Button>
@@ -304,7 +304,7 @@ export default function ExploreView() {
         <DialogContent className="bg-vvisa-surface border border-vvisa-border rounded-xl max-w-md">
           <DialogHeader>
             <DialogTitle className="text-foreground flex items-center gap-2">
-              <FileText className="h-5 w-5 text-indigo-400" />
+              <FileText className="h-5 w-5 text-primary" />
               Required Documents
             </DialogTitle>
           </DialogHeader>
@@ -319,7 +319,7 @@ export default function ExploreView() {
                     key={i}
                     className="flex items-center gap-3 p-2.5 rounded-lg bg-vvisa-bg border border-vvisa-border"
                   >
-                    <FileText className="h-4 w-4 text-indigo-400 shrink-0" />
+                    <FileText className="h-4 w-4 text-primary shrink-0" />
                     <span className="text-sm text-foreground">{doc}</span>
                   </li>
                 ))}

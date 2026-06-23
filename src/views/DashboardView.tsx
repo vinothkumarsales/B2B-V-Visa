@@ -96,7 +96,7 @@ export default function DashboardView() {
                   onFocus={() => setShowDropdown(true)}
                   onKeyDown={handleKeyDown}
                   placeholder="Search destination..."
-                  className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-11"
+                  className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-11"
                 />
                 <AnimatePresence>
                   {showDropdown && goingTo.length > 0 && filteredDestinations.length > 0 && (
@@ -130,7 +130,7 @@ export default function DashboardView() {
                   type="date"
                   value={travelDate}
                   onChange={(e) => setTravelDate(e.target.value)}
-                  className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-11"
+                  className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-11"
                 />
               </div>
             </div>
@@ -143,14 +143,14 @@ export default function DashboardView() {
                   type="date"
                   value={returnDate}
                   onChange={(e) => setReturnDate(e.target.value)}
-                  className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-11"
+                  className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-11"
                 />
               </div>
             </div>
             {/* Search Button */}
             <Button
               onClick={handleSearch}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white h-11 px-6 rounded-lg flex items-center gap-2 shrink-0 w-full lg:w-auto"
+              className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-lg flex items-center gap-2 shrink-0 w-full lg:w-auto"
             >
               <Search className="h-4 w-4" />
               Search
@@ -159,7 +159,7 @@ export default function DashboardView() {
 
           {/* Tabs */}
           <div className="flex gap-6 mt-5 border-b border-vvisa-border">
-            <button className="pb-2.5 text-sm font-medium text-indigo-400 border-b-2 border-indigo-500">
+            <button className="pb-2.5 text-sm font-medium text-primary border-b-2 border-primary">
               Visas
             </button>
             <button className="pb-2.5 text-sm font-medium text-vvisa-text-muted cursor-not-allowed" disabled>
@@ -199,12 +199,12 @@ export default function DashboardView() {
             </Card>
             <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
               <CardContent className="p-4 flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-indigo-950/30">
-                  <Wallet className="h-5 w-5 text-indigo-400" />
+                <div className="p-2.5 rounded-lg bg-primary/10">
+                  <Wallet className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-xs text-vvisa-text-muted">Wallet Balance</p>
-                  <p className="text-xl font-bold text-indigo-400 font-mono">{formatINR(stats.walletBalance)}</p>
+                  <p className="text-xl font-bold text-primary font-mono">{formatINR(stats.walletBalance)}</p>
                 </div>
               </CardContent>
             </Card>
@@ -217,7 +217,7 @@ export default function DashboardView() {
               <span className="text-xs text-vvisa-border-active font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
               <button
                 onClick={() => navigate('applications')}
-                className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
+                className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
               >
                 View All Applications <ArrowRight className="h-3.5 w-3.5" />
               </button>
@@ -284,27 +284,27 @@ export default function DashboardView() {
                 </button>
                 <CardContent className="p-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="h-5 w-5 text-indigo-400" />
+                    <Sparkles className="h-5 w-5 text-primary" />
                     <h3 className="text-sm font-semibold text-foreground">VVisa Alliance Program</h3>
                   </div>
                   <p className="text-sm font-medium text-foreground mb-2">Introducing the VVisa Alliance Program</p>
                   <ul className="space-y-1.5 mb-4">
                     <li className="text-xs text-vvisa-text-secondary flex items-start gap-1.5">
-                      <span className="text-indigo-400 mt-0.5">•</span>
+                      <span className="text-primary mt-0.5">•</span>
                       Earn commissions on every referral
                     </li>
                     <li className="text-xs text-vvisa-text-secondary flex items-start gap-1.5">
-                      <span className="text-indigo-400 mt-0.5">•</span>
+                      <span className="text-primary mt-0.5">•</span>
                       Track links in real-time
                     </li>
                     <li className="text-xs text-vvisa-text-secondary flex items-start gap-1.5">
-                      <span className="text-indigo-400 mt-0.5">•</span>
+                      <span className="text-primary mt-0.5">•</span>
                       Dedicated support
                     </li>
                   </ul>
                   <Button
                     onClick={() => navigate('alliance')}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm h-9"
+                    className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg text-sm h-9"
                   >
                     Learn More
                   </Button>

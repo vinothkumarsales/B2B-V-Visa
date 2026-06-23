@@ -45,7 +45,7 @@ function DashboardContent() {
         <div className="flex items-center justify-center h-96">
           <div className="flex flex-col items-center gap-4">
             <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-[#6B7280] text-sm">Loading...</span>
+            <span className="text-vvisa-text-muted text-sm">Loading...</span>
           </div>
         </div>
       }

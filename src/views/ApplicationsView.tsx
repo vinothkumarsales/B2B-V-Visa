@@ -133,7 +133,7 @@ export default function ApplicationsView() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name or passport..."
-            className="bg-vvisa-surface border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-10"
+            className="bg-vvisa-surface border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-10"
           />
         </div>
         <div className="relative">
@@ -142,7 +142,7 @@ export default function ApplicationsView() {
             type="date"
             value={travelDate}
             onChange={(e) => setTravelDate(e.target.value)}
-            className="bg-vvisa-surface border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-10 w-48"
+            className="bg-vvisa-surface border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-10 w-48"
           />
         </div>
         <Select value={destination} onValueChange={setDestination}>
@@ -189,7 +189,7 @@ export default function ApplicationsView() {
             value="DRAFT"
             className="data-[state=active]:bg-vvisa-surface-2 data-[state=active]:text-foreground text-vvisa-text-muted rounded-md px-3 py-2 text-xs sm:text-sm flex items-center gap-1.5"
           >
-            Draft <Badge variant="secondary" className="bg-gray-800/50 text-gray-400 text-xs border-0">{tabCounts.DRAFT}</Badge>
+            Draft <Badge variant="secondary" className="bg-vvisa-surface-2 text-vvisa-text-muted text-xs border-0">{tabCounts.DRAFT}</Badge>
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -273,7 +273,7 @@ function GroupCard({ app, onViewGroup }: { app: VisaApplication; onViewGroup: ()
           </div>
           <Button
             variant="ghost"
-            className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-950/20 text-sm p-0 h-auto shrink-0"
+            className="text-primary hover:text-primary/80 hover:bg-primary/10 text-sm p-0 h-auto shrink-0"
           >
             View Group <ArrowRight className="h-3.5 w-3.5 ml-1" />
           </Button>
@@ -319,7 +319,7 @@ function GroupCard({ app, onViewGroup }: { app: VisaApplication; onViewGroup: ()
           <span className="text-[10px] text-vvisa-text-muted font-mono">{CLIENT_ID}</span>
           <Button
             variant="ghost"
-            className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-950/20 text-xs p-0 h-auto"
+            className="text-primary hover:text-primary/80 hover:bg-primary/10 text-xs p-0 h-auto"
           >
             View Group <ArrowRight className="h-3 w-3 ml-1" />
           </Button>
@@ -401,10 +401,10 @@ function IndividualApprovedCard({ app }: { app: VisaApplication }) {
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-indigo-600/20 flex items-center justify-center shrink-0">
-                  <Check className="h-2.5 w-2.5 text-indigo-400" />
+                <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <Check className="h-2.5 w-2.5 text-primary" />
                 </div>
-                <span className="text-xs text-indigo-400 font-medium">before time</span>
+                <span className="text-xs text-primary font-medium">before time</span>
               </div>
             </div>
           </div>

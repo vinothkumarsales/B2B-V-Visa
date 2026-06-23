@@ -275,7 +275,7 @@ function TravelerCard({
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-indigo-600/20 flex items-center justify-center text-sm font-bold text-indigo-400">
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">
               {index + 1}
             </div>
             <div>
@@ -292,7 +292,7 @@ function TravelerCard({
                   </span>
                 )}
                 {traveler.ocrStatus === 'scanning' && (
-                  <span className="inline-flex items-center gap-1 text-[10px] text-indigo-400">
+                  <span className="inline-flex items-center gap-1 text-[10px] text-primary">
                     <Loader2 className="h-3 w-3 animate-spin" /> Scanning with ocr.z.ai...
                   </span>
                 )}
@@ -346,7 +346,7 @@ function TravelerCard({
             <div className="px-4 sm:px-5 pb-5 border-t border-vvisa-border">
               <div className="flex items-center justify-between mt-4 mb-1">
                 <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
-                  <Scan className="h-4 w-4 text-indigo-400" />
+                  <Scan className="h-4 w-4 text-primary" />
                   Passport Upload & OCR Scan
                 </h4>
                 <span className="text-[9px] text-vvisa-border-active font-mono">{CLIENT_ID}</span>
@@ -356,7 +356,7 @@ function TravelerCard({
               <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-950/30 border border-amber-800/30 mb-4">
                 <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-200/80">
-                  VVisa uses <span className="text-indigo-400 font-medium">ocr.z.ai</span> for 99.9% accurate passport scanning. Upload a clear passport image and details will be filled automatically. However, it is mandatory to review the information before submitting.
+                  VVisa uses <span className="text-primary font-medium">ocr.z.ai</span> for 99.9% accurate passport scanning. Upload a clear passport image and details will be filled automatically. However, it is mandatory to review the information before submitting.
                 </p>
               </div>
 
@@ -365,10 +365,10 @@ function TravelerCard({
                 <div
                   className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center transition-all min-h-[200px] cursor-pointer
                     ${traveler.ocrStatus === 'scanning'
-                      ? 'border-indigo-500 bg-indigo-950/10'
+                      ? 'border-primary bg-primary/5'
                       : traveler.ocrStatus === 'done'
                         ? 'border-emerald-500/50 bg-emerald-950/10'
-                        : 'border-vvisa-border hover:border-indigo-500/50'
+                        : 'border-vvisa-border hover:border-primary/50'
                     }`}
                   onClick={() => passportInputRef.current?.click()}
                 >
@@ -382,8 +382,8 @@ function TravelerCard({
 
                   {traveler.ocrStatus === 'scanning' ? (
                     <>
-                      <Loader2 className="h-8 w-8 text-indigo-400 animate-spin mb-3" />
-                      <p className="text-sm text-indigo-400 font-medium mb-1">Scanning with ocr.z.ai...</p>
+                      <Loader2 className="h-8 w-8 text-primary animate-spin mb-3" />
+                      <p className="text-sm text-primary font-medium mb-1">Scanning with ocr.z.ai...</p>
                       <p className="text-xs text-vvisa-text-muted">Extracting passport data</p>
                     </>
                   ) : traveler.ocrStatus === 'done' ? (
@@ -398,7 +398,7 @@ function TravelerCard({
                     <>
                       <Upload className="h-8 w-8 text-vvisa-text-muted mb-3" />
                       <p className="text-sm text-vvisa-text-secondary mb-1">Drag & drop passport image</p>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-950/30 border border-indigo-800/30 text-[10px] text-indigo-400 font-medium">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] text-primary font-medium">
                         <Scan className="h-3 w-3" />
                         Powered by ocr.z.ai
                       </span>
@@ -425,7 +425,7 @@ function TravelerCard({
                       value={traveler.passportNumber}
                       onChange={(e) => onUpdate(traveler.id, 'passportNumber', e.target.value)}
                       placeholder="Auto-filled after upload"
-                      className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-9 text-sm mt-1"
+                      className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -435,7 +435,7 @@ function TravelerCard({
                         value={traveler.firstName}
                         onChange={(e) => onUpdate(traveler.id, 'firstName', e.target.value)}
                         placeholder="First name"
-                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-9 text-sm mt-1"
+                        className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1"
                       />
                     </div>
                     <div>
@@ -444,7 +444,7 @@ function TravelerCard({
                         value={traveler.lastName}
                         onChange={(e) => onUpdate(traveler.id, 'lastName', e.target.value)}
                         placeholder="Last name"
-                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-9 text-sm mt-1"
+                        className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1"
                       />
                     </div>
                   </div>
@@ -455,7 +455,7 @@ function TravelerCard({
                         value={traveler.nationality}
                         onChange={(e) => onUpdate(traveler.id, 'nationality', e.target.value)}
                         placeholder="Indian"
-                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-9 text-sm mt-1"
+                        className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1"
                       />
                     </div>
                     <div>
@@ -464,7 +464,7 @@ function TravelerCard({
                         value={traveler.sex}
                         onChange={(e) => onUpdate(traveler.id, 'sex', e.target.value)}
                         placeholder="Male / Female"
-                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-9 text-sm mt-1"
+                        className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1"
                       />
                     </div>
                   </div>
@@ -474,7 +474,7 @@ function TravelerCard({
                       type="date"
                       value={traveler.dateOfBirth}
                       onChange={(e) => onUpdate(traveler.id, 'dateOfBirth', e.target.value)}
-                      className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-9 text-sm mt-1"
+                      className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -484,7 +484,7 @@ function TravelerCard({
                         value={traveler.placeOfBirth}
                         onChange={(e) => onUpdate(traveler.id, 'placeOfBirth', e.target.value)}
                         placeholder="City"
-                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-9 text-sm mt-1"
+                        className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1"
                       />
                     </div>
                     <div>
@@ -493,7 +493,7 @@ function TravelerCard({
                         value={traveler.placeOfIssue}
                         onChange={(e) => onUpdate(traveler.id, 'placeOfIssue', e.target.value)}
                         placeholder="City"
-                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-9 text-sm mt-1"
+                        className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1"
                       />
                     </div>
                   </div>
@@ -504,7 +504,7 @@ function TravelerCard({
                         value={traveler.maritalStatus}
                         onChange={(e) => onUpdate(traveler.id, 'maritalStatus', e.target.value)}
                         placeholder="Single"
-                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-9 text-sm mt-1"
+                        className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1"
                       />
                     </div>
                     <div>
@@ -513,7 +513,7 @@ function TravelerCard({
                         type="date"
                         value={traveler.dateOfIssue}
                         onChange={(e) => onUpdate(traveler.id, 'dateOfIssue', e.target.value)}
-                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-9 text-sm mt-1"
+                        className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1"
                       />
                     </div>
                     <div>
@@ -522,7 +522,7 @@ function TravelerCard({
                         type="date"
                         value={traveler.dateOfExpiry}
                         onChange={(e) => onUpdate(traveler.id, 'dateOfExpiry', e.target.value)}
-                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-9 text-sm mt-1"
+                        className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1"
                       />
                     </div>
                   </div>
@@ -534,13 +534,13 @@ function TravelerCard({
 
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-indigo-400" />
+                  <FileText className="h-4 w-4 text-primary" />
                   Required Documents for Traveler {index + 1}
                   <span className="text-xs text-vvisa-text-muted font-normal">({requiredDocs.length} document{requiredDocs.length !== 1 ? 's' : ''})</span>
                 </h4>
                 <button
                   onClick={() => setShowAddDocs(!showAddDocs)}
-                  className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
+                  className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
                 >
                   {showAddDocs ? 'Hide' : 'Show'} Documents
                   {showAddDocs ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
@@ -577,7 +577,7 @@ function TravelerCard({
                               className={`border border-dashed rounded-lg p-3 flex flex-col items-center justify-center text-center transition-colors cursor-pointer h-20
                                 ${uploadedName
                                   ? 'border-emerald-500/50 bg-emerald-950/10'
-                                  : 'border-vvisa-border hover:border-indigo-500/50'
+                                  : 'border-vvisa-border hover:border-primary/50'
                                 }`}
                               onClick={() => docInputRefs.current[doc.key]?.click()}
                             >
@@ -591,7 +591,7 @@ function TravelerCard({
                                 <>
                                   <Scan className="h-3.5 w-3.5 text-vvisa-text-muted mb-1" />
                                   <p className="text-xs text-vvisa-text-muted">Click to upload</p>
-                                  <span className="inline-flex items-center gap-0.5 text-[9px] text-indigo-400 mt-0.5">
+                                  <span className="inline-flex items-center gap-0.5 text-[9px] text-primary mt-0.5">
                                     <Scan className="h-2.5 w-2.5" /> ocr.z.ai ready
                                   </span>
                                 </>
@@ -649,11 +649,11 @@ function ProgressStepper({ currentStep }: { currentStep: number }) {
               <div key={i} className="flex items-start gap-3">
                 <div className="flex flex-col items-center">
                   {isCompleted ? (
-                    <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
                       <Check className="h-3.5 w-3.5 text-white" />
                     </div>
                   ) : isActive ? (
-                    <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center shrink-0 ring-4 ring-indigo-600/20">
+                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0 ring-4 ring-primary/20">
                       <Circle className="h-2 w-2 text-white fill-white" />
                     </div>
                   ) : (
@@ -662,7 +662,7 @@ function ProgressStepper({ currentStep }: { currentStep: number }) {
                     </div>
                   )}
                   {i < steps.length - 1 && (
-                    <div className={`w-0.5 h-6 ${isCompleted ? 'bg-indigo-600' : 'bg-vvisa-border'}`} />
+                    <div className={`w-0.5 h-6 ${isCompleted ? 'bg-primary' : 'bg-vvisa-border'}`} />
                   )}
                 </div>
                 <p className={`text-xs pt-1 ${isActive ? 'text-foreground font-medium' : isCompleted ? 'text-vvisa-text-secondary' : 'text-vvisa-text-muted'}`}>
@@ -794,13 +794,13 @@ export default function ApplyView() {
               >
                 <ToggleGroupItem
                   value="individual"
-                  className="data-[state=on]:bg-indigo-600 data-[state=on]:text-white text-vvisa-text-secondary rounded-md px-4 h-9 text-sm"
+                  className="data-[state=on]:bg-primary data-[state=on]:text-white text-vvisa-text-secondary rounded-md px-4 h-9 text-sm"
                 >
                   Individual
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="group"
-                  className="data-[state=on]:bg-indigo-600 data-[state=on]:text-white text-vvisa-text-secondary rounded-md px-4 h-9 text-sm"
+                  className="data-[state=on]:bg-primary data-[state=on]:text-white text-vvisa-text-secondary rounded-md px-4 h-9 text-sm"
                 >
                   Group
                 </ToggleGroupItem>
@@ -812,7 +812,7 @@ export default function ApplyView() {
                 value={internalId}
                 onChange={(e) => setInternalId(e.target.value)}
                 placeholder="e.g. C7612934"
-                className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-10"
+                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
               />
             </div>
             {appType === 'group' && (
@@ -822,7 +822,7 @@ export default function ApplyView() {
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
                   placeholder="e.g. SAPNA CHHAJER"
-                  className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-10"
+                  className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                 />
               </div>
             )}
@@ -830,12 +830,12 @@ export default function ApplyView() {
 
           {/* Visa Type Display */}
           {selectedVisaType && (
-            <div className="mt-4 p-3 rounded-lg bg-indigo-950/20 border border-indigo-800/30 flex items-center justify-between">
+            <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/20 flex items-center justify-between">
               <div>
                 <p className="text-xs text-vvisa-text-muted">Selected Visa Type</p>
                 <p className="text-sm font-medium text-foreground">{selectedVisaType.name}</p>
               </div>
-              <span className="text-sm font-bold font-mono text-indigo-400">
+              <span className="text-sm font-bold font-mono text-primary">
                 {formatINR(selectedVisaType.price)}
               </span>
             </div>
@@ -880,7 +880,7 @@ export default function ApplyView() {
           <Button
             variant="outline"
             onClick={handleAddTraveler}
-            className="w-full border-dashed border-vvisa-border text-vvisa-text-secondary hover:bg-vvisa-surface-2 hover:text-foreground hover:border-indigo-500/50 rounded-xl h-12 flex items-center gap-2 text-sm transition-all"
+            className="w-full border-dashed border-vvisa-border text-vvisa-text-secondary hover:bg-vvisa-surface-2 hover:text-foreground hover:border-primary/50 rounded-xl h-12 flex items-center gap-2 text-sm transition-all"
           >
             <Plus className="h-4 w-4" />
             Add Another Traveler
@@ -894,7 +894,7 @@ export default function ApplyView() {
             <Button
               onClick={handleSubmit}
               disabled={submitting || !selectedVisaType}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-11 flex items-center justify-center gap-2"
+              className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-11 flex items-center justify-center gap-2"
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {submitting ? 'Submitting...' : 'Review and Save'} <ArrowRight className="h-4 w-4" />
@@ -935,7 +935,7 @@ export default function ApplyView() {
 
                 <div className="flex justify-between items-center mb-5">
                   <span className="text-xs text-vvisa-text-muted">Current Wallet Balance</span>
-                  <span className="text-sm font-mono text-indigo-400">{formatINR(walletBalance)}</span>
+                  <span className="text-sm font-mono text-primary">{formatINR(walletBalance)}</span>
                 </div>
 
                 <div className="flex justify-between items-center mb-5">
@@ -948,7 +948,7 @@ export default function ApplyView() {
                 <Button
                   onClick={handleSubmit}
                   disabled={submitting || !selectedVisaType || walletBalance < total}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-10 flex items-center justify-center gap-2 text-sm"
+                  className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-10 flex items-center justify-center gap-2 text-sm"
                 >
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   {submitting ? 'Submitting...' : 'Review and Save'} <ArrowRight className="h-4 w-4" />
@@ -1002,7 +1002,7 @@ export default function ApplyView() {
                   {/* Transaction ID */}
                   <div className="bg-vvisa-bg border border-vvisa-border rounded-xl p-4 mb-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Receipt className="h-4 w-4 text-indigo-400" />
+                      <Receipt className="h-4 w-4 text-primary" />
                       <span className="text-xs text-vvisa-text-secondary font-medium">Unique Transaction ID</span>
                     </div>
                     <div className="flex items-center justify-between gap-2">
@@ -1045,7 +1045,7 @@ export default function ApplyView() {
                   <div className="flex gap-3">
                     <Button
                       onClick={() => { setSubmitResult(null); navigate('applications'); }}
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-10 text-sm"
+                      className="flex-1 bg-primary hover:bg-primary/90 text-white rounded-lg h-10 text-sm"
                     >
                       View Applications
                     </Button>

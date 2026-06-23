@@ -101,12 +101,12 @@ export default function WalletView() {
                 onClick={() => setDepositTab(tab.key)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   depositTab === tab.key
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-primary text-white'
                     : 'bg-vvisa-surface border border-vvisa-border text-vvisa-text-secondary hover:bg-vvisa-surface-2'
                 }`}
               >
                 {tab.label}
-                <span className={`ml-1.5 text-xs ${depositTab === tab.key ? 'text-indigo-200' : 'text-vvisa-text-muted'}`}>
+                <span className={`ml-1.5 text-xs ${depositTab === tab.key ? 'text-primary-foreground/60' : 'text-vvisa-text-muted'}`}>
                   ({tab.fee} fee)
                 </span>
               </button>
@@ -240,14 +240,14 @@ export default function WalletView() {
                     <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Card Number</Label>
                     <Input
                       placeholder="4242 4242 4242 4242"
-                      className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-10"
+                      className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                     />
                   </div>
                   <div>
                     <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Expiry</Label>
                     <Input
                       placeholder="MM/YY"
-                      className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-10"
+                      className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                     />
                   </div>
                   <div>
@@ -255,7 +255,7 @@ export default function WalletView() {
                     <Input
                       placeholder="•••"
                       type="password"
-                      className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-10"
+                      className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                     />
                   </div>
                 </div>
@@ -264,10 +264,10 @@ export default function WalletView() {
                   <Input
                     placeholder="Enter amount"
                     type="number"
-                    className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground h-10 font-mono"
+                    className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10 font-mono"
                   />
                 </div>
-                <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-10 flex items-center justify-center gap-2">
+                <Button className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg h-10 flex items-center justify-center gap-2">
                   <CreditCard className="h-4 w-4" />
                   Pay with Credit Card
                 </Button>
@@ -298,7 +298,7 @@ export default function WalletView() {
                   <Input
                     placeholder="Enter amount"
                     type="number"
-                    className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-8 pr-3 h-10 font-mono"
+                    className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-8 pr-3 h-10 font-mono"
                   />
                 </div>
                 <p className="text-xs text-vvisa-text-muted mt-1">Available: {formatINR(walletBalance)}</p>
@@ -309,7 +309,7 @@ export default function WalletView() {
                   HDFC Bank · ••••3456 (Registered)
                 </p>
               </div>
-              <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-10">
+              <Button className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg h-10">
                 Request Withdrawal
               </Button>
             </CardContent>

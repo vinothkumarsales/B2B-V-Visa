@@ -59,7 +59,7 @@ export default function ChangePasswordView() {
                 type={showCurrent ? 'text' : 'password'}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pr-9 h-10"
+                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground pr-9 h-10"
               />
               <button
                 type="button"
@@ -78,7 +78,7 @@ export default function ChangePasswordView() {
                 type={showNew ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pr-9 h-10"
+                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground pr-9 h-10"
               />
               <button
                 type="button"
@@ -97,7 +97,7 @@ export default function ChangePasswordView() {
                 type={showConfirm ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pr-9 h-10"
+                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground pr-9 h-10"
               />
               <button
                 type="button"
@@ -109,7 +109,7 @@ export default function ChangePasswordView() {
             </div>
           </div>
 
-          <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-10 mt-2">
+          <Button className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg h-10 mt-2">
             Update Password
           </Button>
         </CardContent>

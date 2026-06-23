@@ -59,49 +59,49 @@
   --color-vvisa-text-muted: var(--vvisa-text-muted);
 }
 
-/* ==================== LIGHT MODE (default) ==================== */
+/* ==================== BLUE THEME (default / "bright" mode) ==================== */
 :root {
   --radius: 0.75rem;
-  --background: #F8FAFC;
-  --foreground: #0F172A;
-  --card: #FFFFFF;
-  --card-foreground: #0F172A;
-  --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
-  --primary: #4F46E5;
+  --background: #0A2364;
+  --foreground: #FFFFFF;
+  --card: #0F2C5A;
+  --card-foreground: #FFFFFF;
+  --popover: #0F2C5A;
+  --popover-foreground: #FFFFFF;
+  --primary: #6366F1;
   --primary-foreground: #FFFFFF;
-  --secondary: #F1F5F9;
-  --secondary-foreground: #0F172A;
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B;
-  --accent: #F1F5F9;
-  --accent-foreground: #0F172A;
+  --secondary: #1A3A6E;
+  --secondary-foreground: #FFFFFF;
+  --muted: #1A3A6E;
+  --muted-foreground: #8A9BB0;
+  --accent: #1A3A6E;
+  --accent-foreground: #FFFFFF;
   --destructive: #EF4444;
-  --border: #E2E8F0;
-  --input: #E2E8F0;
-  --ring: #4F46E5;
-  --chart-1: #4F46E5;
-  --chart-2: #10B981;
+  --border: #1A3A6E;
+  --input: #1A3A6E;
+  --ring: #6366F1;
+  --chart-1: #6366F1;
+  --chart-2: #22C55E;
   --chart-3: #F59E0B;
   --chart-4: #3B82F6;
   --chart-5: #EF4444;
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #0F172A;
-  --sidebar-primary: #4F46E5;
+  --sidebar: #0A2364;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #6366F1;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F1F5F9;
-  --sidebar-accent-foreground: #0F172A;
-  --sidebar-border: #E2E8F0;
-  --sidebar-ring: #4F46E5;
+  --sidebar-accent: #1E3A6A;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #1A3A6E;
+  --sidebar-ring: #6366F1;
 
-  /* VVisa semantic light colors */
-  --vvisa-bg: #F8FAFC;
-  --vvisa-surface: #FFFFFF;
-  --vvisa-surface-2: #F1F5F9;
-  --vvisa-border-color: #E2E8F0;
-  --vvisa-border-active: #94A3B8;
-  --vvisa-text-secondary: #475569;
-  --vvisa-text-muted: #64748B;
+  /* VVisa semantic blue theme colors */
+  --vvisa-bg: #0A2364;
+  --vvisa-surface: #0F2C5A;
+  --vvisa-surface-2: #1A3A6E;
+  --vvisa-border-color: #1A3A6E;
+  --vvisa-border-active: #2A4F8E;
+  --vvisa-text-secondary: #B8C5D1;
+  --vvisa-text-muted: #8A9BB0;
 }
 
 /* ==================== DARK MODE ==================== */
