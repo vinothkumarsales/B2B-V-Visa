@@ -42,25 +42,70 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* VVisa Brand Colors */
-  --color-vvisa-bg: #0A0A0F;
-  --color-vvisa-surface: #111118;
-  --color-vvisa-surface-2: #1A1A24;
-  --color-vvisa-border: #2A2A38;
-  --color-vvisa-border-active: #3D3D54;
+  /* VVisa Brand Colors — theme-aware via CSS vars */
+  --color-vvisa-bg: var(--vvisa-bg);
+  --color-vvisa-surface: var(--vvisa-surface);
+  --color-vvisa-surface-2: var(--vvisa-surface-2);
+  --color-vvisa-border: var(--vvisa-border-color);
+  --color-vvisa-border-active: var(--vvisa-border-active);
   --color-vvisa-brand: #4F46E5;
   --color-vvisa-brand-light: #6366F1;
   --color-vvisa-gold: #F59E0B;
   --color-vvisa-green: #10B981;
   --color-vvisa-red: #EF4444;
   --color-vvisa-blue: #3B82F6;
-  --color-vvisa-text: #F9FAFB;
-  --color-vvisa-text-secondary: #9CA3AF;
-  --color-vvisa-text-muted: #6B7280;
+  --color-vvisa-text: var(--foreground);
+  --color-vvisa-text-secondary: var(--vvisa-text-secondary);
+  --color-vvisa-text-muted: var(--vvisa-text-muted);
 }
 
+/* ==================== LIGHT MODE (default) ==================== */
 :root {
   --radius: 0.75rem;
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --primary: #4F46E5;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F1F5F9;
+  --secondary-foreground: #0F172A;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --accent: #F1F5F9;
+  --accent-foreground: #0F172A;
+  --destructive: #EF4444;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #4F46E5;
+  --chart-1: #4F46E5;
+  --chart-2: #10B981;
+  --chart-3: #F59E0B;
+  --chart-4: #3B82F6;
+  --chart-5: #EF4444;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #0F172A;
+  --sidebar-primary: #4F46E5;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F1F5F9;
+  --sidebar-accent-foreground: #0F172A;
+  --sidebar-border: #E2E8F0;
+  --sidebar-ring: #4F46E5;
+
+  /* VVisa semantic light colors */
+  --vvisa-bg: #F8FAFC;
+  --vvisa-surface: #FFFFFF;
+  --vvisa-surface-2: #F1F5F9;
+  --vvisa-border-color: #E2E8F0;
+  --vvisa-border-active: #94A3B8;
+  --vvisa-text-secondary: #475569;
+  --vvisa-text-muted: #64748B;
+}
+
+/* ==================== DARK MODE ==================== */
+.dark {
   --background: #0A0A0F;
   --foreground: #F9FAFB;
   --card: #111118;
@@ -92,6 +137,15 @@
   --sidebar-accent-foreground: #F9FAFB;
   --sidebar-border: #2A2A38;
   --sidebar-ring: #4F46E5;
+
+  /* VVisa semantic dark colors */
+  --vvisa-bg: #0A0A0F;
+  --vvisa-surface: #111118;
+  --vvisa-surface-2: #1A1A24;
+  --vvisa-border-color: #2A2A38;
+  --vvisa-border-active: #3D3D54;
+  --vvisa-text-secondary: #9CA3AF;
+  --vvisa-text-muted: #6B7280;
 }
 
 /* Scrollbar Styling */
@@ -101,16 +155,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #0A0A0F;
+  background: var(--vvisa-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2A2A38;
+  background: var(--vvisa-border-color);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3D3D54;
+  background: var(--vvisa-border-active);
 }
 
 @layer base {
@@ -118,7 +172,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-[#0A0A0F] text-[#F9FAFB] font-sans;
+    @apply bg-background text-foreground font-sans;
   }
 }
 
@@ -129,7 +183,7 @@
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, #1A1A24 25%, #222230 50%, #1A1A24 75%);
+  background: linear-gradient(90deg, var(--vvisa-surface-2) 25%, var(--vvisa-border-color) 50%, var(--vvisa-surface-2) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
@@ -157,5 +211,5 @@
 /* Custom selection */
 ::selection {
   background: rgba(79, 70, 229, 0.3);
-  color: #F9FAFB;
+  color: var(--foreground);
 }

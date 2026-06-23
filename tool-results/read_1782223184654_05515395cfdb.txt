@@ -1,0 +1,865 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import { useState, useRef, useCallback, useMemo } from 'react';
+     4→     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→     5→import { useAppStore } from '@/store/app.store';
+     6→     6→import { Button } from '@/components/ui/button';
+     7→     7→import { Input } from '@/components/ui/input';
+     8→     8→import { Label } from '@/components/ui/label';
+     9→     9→import { Card, CardContent } from '@/components/ui/card';
+    10→    10→import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+    11→    11→import { Separator } from '@/components/ui/separator';
+    12→    12→import {
+    13→    13→  Upload, AlertTriangle, Plus, ArrowRight, Check, Circle, Scan,
+    14→    14→  Loader2, X, FileCheck, ChevronDown, ChevronUp, Image as ImageIcon,
+    15→    15→  Trash2, FileText,
+    16→    16→} from 'lucide-react';
+    17→    17→
+    18→    18→const pageVariants = {
+    19→    19→  initial: { opacity: 0, y: 8 },
+    20→    20→  animate: { opacity: 1, y: 0 },
+    21→    21→  exit: { opacity: 0, y: -8 },
+    22→    22→};
+    23→    23→
+    24→    24→const CLIENT_ID = 'enKOdaUD6df8RHXgzoP723VOvHA2';
+    25→    25→
+    26→    26→function formatINR(amount: number): string {
+    27→    27→  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+    28→    28→}
+    29→    29→
+    30→    30→interface TravelerData {
+    31→    31→  id: string;
+    32→    32→  passportNumber: string;
+    33→    33→  firstName: string;
+    34→    34→  lastName: string;
+    35→    35→  nationality: string;
+    36→    36→  sex: string;
+    37→    37→  dateOfBirth: string;
+    38→    38→  placeOfBirth: string;
+    39→    39→  placeOfIssue: string;
+    40→    40→  maritalStatus: string;
+    41→    41→  dateOfIssue: string;
+    42→    42→  dateOfExpiry: string;
+    43→    43→  passportFileName: string;
+    44→    44→  ocrStatus: 'idle' | 'scanning' | 'done' | 'error';
+    45→    45→  ocrError: string;
+    46→    46→  additionalDocs: { [key: string]: string | null };
+    47→    47→  expanded: boolean;
+    48→    48→}
+    49→    49→
+    50→    50→// Map document names from visa types to upload zone metadata
+    51→    51→const docNameToMeta: Record<string, { key: string; helper: string }> = {
+    52→    52→  'Travel Itinerary': { key: 'travelItinerary', helper: 'Flight tickets or travel plan' },
+    53→    53→  'Bank Statement': { key: 'bankStatement', helper: 'Last 6 months bank statement' },
+    54→    54→  'Hotel Booking': { key: 'hotelBooking', helper: 'Confirmed hotel reservation' },
+    55→    55→  'National ID': { key: 'nationalId', helper: 'Aadhar card or voter ID' },
+    56→    56→  'ITR': { key: 'itr', helper: 'Income Tax Return for last 2 years' },
+    57→    57→  'Salary Slips': { key: 'salarySlips', helper: 'Last 3 months salary slips' },
+    58→    58→  'Covering Letter': { key: 'coveringLetter', helper: 'From employer on company letterhead' },
+    59→    59→  'Form 54': { key: 'form54', helper: 'Family composition form (if applicable)' },
+    60→    60→  'Employment Letter': { key: 'employmentLetter', helper: 'Employment verification letter from company' },
+    61→    61→  'Business Invitation Letter': { key: 'businessInvitation', helper: 'Invitation letter from business partner' },
+    62→    62→  'Company Registration': { key: 'companyRegistration', helper: 'Company registration / incorporation certificate' },
+    63→    63→  'Onward Flight Ticket': { key: 'onwardFlight', helper: 'Onward/return flight ticket' },
+    64→    64→  'Return Flight Ticket': { key: 'returnFlight', helper: 'Confirmed return flight ticket' },
+    65→    65→  'Offer Letter': { key: 'offerLetter', helper: 'Job offer letter from employer' },
+    66→    66→  'GTE Statement': { key: 'gteStatement', helper: 'Genuine Temporary Entrant statement' },
+    67→    67→  'Financial Documents': { key: 'financialDocs', helper: 'Proof of financial capacity' },
+    68→    68→  'Health Insurance': { key: 'healthInsurance', helper: 'Travel health insurance policy' },
+    69→    69→  'English Test Scores': { key: 'englishScores', helper: 'IELTS / TOEFL / PTE score report' },
+    70→    70→  'Travel Insurance': { key: 'travelInsurance', helper: 'Travel insurance policy document' },
+    71→    71→};
+    72→    72→
+    73→    73→// Documents that are always covered by the passport upload section (not shown as additional)
+    74→    74→const ALWAYS_COVERED = new Set(['Passport', 'Photo']);
+    75→    75→
+    76→    76→function getRequiredAdditionalDocs(visaDocuments: string[]): { key: string; title: string; helper: string }[] {
+    77→    77→  return visaDocuments
+    78→    78→    .filter((doc) => !ALWAYS_COVERED.has(doc))
+    79→    79→    .map((doc) => {
+    80→    80→      const meta = docNameToMeta[doc];
+    81→    81→      if (meta) return { key: meta.key, title: doc, helper: meta.helper };
+    82→    82→      // Fallback for unknown doc names
+    83→    83→      const key = doc.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    84→    84→      return { key, title: doc, helper: `Upload ${doc}` };
+    85→    85→    });
+    86→    86→}
+    87→    87→
+    88→    88→function createEmptyTraveler(index: number, requiredDocKeys: string[]): TravelerData {
+    89→    89→  return {
+    90→    90→    id: `traveler-${Date.now()}-${index}`,
+    91→    91→    passportNumber: '',
+    92→    92→    firstName: '',
+    93→    93→    lastName: '',
+    94→    94→    nationality: 'Indian',
+    95→    95→    sex: '',
+    96→    96→    dateOfBirth: '',
+    97→    97→    placeOfBirth: '',
+    98→    98→    placeOfIssue: '',
+    99→    99→    maritalStatus: '',
+   100→   100→    dateOfIssue: '',
+   101→   101→    dateOfExpiry: '',
+   102→   102→    passportFileName: '',
+   103→   103→    ocrStatus: 'idle',
+   104→   104→    ocrError: '',
+   105→   105→    additionalDocs: Object.fromEntries(requiredDocKeys.map((k) => [k, null])),
+   106→   106→    expanded: index === 0,
+   107→   107→  };
+   108→   108→}
+   109→   109→
+   110→   110→function formatDateForInput(dateStr: string): string {
+   111→   111→  if (!dateStr) return '';
+   112→   112→  // Handle DD/MM/YYYY format from OCR
+   113→   113→  const parts = dateStr.split(/[\/\-\.]/);
+   114→   114→  if (parts.length === 3) {
+   115→   115→    const [d, m, y] = parts.map((p) => p.trim());
+   116→   116→    // If year is 2 digits, convert to 4 digits
+   117→   117→    const fullYear = y.length === 2 ? (parseInt(y) > 50 ? '19' + y : '20' + y) : y;
+   118→   118→    return `${fullYear}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+   119→   119→  }
+   120→   120→  return '';
+   121→   121→}
+   122→   122→
+   123→   123→/* ─── Traveler Card Component ─── */
+   124→   124→function TravelerCard({
+   125→   125→  traveler,
+   126→   126→  index,
+   127→   127→  onUpdate,
+   128→   128→  onRemove,
+   129→   129→  canRemove,
+   130→   130→  requiredDocs,
+   131→   131→}: {
+   132→   132→  traveler: TravelerData;
+   133→   133→  index: number;
+   134→   134→  onUpdate: (id: string, field: keyof TravelerData, value: string) => void;
+   135→   135→  onRemove: (id: string) => void;
+   136→   136→  canRemove: boolean;
+   137→   137→  requiredDocs: { key: string; title: string; helper: string }[];
+   138→   138→}) {
+   139→   139→  const passportInputRef = useRef<HTMLInputElement>(null);
+   140→   140→  const [showAddDocs, setShowAddDocs] = useState(false);
+   141→   141→  const docInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+   142→   142→
+   143→   143→  const handlePassportUpload = useCallback(
+   144→   144→    async (e: React.ChangeEvent<HTMLInputElement>) => {
+   145→   145→      const file = e.target.files?.[0];
+   146→   146→      if (!file) return;
+   147→   147→
+   148→   148→      // Validate file size (5MB)
+   149→   149→      if (file.size > 5 * 1024 * 1024) {
+   150→   150→        onUpdate(traveler.id, 'ocrError', 'File size exceeds 5 MB limit');
+   151→   151→        onUpdate(traveler.id, 'ocrStatus', 'error');
+   152→   152→        return;
+   153→   153→      }
+   154→   154→
+   155→   155→      // Update file name
+   156→   156→      onUpdate(traveler.id, 'passportFileName', file.name);
+   157→   157→      onUpdate(traveler.id, 'ocrStatus', 'scanning');
+   158→   158→      onUpdate(traveler.id, 'ocrError', '');
+   159→   159→
+   160→   160→      try {
+   161→   161→        const base64 = await fileToBase64(file);
+   162→   162→        const res = await fetch('/api/ocr', {
+   163→   163→          method: 'POST',
+   164→   164→          headers: { 'Content-Type': 'application/json' },
+   165→   165→          body: JSON.stringify({ imageBase64: base64, documentType: 'passport' }),
+   166→   166→        });
+   167→   167→        const data = await res.json();
+   168→   168→
+   169→   169→        if (data.success && data.fields) {
+   170→   170→          for (const f of data.fields) {
+   171→   171→            if (f.value) {
+   172→   172→              const key = f.field as keyof TravelerData;
+   173→   173→              if (key === 'dateOfBirth' || key === 'dateOfIssue' || key === 'dateOfExpiry') {
+   174→   174→                const formatted = formatDateForInput(f.value);
+   175→   175→                if (formatted) onUpdate(traveler.id, key, formatted);
+   176→   176→              } else {
+   177→   177→                onUpdate(traveler.id, key, f.value);
+   178→   178→              }
+   179→   179→            }
+   180→   180→          }
+   181→   181→          onUpdate(traveler.id, 'ocrStatus', 'done');
+   182→   182→        } else {
+   183→   183→          onUpdate(traveler.id, 'ocrError', data.error || 'OCR failed. Please enter details manually.');
+   184→   184→          onUpdate(traveler.id, 'ocrStatus', 'error');
+   185→   185→        }
+   186→   186→      } catch (err) {
+   187→   187→        console.error('OCR upload error:', err);
+   188→   188→        onUpdate(traveler.id, 'ocrError', 'Network error. Please try again.');
+   189→   189→        onUpdate(traveler.id, 'ocrStatus', 'error');
+   190→   190→      }
+   191→   191→
+   192→   192→      // Reset file input
+   193→   193→      if (passportInputRef.current) passportInputRef.current.value = '';
+   194→   194→    },
+   195→   195→    [traveler.id, onUpdate]
+   196→   196→  );
+   197→   197→
+   198→   198→  const handleDocUpload = useCallback(
+   199→   199→    async (docKey: string, e: React.ChangeEvent<HTMLInputElement>) => {
+   200→   200→      const file = e.target.files?.[0];
+   201→   201→      if (!file) return;
+   202→   202→
+   203→   203→      if (file.size > 5 * 1024 * 1024) return;
+   204→   204→
+   205→   205→      try {
+   206→   206→        const base64 = await fileToBase64(file);
+   207→   207→        const res = await fetch('/api/ocr', {
+   208→   208→          method: 'POST',
+   209→   209→          headers: { 'Content-Type': 'application/json' },
+   210→   210→          body: JSON.stringify({ imageBase64: base64, documentType: docKey }),
+   211→   211→        });
+   212→   212→        const data = await res.json();
+   213→   213→        if (data.success) {
+   214→   214→          onUpdate(traveler.id, 'additionalDocs' as any, JSON.stringify({ ...traveler.additionalDocs, [docKey]: file.name }));
+   215→   215→        }
+   216→   216→      } catch {
+   217→   217→        // Silently fail for additional docs
+   218→   218→      }
+   219→   219→
+   220→   220→      if (docInputRefs.current[docKey]) docInputRefs.current[docKey]!.value = '';
+   221→   221→    },
+   222→   222→    [traveler.id, traveler.additionalDocs, onUpdate]
+   223→   223→  );
+   224→   224→
+   225→   225→  const toggleExpand = () => {
+   226→   226→    onUpdate(traveler.id, 'expanded', traveler.expanded ? 'false' : 'true');
+   227→   227→  };
+   228→   228→
+   229→   229→  return (
+   230→   230→    <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl overflow-hidden">
+   231→   231→      {/* Traveler Header - Always visible */}
+   232→   232→      <div
+   233→   233→        className="p-4 sm:p-5 cursor-pointer hover:bg-[#1A1A24]/50 transition-colors"
+   234→   234→        onClick={toggleExpand}
+   235→   235→      >
+   236→   236→        <div className="flex items-center justify-between">
+   237→   237→          <div className="flex items-center gap-3">
+   238→   238→            <div className="w-8 h-8 rounded-full bg-indigo-600/20 flex items-center justify-center text-sm font-bold text-indigo-400">
+   239→   239→              {index + 1}
+   240→   240→            </div>
+   241→   241→            <div>
+   242→   242→              <h3 className="text-sm font-semibold text-white">
+   243→   243→                Traveler {index + 1}
+   244→   244→                {traveler.firstName && (
+   245→   245→                  <span className="text-[#9CA3AF] font-normal"> — {traveler.firstName} {traveler.lastName}</span>
+   246→   246→                )}
+   247→   247→              </h3>
+   248→   248→              <div className="flex items-center gap-2 mt-0.5">
+   249→   249→                {traveler.ocrStatus === 'done' && (
+   250→   250→                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400">
+   251→   251→                    <FileCheck className="h-3 w-3" /> OCR Complete
+   252→   252→                  </span>
+   253→   253→                )}
+   254→   254→                {traveler.ocrStatus === 'scanning' && (
+   255→   255→                  <span className="inline-flex items-center gap-1 text-[10px] text-indigo-400">
+   256→   256→                    <Loader2 className="h-3 w-3 animate-spin" /> Scanning with ocr.z.ai...
+   257→   257→                  </span>
+   258→   258→                )}
+   259→   259→                {traveler.ocrStatus === 'error' && (
+   260→   260→                  <span className="inline-flex items-center gap-1 text-[10px] text-red-400">
+   261→   261→                    <X className="h-3 w-3" /> {traveler.ocrError}
+   262→   262→                  </span>
+   263→   263→                )}
+   264→   264→                {traveler.ocrStatus === 'idle' && !traveler.passportFileName && (
+   265→   265→                  <span className="text-[10px] text-[#6B7280]">Awaiting passport upload</span>
+   266→   266→                )}
+   267→   267→                {traveler.passportFileName && traveler.ocrStatus !== 'scanning' && (
+   268→   268→                  <span className="text-[10px] text-[#6B7280]">
+   269→   269→                    <ImageIcon className="h-3 w-3 inline mr-0.5" /> {traveler.passportFileName}
+   270→   270→                  </span>
+   271→   271→                )}
+   272→   272→              </div>
+   273→   273→            </div>
+   274→   274→          </div>
+   275→   275→          <div className="flex items-center gap-2">
+   276→   276→            {canRemove && (
+   277→   277→              <button
+   278→   278→                onClick={(e) => {
+   279→   279→                  e.stopPropagation();
+   280→   280→                  onRemove(traveler.id);
+   281→   281→                }}
+   282→   282→                className="p-1.5 rounded-lg hover:bg-red-950/30 text-[#6B7280] hover:text-red-400 transition-colors"
+   283→   283→              >
+   284→   284→                <Trash2 className="h-4 w-4" />
+   285→   285→              </button>
+   286→   286→            )}
+   287→   287→            {traveler.expanded ? (
+   288→   288→              <ChevronUp className="h-4 w-4 text-[#6B7280]" />
+   289→   289→            ) : (
+   290→   290→              <ChevronDown className="h-4 w-4 text-[#6B7280]" />
+   291→   291→            )}
+   292→   292→          </div>
+   293→   293→        </div>
+   294→   294→      </div>
+   295→   295→
+   296→   296→      {/* Expanded Traveler Details */}
+   297→   297→      <AnimatePresence>
+   298→   298→        {traveler.expanded && (
+   299→   299→          <motion.div
+   300→   300→            initial={{ height: 0, opacity: 0 }}
+   301→   301→            animate={{ height: 'auto', opacity: 1 }}
+   302→   302→            exit={{ height: 0, opacity: 0 }}
+   303→   303→            transition={{ duration: 0.3 }}
+   304→   304→            className="overflow-hidden"
+   305→   305→          >
+   306→   306→            <div className="px-4 sm:px-5 pb-5 border-t border-[#2A2A38]">
+   307→   307→              <div className="flex items-center justify-between mt-4 mb-1">
+   308→   308→                <h4 className="text-sm font-medium text-white flex items-center gap-2">
+   309→   309→                  <Scan className="h-4 w-4 text-indigo-400" />
+   310→   310→                  Passport Upload & OCR Scan
+   311→   311→                </h4>
+   312→   312→                <span className="text-[9px] text-[#3D3D54] font-mono">{CLIENT_ID}</span>
+   313→   313→              </div>
+   314→   314→
+   315→   315→              {/* Warning Banner */}
+   316→   316→              <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-950/30 border border-amber-800/30 mb-4">
+   317→   317→                <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+   318→   318→                <p className="text-xs text-amber-200/80">
+   319→   319→                  VVisa uses <span className="text-indigo-400 font-medium">ocr.z.ai</span> for 99.9% accurate passport scanning. Upload a clear passport image and details will be filled automatically. However, it is mandatory to review the information before submitting.
+   320→   320→                </p>
+   321→   321→              </div>
+   322→   322→
+   323→   323→              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+   324→   324→                {/* Upload Zone */}
+   325→   325→                <div
+   326→   326→                  className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center transition-all min-h-[200px] cursor-pointer
+   327→   327→                    ${traveler.ocrStatus === 'scanning'
+   328→   328→                      ? 'border-indigo-500 bg-indigo-950/10'
+   329→   329→                      : traveler.ocrStatus === 'done'
+   330→   330→                        ? 'border-emerald-500/50 bg-emerald-950/10'
+   331→   331→                        : 'border-[#2A2A38] hover:border-indigo-500/50'
+   332→   332→                    }`}
+   333→   333→                  onClick={() => passportInputRef.current?.click()}
+   334→   334→                >
+   335→   335→                  <input
+   336→   336→                    ref={passportInputRef}
+   337→   337→                    type="file"
+   338→   338→                    accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+   339→   339→                    className="hidden"
+   340→   340→                    onChange={handlePassportUpload}
+   341→   341→                  />
+   342→   342→
+   343→   343→                  {traveler.ocrStatus === 'scanning' ? (
+   344→   344→                    <>
+   345→   345→                      <Loader2 className="h-8 w-8 text-indigo-400 animate-spin mb-3" />
+   346→   346→                      <p className="text-sm text-indigo-400 font-medium mb-1">Scanning with ocr.z.ai...</p>
+   347→   347→                      <p className="text-xs text-[#6B7280]">Extracting passport data</p>
+   348→   348→                    </>
+   349→   349→                  ) : traveler.ocrStatus === 'done' ? (
+   350→   350→                    <>
+   351→   351→                      <div className="w-10 h-10 rounded-full bg-emerald-600/20 flex items-center justify-center mb-2">
+   352→   352→                        <Check className="h-5 w-5 text-emerald-400" />
+   353→   353→                      </div>
+   354→   354→                      <p className="text-sm text-emerald-400 font-medium mb-1">Scan Complete</p>
+   355→   355→                      <p className="text-xs text-[#6B7280]">Click to re-scan</p>
+   356→   356→                    </>
+   357→   357→                  ) : (
+   358→   358→                    <>
+   359→   359→                      <Upload className="h-8 w-8 text-[#6B7280] mb-3" />
+   360→   360→                      <p className="text-sm text-[#9CA3AF] mb-1">Drag & drop passport image</p>
+   361→   361→                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-950/30 border border-indigo-800/30 text-[10px] text-indigo-400 font-medium">
+   362→   362→                        <Scan className="h-3 w-3" />
+   363→   363→                        Powered by ocr.z.ai
+   364→   364→                      </span>
+   365→   365→                      <p className="text-xs text-[#6B7280] mt-2">JPG, PNG or PDF — max 5 MB</p>
+   366→   366→                      <Button
+   367→   367→                        variant="outline"
+   368→   368→                        className="mt-3 border-[#2A2A38] text-[#9CA3AF] hover:bg-[#1A1A24] hover:text-white rounded-lg text-xs"
+   369→   369→                        onClick={(e) => {
+   370→   370→                          e.stopPropagation();
+   371→   371→                          passportInputRef.current?.click();
+   372→   372→                        }}
+   373→   373→                      >
+   374→   374→                        Choose File
+   375→   375→                      </Button>
+   376→   376→                    </>
+   377→   377→                  )}
+   378→   378→                </div>
+   379→   379→
+   380→   380→                {/* Auto-populated Fields */}
+   381→   381→                <div className="space-y-3">
+   382→   382→                  <div>
+   383→   383→                    <Label className="text-xs text-[#6B7280]">Passport Number</Label>
+   384→   384→                    <Input
+   385→   385→                      value={traveler.passportNumber}
+   386→   386→                      onChange={(e) => onUpdate(traveler.id, 'passportNumber', e.target.value)}
+   387→   387→                      placeholder="Auto-filled after upload"
+   388→   388→                      className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   389→   389→                    />
+   390→   390→                  </div>
+   391→   391→                  <div className="grid grid-cols-2 gap-3">
+   392→   392→                    <div>
+   393→   393→                      <Label className="text-xs text-[#6B7280]">First Name</Label>
+   394→   394→                      <Input
+   395→   395→                        value={traveler.firstName}
+   396→   396→                        onChange={(e) => onUpdate(traveler.id, 'firstName', e.target.value)}
+   397→   397→                        placeholder="First name"
+   398→   398→                        className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   399→   399→                      />
+   400→   400→                    </div>
+   401→   401→                    <div>
+   402→   402→                      <Label className="text-xs text-[#6B7280]">Last Name</Label>
+   403→   403→                      <Input
+   404→   404→                        value={traveler.lastName}
+   405→   405→                        onChange={(e) => onUpdate(traveler.id, 'lastName', e.target.value)}
+   406→   406→                        placeholder="Last name"
+   407→   407→                        className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   408→   408→                      />
+   409→   409→                    </div>
+   410→   410→                  </div>
+   411→   411→                  <div className="grid grid-cols-2 gap-3">
+   412→   412→                    <div>
+   413→   413→                      <Label className="text-xs text-[#6B7280]">Nationality</Label>
+   414→   414→                      <Input
+   415→   415→                        value={traveler.nationality}
+   416→   416→                        onChange={(e) => onUpdate(traveler.id, 'nationality', e.target.value)}
+   417→   417→                        placeholder="Indian"
+   418→   418→                        className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   419→   419→                      />
+   420→   420→                    </div>
+   421→   421→                    <div>
+   422→   422→                      <Label className="text-xs text-[#6B7280]">Sex</Label>
+   423→   423→                      <Input
+   424→   424→                        value={traveler.sex}
+   425→   425→                        onChange={(e) => onUpdate(traveler.id, 'sex', e.target.value)}
+   426→   426→                        placeholder="Male / Female"
+   427→   427→                        className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   428→   428→                      />
+   429→   429→                    </div>
+   430→   430→                  </div>
+   431→   431→                  <div>
+   432→   432→                    <Label className="text-xs text-[#6B7280]">Date of Birth</Label>
+   433→   433→                    <Input
+   434→   434→                      type="date"
+   435→   435→                      value={traveler.dateOfBirth}
+   436→   436→                      onChange={(e) => onUpdate(traveler.id, 'dateOfBirth', e.target.value)}
+   437→   437→                      className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   438→   438→                    />
+   439→   439→                  </div>
+   440→   440→                  <div className="grid grid-cols-2 gap-3">
+   441→   441→                    <div>
+   442→   442→                      <Label className="text-xs text-[#6B7280]">Place of Birth</Label>
+   443→   443→                      <Input
+   444→   444→                        value={traveler.placeOfBirth}
+   445→   445→                        onChange={(e) => onUpdate(traveler.id, 'placeOfBirth', e.target.value)}
+   446→   446→                        placeholder="City"
+   447→   447→                        className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   448→   448→                      />
+   449→   449→                    </div>
+   450→   450→                    <div>
+   451→   451→                      <Label className="text-xs text-[#6B7280]">Place of Issue</Label>
+   452→   452→                      <Input
+   453→   453→                        value={traveler.placeOfIssue}
+   454→   454→                        onChange={(e) => onUpdate(traveler.id, 'placeOfIssue', e.target.value)}
+   455→   455→                        placeholder="City"
+   456→   456→                        className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   457→   457→                      />
+   458→   458→                    </div>
+   459→   459→                  </div>
+   460→   460→                  <div className="grid grid-cols-3 gap-3">
+   461→   461→                    <div>
+   462→   462→                      <Label className="text-xs text-[#6B7280]">Marital Status</Label>
+   463→   463→                      <Input
+   464→   464→                        value={traveler.maritalStatus}
+   465→   465→                        onChange={(e) => onUpdate(traveler.id, 'maritalStatus', e.target.value)}
+   466→   466→                        placeholder="Single"
+   467→   467→                        className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   468→   468→                      />
+   469→   469→                    </div>
+   470→   470→                    <div>
+   471→   471→                      <Label className="text-xs text-[#6B7280]">Date of Issue</Label>
+   472→   472→                      <Input
+   473→   473→                        type="date"
+   474→   474→                        value={traveler.dateOfIssue}
+   475→   475→                        onChange={(e) => onUpdate(traveler.id, 'dateOfIssue', e.target.value)}
+   476→   476→                        className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   477→   477→                      />
+   478→   478→                    </div>
+   479→   479→                    <div>
+   480→   480→                      <Label className="text-xs text-[#6B7280]">Date of Expiry</Label>
+   481→   481→                      <Input
+   482→   482→                        type="date"
+   483→   483→                        value={traveler.dateOfExpiry}
+   484→   484→                        onChange={(e) => onUpdate(traveler.id, 'dateOfExpiry', e.target.value)}
+   485→   485→                        className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   486→   486→                      />
+   487→   487→                    </div>
+   488→   488→                  </div>
+   489→   489→                </div>
+   490→   490→              </div>
+   491→   491→
+   492→   492→              {/* Additional Documents Section for this Traveler */}
+   493→   493→              <Separator className="bg-[#2A2A38] my-5" />
+   494→   494→
+   495→   495→              <div className="flex items-center justify-between mb-3">
+   496→   496→                <h4 className="text-sm font-medium text-white flex items-center gap-2">
+   497→   497→                  <FileText className="h-4 w-4 text-indigo-400" />
+   498→   498→                  Required Documents for Traveler {index + 1}
+   499→   499→                  <span className="text-xs text-[#6B7280] font-normal">({requiredDocs.length} document{requiredDocs.length !== 1 ? 's' : ''})</span>
+   500→   500→                </h4>
+   501→   501→                <button
+   502→   502→                  onClick={() => setShowAddDocs(!showAddDocs)}
+   503→   503→                  className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
+   504→   504→                >
+   505→   505→                  {showAddDocs ? 'Hide' : 'Show'} Documents
+   506→   506→                  {showAddDocs ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+   507→   507→                </button>
+   508→   508→              </div>
+   509→   509→
+   510→   510→              {requiredDocs.length === 0 ? (
+   511→   511→                <p className="text-xs text-[#6B7280] py-4 text-center">No additional documents required for this visa type (only Passport & Photo).</p>
+   512→   512→              ) : (
+   513→   513→                <AnimatePresence>
+   514→   514→                  {showAddDocs && (
+   515→   515→                    <motion.div
+   516→   516→                      initial={{ height: 0, opacity: 0 }}
+   517→   517→                      animate={{ height: 'auto', opacity: 1 }}
+   518→   518→                      exit={{ height: 0, opacity: 0 }}
+   519→   519→                      transition={{ duration: 0.2 }}
+   520→   520→                      className="overflow-hidden"
+   521→   521→                    >
+   522→   522→                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   523→   523→                        {requiredDocs.map((doc) => {
+   524→   524→                        const uploadedName = traveler.additionalDocs[doc.key];
+   525→   525→                        return (
+   526→   526→                          <div key={doc.key} className="space-y-1.5">
+   527→   527→                            <Label className="text-sm text-white font-medium">{doc.title}</Label>
+   528→   528→                            <p className="text-xs text-[#6B7280]">{doc.helper}</p>
+   529→   529→                            <input
+   530→   530→                              ref={(el) => { docInputRefs.current[doc.key] = el; }}
+   531→   531→                              type="file"
+   532→   532→                              accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+   533→   533→                              className="hidden"
+   534→   534→                              onChange={(e) => handleDocUpload(doc.key, e)}
+   535→   535→                            />
+   536→   536→                            <div
+   537→   537→                              className={`border border-dashed rounded-lg p-3 flex flex-col items-center justify-center text-center transition-colors cursor-pointer h-20
+   538→   538→                                ${uploadedName
+   539→   539→                                  ? 'border-emerald-500/50 bg-emerald-950/10'
+   540→   540→                                  : 'border-[#2A2A38] hover:border-indigo-500/50'
+   541→   541→                                }`}
+   542→   542→                              onClick={() => docInputRefs.current[doc.key]?.click()}
+   543→   543→                            >
+   544→   544→                              {uploadedName ? (
+   545→   545→                                <>
+   546→   546→                                  <FileCheck className="h-3.5 w-3.5 text-emerald-400 mb-1" />
+   547→   547→                                  <p className="text-xs text-emerald-400 font-medium truncate max-w-full px-2">{uploadedName}</p>
+   548→   548→                                  <span className="text-[9px] text-[#6B7280] mt-0.5">Click to replace</span>
+   549→   549→                                </>
+   550→   550→                              ) : (
+   551→   551→                                <>
+   552→   552→                                  <Scan className="h-3.5 w-3.5 text-[#6B7280] mb-1" />
+   553→   553→                                  <p className="text-xs text-[#6B7280]">Click to upload</p>
+   554→   554→                                  <span className="inline-flex items-center gap-0.5 text-[9px] text-indigo-400 mt-0.5">
+   555→   555→                                    <Scan className="h-2.5 w-2.5" /> ocr.z.ai ready
+   556→   556→                                  </span>
+   557→   557→                                </>
+   558→   558→                              )}
+   559→   559→                            </div>
+   560→   560→                          </div>
+   561→   561→                        );
+   562→   562→                      })}
+   563→   563→                    </div>
+   564→   564→                  </motion.div>
+   565→   565→                )}
+   566→   566→              </AnimatePresence>
+   567→   567→              )}
+   568→   568→            </div>
+   569→   569→          </motion.div>
+   570→   570→        )}
+   571→   571→      </AnimatePresence>
+   572→   572→    </Card>
+   573→   573→  );
+   574→   574→}
+   575→   575→
+   576→   576→/* ─── Helper: Convert File to Base64 ─── */
+   577→   577→function fileToBase64(file: File): Promise<string> {
+   578→   578→  return new Promise((resolve, reject) => {
+   579→   579→    const reader = new FileReader();
+   580→   580→    reader.onload = () => {
+   581→   581→      const result = reader.result as string;
+   582→   582→      // Remove the data URL prefix
+   583→   583→      const base64 = result.split(',')[1];
+   584→   584→      resolve(base64);
+   585→   585→    };
+   586→   586→    reader.onerror = reject;
+   587→   587→    reader.readAsDataURL(file);
+   588→   588→  });
+   589→   589→}
+   590→   590→
+   591→   591→/* ─── Progress Stepper Component ─── */
+   592→   592→function ProgressStepper({ currentStep }: { currentStep: number }) {
+   593→   593→  const steps = ['Application Type', 'Internal ID', 'Traveler Details', 'Additional Documents', 'Review', 'Submit'];
+   594→   594→
+   595→   595→  return (
+   596→   596→    <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl">
+   597→   597→      <CardContent className="p-4">
+   598→   598→        <div className="flex items-center justify-between mb-4">
+   599→   599→          <p className="text-xs text-[#6B7280] font-medium">APPLICATION PROGRESS</p>
+   600→   600→          <span className="text-[9px] text-[#3D3D54] font-mono">{CLIENT_ID}</span>
+   601→   601→        </div>
+   602→   602→        <div className="space-y-0">
+   603→   603→          {steps.map((step, i) => {
+   604→   604→            const stepNum = i + 1;
+   605→   605→            const isCompleted = stepNum < currentStep;
+   606→   606→            const isActive = stepNum === currentStep;
+   607→   607→
+   608→   608→            return (
+   609→   609→              <div key={i} className="flex items-start gap-3">
+   610→   610→                <div className="flex flex-col items-center">
+   611→   611→                  {isCompleted ? (
+   612→   612→                    <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
+   613→   613→                      <Check className="h-3.5 w-3.5 text-white" />
+   614→   614→                    </div>
+   615→   615→                  ) : isActive ? (
+   616→   616→                    <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center shrink-0 ring-4 ring-indigo-600/20">
+   617→   617→                      <Circle className="h-2 w-2 text-white fill-white" />
+   618→   618→                    </div>
+   619→   619→                  ) : (
+   620→   620→                    <div className="w-6 h-6 rounded-full bg-[#1A1A24] border border-[#2A2A38] flex items-center justify-center shrink-0">
+   621→   621→                      <Circle className="h-2 w-2 text-[#6B7280]" />
+   622→   622→                    </div>
+   623→   623→                  )}
+   624→   624→                  {i < steps.length - 1 && (
+   625→   625→                    <div className={`w-0.5 h-6 ${isCompleted ? 'bg-indigo-600' : 'bg-[#2A2A38]'}`} />
+   626→   626→                  )}
+   627→   627→                </div>
+   628→   628→                <p className={`text-xs pt-1 ${isActive ? 'text-white font-medium' : isCompleted ? 'text-[#9CA3AF]' : 'text-[#6B7280]'}`}>
+   629→   629→                  {step}
+   630→   630→                </p>
+   631→   631→              </div>
+   632→   632→            );
+   633→   633→          })}
+   634→   634→        </div>
+   635→   635→      </CardContent>
+   636→   636→    </Card>
+   637→   637→  );
+   638→   638→}
+   639→   639→
+   640→   640→/* ─── Main ApplyView ─── */
+   641→   641→export default function ApplyView() {
+   642→   642→  const { selectedVisaType, walletBalance } = useAppStore();
+   643→   643→  const [appType, setAppType] = useState<'individual' | 'group'>('group');
+   644→   644→  const [internalId, setInternalId] = useState('');
+   645→   645→  const [groupName, setGroupName] = useState('');
+   646→   646→
+   647→   647→  // Compute required additional docs from the selected visa type
+   648→   648→  const requiredDocs = useMemo(() => {
+   649→   649→    if (!selectedVisaType?.documents) return [];
+   650→   650→    return getRequiredAdditionalDocs(selectedVisaType.documents);
+   651→   651→  }, [selectedVisaType]);
+   652→   652→
+   653→   653→  const requiredDocKeys = useMemo(() => requiredDocs.map((d) => d.key), [requiredDocs]);
+   654→   654→
+   655→   655→  const [travelers, setTravelers] = useState<TravelerData[]>(() => [createEmptyTraveler(0, requiredDocKeys)]);
+   656→   656→
+   657→   657→  const pricePerTraveler = selectedVisaType?.price || 13499;
+   658→   658→  const total = pricePerTraveler * travelers.length;
+   659→   659→
+   660→   660→  const handleUpdateTraveler = useCallback(
+   661→   661→    (id: string, field: string, value: string) => {
+   662→   662→      setTravelers((prev) =>
+   663→   663→        prev.map((t) => (t.id === id ? { ...t, [field]: value } : t))
+   664→   664→      );
+   665→   665→    },
+   666→   666→    []
+   667→   667→  );
+   668→   668→
+   669→   669→  const handleRemoveTraveler = useCallback((id: string) => {
+   670→   670→    setTravelers((prev) => prev.filter((t) => t.id !== id));
+   671→   671→  }, []);
+   672→   672→
+   673→   673→  const handleAddTraveler = () => {
+   674→   674→    setTravelers((prev) => [...prev, createEmptyTraveler(prev.length, requiredDocKeys)]);
+   675→   675→  };
+   676→   676→
+   677→   677→  // Determine current step based on form completion
+   678→   678→  const currentStep = travelers.length > 1 ? 3 : travelers[0]?.ocrStatus === 'done' ? 3 : 2;
+   679→   679→
+   680→   680→  return (
+   681→   681→    <motion.div
+   682→   682→      variants={pageVariants}
+   683→   683→      initial="initial"
+   684→   684→      animate="animate"
+   685→   685→      transition={{ duration: 0.3, ease: 'easeOut' }}
+   686→   686→      className="space-y-6"
+   687→   687→    >
+   688→   688→      {/* Application Setup */}
+   689→   689→      <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl">
+   690→   690→        <CardContent className="p-5">
+   691→   691→          <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+   692→   692→            <div className="flex-1">
+   693→   693→              <div className="flex items-center justify-between">
+   694→   694→                <Label className="text-xs text-[#9CA3AF] mb-1.5 block font-medium">Are You Applying For</Label>
+   695→   695→                <span className="text-[9px] text-[#3D3D54] font-mono">{CLIENT_ID}</span>
+   696→   696→              </div>
+   697→   697→              <ToggleGroup
+   698→   698→                type="single"
+   699→   699→                value={appType}
+   700→   700→                onValueChange={(val) => val && setAppType(val as 'individual' | 'group')}
+   701→   701→                className="bg-[#0A0A0F] border border-[#2A2A38] rounded-lg p-1"
+   702→   702→              >
+   703→   703→                <ToggleGroupItem
+   704→   704→                  value="individual"
+   705→   705→                  className="data-[state=on]:bg-indigo-600 data-[state=on]:text-white text-[#9CA3AF] rounded-md px-4 h-9 text-sm"
+   706→   706→                >
+   707→   707→                  Individual
+   708→   708→                </ToggleGroupItem>
+   709→   709→                <ToggleGroupItem
+   710→   710→                  value="group"
+   711→   711→                  className="data-[state=on]:bg-indigo-600 data-[state=on]:text-white text-[#9CA3AF] rounded-md px-4 h-9 text-sm"
+   712→   712→                >
+   713→   713→                  Group
+   714→   714→                </ToggleGroupItem>
+   715→   715→              </ToggleGroup>
+   716→   716→            </div>
+   717→   717→            <div className="flex-1">
+   718→   718→              <Label className="text-xs text-[#9CA3AF] mb-1.5 block font-medium">Internal ID</Label>
+   719→   719→              <Input
+   720→   720→                value={internalId}
+   721→   721→                onChange={(e) => setInternalId(e.target.value)}
+   722→   722→                placeholder="e.g. C7612934"
+   723→   723→                className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white h-10"
+   724→   724→              />
+   725→   725→            </div>
+   726→   726→            {appType === 'group' && (
+   727→   727→              <div className="flex-1">
+   728→   728→                <Label className="text-xs text-[#9CA3AF] mb-1.5 block font-medium">Group Name</Label>
+   729→   729→                <Input
+   730→   730→                  value={groupName}
+   731→   731→                  onChange={(e) => setGroupName(e.target.value)}
+   732→   732→                  placeholder="e.g. SAPNA CHHAJER"
+   733→   733→                  className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white h-10"
+   734→   734→                />
+   735→   735→              </div>
+   736→   736→            )}
+   737→   737→          </div>
+   738→   738→
+   739→   739→          {/* Visa Type Display */}
+   740→   740→          {selectedVisaType && (
+   741→   741→            <div className="mt-4 p-3 rounded-lg bg-indigo-950/20 border border-indigo-800/30 flex items-center justify-between">
+   742→   742→              <div>
+   743→   743→                <p className="text-xs text-[#6B7280]">Selected Visa Type</p>
+   744→   744→                <p className="text-sm font-medium text-white">{selectedVisaType.name}</p>
+   745→   745→              </div>
+   746→   746→              <span className="text-sm font-bold font-mono text-indigo-400">
+   747→   747→                {formatINR(selectedVisaType.price)}
+   748→   748→              </span>
+   749→   749→            </div>
+   750→   750→          )}
+   751→   751→        </CardContent>
+   752→   752→      </Card>
+   753→   753→
+   754→   754→      {/* 3-Column Layout */}
+   755→   755→      <div className="flex gap-6">
+   756→   756→        {/* Left: Progress Stepper */}
+   757→   757→        <div className="hidden lg:block w-56 shrink-0">
+   758→   758→          <div className="sticky top-24">
+   759→   759→            <ProgressStepper currentStep={currentStep} />
+   760→   760→          </div>
+   761→   761→        </div>
+   762→   762→
+   763→   763→        {/* Center: Traveler Cards */}
+   764→   764→        <div className="flex-1 space-y-4 min-w-0">
+   765→   765→          {/* Traveler Cards */}
+   766→   766→          <AnimatePresence mode="popLayout">
+   767→   767→            {travelers.map((traveler, i) => (
+   768→   768→              <motion.div
+   769→   769→                key={traveler.id}
+   770→   770→                initial={{ opacity: 0, y: 16 }}
+   771→   771→                animate={{ opacity: 1, y: 0 }}
+   772→   772→                exit={{ opacity: 0, y: -16, scale: 0.95 }}
+   773→   773→                transition={{ duration: 0.3 }}
+   774→   774→              >
+   775→   775→                <TravelerCard
+   776→   776→                  traveler={traveler}
+   777→   777→                  index={i}
+   778→   778→                  onUpdate={handleUpdateTraveler}
+   779→   779→                  onRemove={handleRemoveTraveler}
+   780→   780→                  canRemove={travelers.length > 1}
+   781→   781→                  requiredDocs={requiredDocs}
+   782→   782→                />
+   783→   783→              </motion.div>
+   784→   784→            ))}
+   785→   785→          </AnimatePresence>
+   786→   786→
+   787→   787→          {/* Add Traveler Button */}
+   788→   788→          <Button
+   789→   789→            variant="outline"
+   790→   790→            onClick={handleAddTraveler}
+   791→   791→            className="w-full border-dashed border-[#2A2A38] text-[#9CA3AF] hover:bg-[#1A1A24] hover:text-white hover:border-indigo-500/50 rounded-xl h-12 flex items-center gap-2 text-sm transition-all"
+   792→   792→          >
+   793→   793→            <Plus className="h-4 w-4" />
+   794→   794→            Add Another Traveler
+   795→   795→            <span className="text-xs text-[#6B7280] ml-1">
+   796→   796→              (+{formatINR(pricePerTraveler)})
+   797→   797→            </span>
+   798→   798→          </Button>
+   799→   799→
+   800→   800→          {/* Review CTA (mobile) */}
+   801→   801→          <div className="lg:hidden">
+   802→   802→            <Button
+   803→   803→              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-11 flex items-center justify-center gap-2"
+   804→   804→            >
+   805→   805→              Review and Save <ArrowRight className="h-4 w-4" />
+   806→   806→            </Button>
+   807→   807→          </div>
+   808→   808→        </div>
+   809→   809→
+   810→   810→        {/* Right: Price Summary */}
+   811→   811→        <div className="hidden lg:block w-72 shrink-0">
+   812→   812→          <div className="sticky top-24">
+   813→   813→            <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl">
+   814→   814→              <CardContent className="p-5">
+   815→   815→                <div className="flex items-center justify-between mb-4">
+   816→   816→                  <h3 className="text-sm font-semibold text-white">Price Summary</h3>
+   817→   817→                  <span className="text-[9px] text-[#3D3D54] font-mono">{CLIENT_ID}</span>
+   818→   818→                </div>
+   819→   819→
+   820→   820→                <div className="space-y-3 mb-4 max-h-48 overflow-y-auto">
+   821→   821→                  {travelers.map((t, i) => (
+   822→   822→                    <div key={t.id} className="flex justify-between items-center">
+   823→   823→                      <span className="text-xs text-[#9CA3AF]">
+   824→   824→                        Traveler {i + 1}
+   825→   825→                        {t.firstName ? ` — ${t.firstName} ${t.lastName}` : ''}
+   826→   826→                      </span>
+   827→   827→                      <span className="text-sm font-mono text-white">{formatINR(pricePerTraveler)}</span>
+   828→   828→                    </div>
+   829→   829→                  ))}
+   830→   830→                </div>
+   831→   831→
+   832→   832→                <Separator className="bg-[#2A2A38] my-3" />
+   833→   833→
+   834→   834→                <div className="flex justify-between items-center mb-4">
+   835→   835→                  <span className="text-sm font-semibold text-white">Total ({travelers.length} traveler{travelers.length > 1 ? 's' : ''})</span>
+   836→   836→                  <span className="text-lg font-bold font-mono text-white">{formatINR(total)}</span>
+   837→   837→                </div>
+   838→   838→
+   839→   839→                <Separator className="bg-[#2A2A38] my-3" />
+   840→   840→
+   841→   841→                <div className="flex justify-between items-center mb-5">
+   842→   842→                  <span className="text-xs text-[#6B7280]">Current Wallet Balance</span>
+   843→   843→                  <span className="text-sm font-mono text-indigo-400">{formatINR(walletBalance)}</span>
+   844→   844→                </div>
+   845→   845→
+   846→   846→                <div className="flex justify-between items-center mb-5">
+   847→   847→                  <span className="text-xs text-[#6B7280]">After Payment</span>
+   848→   848→                  <span className={`text-sm font-mono ${walletBalance - total >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+   849→   849→                    {formatINR(walletBalance - total)}
+   850→   850→                  </span>
+   851→   851→                </div>
+   852→   852→
+   853→   853→                <Button
+   854→   854→                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-10 flex items-center justify-center gap-2 text-sm"
+   855→   855→                >
+   856→   856→                  Review and Save <ArrowRight className="h-4 w-4" />
+   857→   857→                </Button>
+   858→   858→              </CardContent>
+   859→   859→            </Card>
+   860→   860→          </div>
+   861→   861→        </div>
+   862→   862→      </div>
+   863→   863→    </motion.div>
+   864→   864→  );
+   865→   865→}

@@ -122,9 +122,9 @@ export default function SignupView() {
           {/* Logo + Brand */}
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm">
-              <span className="text-white font-bold text-xl">V</span>
+              <span className="text-foreground font-bold text-xl">V</span>
             </div>
-            <span className="text-white font-semibold text-xl tracking-tight">
+            <span className="text-foreground font-semibold text-xl tracking-tight">
               VVisa Business
             </span>
           </div>
@@ -150,7 +150,7 @@ export default function SignupView() {
                     <feature.icon className="size-4 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-white font-medium text-sm">
+                    <h3 className="text-foreground font-medium text-sm">
                       {feature.title}
                     </h3>
                     <ul className="mt-1.5 space-y-0.5">
@@ -176,23 +176,23 @@ export default function SignupView() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="w-full md:w-[60%] bg-[#0A0A0F] flex items-center justify-center p-6 md:p-12 overflow-y-auto"
+        className="w-full md:w-[60%] bg-vvisa-bg flex items-center justify-center p-6 md:p-12 overflow-y-auto"
       >
         <div className="w-full max-w-md py-8">
           {/* Heading */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-white">Create your account</h2>
-            <p className="mt-1.5 text-sm text-[#6B7280]">
+            <p className="mt-1.5 text-sm text-vvisa-text-muted">
               Get started with VVisa in minutes
             </p>
           </div>
 
           {/* Tab Toggle */}
-          <div className="flex bg-[#111118] rounded-lg p-1 mb-6 border border-[#2A2A38]">
-            <button className="flex-1 h-9 rounded-md bg-indigo-600 text-white text-sm font-medium transition-colors cursor-pointer">
+          <div className="flex bg-vvisa-surface rounded-lg p-1 mb-6 border border-vvisa-border">
+            <button className="flex-1 h-9 rounded-md bg-indigo-600 text-foreground text-sm font-medium transition-colors cursor-pointer">
               Sign up with Phone
             </button>
-            <button className="flex-1 h-9 rounded-md text-[#6B7280] text-sm font-medium hover:text-[#9CA3AF] transition-colors cursor-pointer">
+            <button className="flex-1 h-9 rounded-md text-vvisa-text-muted text-sm font-medium hover:text-vvisa-text-secondary transition-colors cursor-pointer">
               Sign up with Email
             </button>
           </div>
@@ -200,17 +200,17 @@ export default function SignupView() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Phone Number with India Flag */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#9CA3AF]">
+              <Label className="text-sm font-medium text-vvisa-text-secondary">
                 Mobile Number
               </Label>
               <div className="flex gap-0">
-                <div className="flex items-center gap-2 bg-[#111118] border border-[#2A2A38] border-r-0 rounded-l-md px-3 h-11 shrink-0">
+                <div className="flex items-center gap-2 bg-vvisa-surface border border-vvisa-border border-r-0 rounded-l-md px-3 h-11 shrink-0">
                   <span className="text-lg">🇮🇳</span>
-                  <span className="text-sm text-[#9CA3AF]">+91</span>
+                  <span className="text-sm text-vvisa-text-secondary">+91</span>
                 </div>
                 <Input
                   placeholder="Enter mobile number"
-                  className="h-11 bg-[#111118] border-[#2A2A38] text-white placeholder:text-[#6B7280] focus:border-indigo-500 focus:ring-indigo-500/20 rounded-l-none"
+                  className="h-11 bg-vvisa-surface border-vvisa-border text-white placeholder:text-vvisa-text-muted focus:border-indigo-500 focus:ring-indigo-500/20 rounded-l-none"
                   {...register('phone')}
                 />
               </div>
@@ -225,7 +225,7 @@ export default function SignupView() {
                 type="button"
                 variant="outline"
                 onClick={handleSendOtp}
-                className="w-full h-11 bg-[#111118] border-[#2A2A38] text-white hover:bg-[#1A1A24] hover:text-white font-medium transition-colors cursor-pointer"
+                className="w-full h-11 bg-vvisa-surface border-vvisa-border text-white hover:bg-vvisa-surface-2 hover:text-foreground font-medium transition-colors cursor-pointer"
               >
                 Send OTP
               </Button>
@@ -236,7 +236,7 @@ export default function SignupView() {
                 transition={{ duration: 0.3 }}
                 className="space-y-2"
               >
-                <Label className="text-sm font-medium text-[#9CA3AF]">
+                <Label className="text-sm font-medium text-vvisa-text-secondary">
                   Enter OTP
                 </Label>
                 <div className="flex justify-center">
@@ -269,12 +269,12 @@ export default function SignupView() {
 
             {/* Agency Name */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#9CA3AF]">
+              <Label className="text-sm font-medium text-vvisa-text-secondary">
                 Agency Name
               </Label>
               <Input
                 placeholder="e.g. Vindox Travels"
-                className="h-11 bg-[#111118] border-[#2A2A38] text-white placeholder:text-[#6B7280] focus:border-indigo-500 focus:ring-indigo-500/20"
+                className="h-11 bg-vvisa-surface border-vvisa-border text-white placeholder:text-vvisa-text-muted focus:border-indigo-500 focus:ring-indigo-500/20"
                 {...register('agencyName')}
               />
               {errors.agencyName && (
@@ -286,13 +286,13 @@ export default function SignupView() {
 
             {/* Email */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#9CA3AF]">
+              <Label className="text-sm font-medium text-vvisa-text-secondary">
                 Email
               </Label>
               <Input
                 type="email"
                 placeholder="you@agency.com"
-                className="h-11 bg-[#111118] border-[#2A2A38] text-white placeholder:text-[#6B7280] focus:border-indigo-500 focus:ring-indigo-500/20"
+                className="h-11 bg-vvisa-surface border-vvisa-border text-white placeholder:text-vvisa-text-muted focus:border-indigo-500 focus:ring-indigo-500/20"
                 {...register('email')}
               />
               {errors.email && (
@@ -302,20 +302,20 @@ export default function SignupView() {
 
             {/* Password */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#9CA3AF]">
+              <Label className="text-sm font-medium text-vvisa-text-secondary">
                 Password
               </Label>
               <div className="relative">
                 <Input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Min 8 characters"
-                  className="h-11 bg-[#111118] border-[#2A2A38] text-white placeholder:text-[#6B7280] focus:border-indigo-500 focus:ring-indigo-500/20 pr-10"
+                  className="h-11 bg-vvisa-surface border-vvisa-border text-white placeholder:text-vvisa-text-muted focus:border-indigo-500 focus:ring-indigo-500/20 pr-10"
                   {...register('password')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#9CA3AF] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-vvisa-text-muted hover:text-vvisa-text-secondary transition-colors"
                 >
                   {showPassword ? (
                     <EyeOff className="size-4" />
@@ -333,20 +333,20 @@ export default function SignupView() {
 
             {/* Confirm Password */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#9CA3AF]">
+              <Label className="text-sm font-medium text-vvisa-text-secondary">
                 Confirm Password
               </Label>
               <div className="relative">
                 <Input
                   type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="Re-enter password"
-                  className="h-11 bg-[#111118] border-[#2A2A38] text-white placeholder:text-[#6B7280] focus:border-indigo-500 focus:ring-indigo-500/20 pr-10"
+                  className="h-11 bg-vvisa-surface border-vvisa-border text-white placeholder:text-vvisa-text-muted focus:border-indigo-500 focus:ring-indigo-500/20 pr-10"
                   {...register('confirmPassword')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#9CA3AF] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-vvisa-text-muted hover:text-vvisa-text-secondary transition-colors"
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="size-4" />
@@ -374,7 +374,7 @@ export default function SignupView() {
               />
               <label
                 htmlFor="terms"
-                className="text-xs text-[#6B7280] leading-relaxed cursor-pointer"
+                className="text-xs text-vvisa-text-muted leading-relaxed cursor-pointer"
               >
                 I agree to the{' '}
                 <span className="text-indigo-400 hover:text-indigo-300">
@@ -390,14 +390,14 @@ export default function SignupView() {
             {/* Create Account Button */}
             <Button
               type="submit"
-              className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-colors cursor-pointer"
+              className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-foreground font-medium transition-colors cursor-pointer"
             >
               Create Account
             </Button>
           </form>
 
           {/* Sign In Link */}
-          <p className="mt-8 text-center text-sm text-[#6B7280]">
+          <p className="mt-8 text-center text-sm text-vvisa-text-muted">
             Already have an account?{' '}
             <button
               onClick={() => navigate('login')}

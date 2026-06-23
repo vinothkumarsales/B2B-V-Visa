@@ -68,12 +68,12 @@ export default function LandingView() {
   const testimonial = mockTestimonials[activeTestimonial];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0A0A0F]">
+    <div className="min-h-screen flex flex-col bg-vvisa-bg">
       {/* ────────────────────── 1. HEADER ────────────────────── */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
-            ? 'bg-[#0A0A0F]/80 backdrop-blur-xl border-b border-[#2A2A38]'
+            ? 'bg-vvisa-bg/80 backdrop-blur-xl border-b border-vvisa-border'
             : 'bg-transparent'
         }`}
       >
@@ -81,18 +81,18 @@ export default function LandingView() {
           {/* Logo */}
           <div className="flex items-center gap-2">
             <Image src="/logo.svg" alt="VVisa" width={32} height={32} />
-            <span className="text-white font-bold text-xl tracking-tight">VVisa</span>
+            <span className="text-foreground font-bold text-xl tracking-tight">VVisa</span>
           </div>
 
           {/* Nav */}
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm text-[#9CA3AF] hover:text-white transition-colors">
+            <a href="#features" className="text-sm text-vvisa-text-secondary hover:text-white transition-colors">
               Features
             </a>
-            <a href="#how-it-works" className="text-sm text-[#9CA3AF] hover:text-white transition-colors">
+            <a href="#how-it-works" className="text-sm text-vvisa-text-secondary hover:text-white transition-colors">
               How It Works
             </a>
-            <a href="#pricing" className="text-sm text-[#9CA3AF] hover:text-white transition-colors">
+            <a href="#pricing" className="text-sm text-vvisa-text-secondary hover:text-white transition-colors">
               Pricing
             </a>
           </nav>
@@ -100,7 +100,7 @@ export default function LandingView() {
           {/* CTA */}
           <Button
             variant="outline"
-            className="border-[#2A2A38] bg-transparent hover:bg-[#111118] text-[#9CA3AF] hover:text-white text-sm h-9 px-5"
+            className="border-vvisa-border bg-transparent hover:bg-vvisa-surface text-vvisa-text-secondary hover:text-foreground text-sm h-9 px-5"
             onClick={() => navigate('login')}
           >
             Log In
@@ -121,10 +121,10 @@ export default function LandingView() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="inline-flex items-center gap-2 rounded-full border border-[#2A2A38] bg-[#111118] px-4 py-1.5 mb-6"
+                className="inline-flex items-center gap-2 rounded-full border border-vvisa-border bg-vvisa-surface px-4 py-1.5 mb-6"
               >
                 <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                <span className="text-xs sm:text-sm text-[#9CA3AF]">
+                <span className="text-xs sm:text-sm text-vvisa-text-secondary">
                   Trusted by 5,000+ Travel Agents
                 </span>
               </motion.div>
@@ -144,7 +144,7 @@ export default function LandingView() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.35 }}
-                className="mt-5 text-base sm:text-lg text-[#9CA3AF] max-w-xl mx-auto lg:mx-0 leading-relaxed"
+                className="mt-5 text-base sm:text-lg text-vvisa-text-secondary max-w-xl mx-auto lg:mx-0 leading-relaxed"
               >
                 India&rsquo;s most trusted B2B visa platform for travel agencies.
                 Guaranteed processing. Zero errors.
@@ -164,7 +164,7 @@ export default function LandingView() {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="text-[#9CA3AF] hover:text-white h-12 px-6 text-base gap-2"
+                  className="text-vvisa-text-secondary hover:text-white h-12 px-6 text-base gap-2"
                 >
                   <Play className="size-4 fill-[#9CA3AF]" />
                   Watch Demo
@@ -179,32 +179,32 @@ export default function LandingView() {
                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
                 animate={{ opacity: 1, y: [0, -8, 0], scale: 1 }}
                 transition={{ duration: 0.7, delay: 0.4, y: { duration: 3.5, repeat: Infinity, ease: 'easeInOut' } }}
-                className="relative z-10 w-72 bg-[#111118] border border-[#2A2A38] rounded-2xl p-5 shadow-2xl"
+                className="relative z-10 w-72 bg-vvisa-surface border border-vvisa-border rounded-2xl p-5 shadow-2xl"
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="h-10 w-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
                     <CheckCircle className="size-5 text-emerald-400" />
                   </div>
                   <div>
-                    <p className="text-white font-semibold text-sm">Visa Approved</p>
-                    <p className="text-[#9CA3AF] text-xs">Vietnam e-Visa</p>
+                    <p className="text-foreground font-semibold text-sm">Visa Approved</p>
+                    <p className="text-vvisa-text-secondary text-xs">Vietnam e-Visa</p>
                   </div>
                 </div>
-                <div className="space-y-2 text-xs text-[#9CA3AF]">
+                <div className="space-y-2 text-xs text-vvisa-text-secondary">
                   <div className="flex justify-between">
                     <span>Applicant</span>
                     <span className="text-white">Rajesh Mehta</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Ref. No.</span>
-                    <span className="text-white font-mono">E260308IND</span>
+                    <span className="text-foreground font-mono">E260308IND</span>
                   </div>
                   <div className="flex justify-between">
                     <span>ETA</span>
                     <span className="text-emerald-400">Mar 15, 2026</span>
                   </div>
                 </div>
-                <div className="mt-4 h-1.5 rounded-full bg-[#1A1A24]">
+                <div className="mt-4 h-1.5 rounded-full bg-vvisa-surface-2">
                   <div className="h-full w-full rounded-full bg-gradient-to-r from-[#4F46E5] to-emerald-400" />
                 </div>
               </motion.div>
@@ -214,14 +214,14 @@ export default function LandingView() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0, y: [0, -12, 0] }}
                 transition={{ duration: 0.6, delay: 0.7, y: { duration: 4, repeat: Infinity, ease: 'easeInOut' } }}
-                className="absolute top-4 left-0 z-20 bg-[#111118] border border-[#2A2A38] rounded-xl px-4 py-3 shadow-lg"
+                className="absolute top-4 left-0 z-20 bg-vvisa-surface border border-vvisa-border rounded-xl px-4 py-3 shadow-lg"
               >
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-full bg-amber-500/20 flex items-center justify-center">
                     <TrendingUp className="size-4 text-amber-400" />
                   </div>
                   <div>
-                    <p className="text-white font-semibold text-sm leading-tight">₹15,000 Cashback</p>
+                    <p className="text-foreground font-semibold text-sm leading-tight">₹15,000 Cashback</p>
                     <p className="text-emerald-400 text-xs">Earned this month</p>
                   </div>
                 </div>
@@ -232,14 +232,14 @@ export default function LandingView() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0, y: [0, 10, 0] }}
                 transition={{ duration: 0.6, delay: 0.9, y: { duration: 5, repeat: Infinity, ease: 'easeInOut' } }}
-                className="absolute bottom-8 right-0 z-20 bg-[#111118] border border-[#2A2A38] rounded-xl px-4 py-3 shadow-lg"
+                className="absolute bottom-8 right-0 z-20 bg-vvisa-surface border border-vvisa-border rounded-xl px-4 py-3 shadow-lg"
               >
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-full bg-[#4F46E5]/20 flex items-center justify-center">
                     <Wallet className="size-4 text-[#4F46E5]" />
                   </div>
                   <div>
-                    <p className="text-white font-semibold text-sm leading-tight">Total Earnings ₹12,570</p>
+                    <p className="text-foreground font-semibold text-sm leading-tight">Total Earnings ₹12,570</p>
                     <p className="text-emerald-400 text-xs">↑ 30% vs last month</p>
                   </div>
                 </div>
@@ -249,7 +249,7 @@ export default function LandingView() {
         </section>
 
         {/* ────────────────────── 3. TICKER BAR ────────────────────── */}
-        <section className="ticker-bar border-y border-[#2A2A38] py-3 overflow-hidden">
+        <section className="ticker-bar border-y border-vvisa-border py-3 overflow-hidden">
           <div className="animate-marquee flex whitespace-nowrap gap-12">
             {[
               'Best Prices for Travel Agents',
@@ -262,7 +262,7 @@ export default function LandingView() {
             ].map((text, i) => (
               <span
                 key={i}
-                className="inline-flex items-center gap-3 text-sm text-[#6B7280] select-none"
+                className="inline-flex items-center gap-3 text-sm text-vvisa-text-muted select-none"
               >
                 <Globe className="size-3.5 text-[#4F46E5]" />
                 {text}
@@ -281,7 +281,7 @@ export default function LandingView() {
             ].map((text, i) => (
               <span
                 key={`dup-${i}`}
-                className="inline-flex items-center gap-3 text-sm text-[#6B7280] select-none"
+                className="inline-flex items-center gap-3 text-sm text-vvisa-text-muted select-none"
               >
                 <Globe className="size-3.5 text-[#4F46E5]" />
                 {text}
@@ -294,7 +294,7 @@ export default function LandingView() {
         {/* ────────────────────── 4. TRUST BAR ────────────────────── */}
         <section className="py-14 px-4 sm:px-6 lg:px-8">
           <motion.div {...fadeInUp} className="mx-auto max-w-5xl text-center">
-            <p className="text-sm sm:text-base text-[#9CA3AF]">
+            <p className="text-sm sm:text-base text-vvisa-text-secondary">
               <span className="text-[#4F46E5] font-bold text-base sm:text-lg">5,000+</span>{' '}
               Travel Agents trust VVisa for On Time Visas
             </p>
@@ -307,14 +307,14 @@ export default function LandingView() {
               ].map((agency) => (
                 <div
                   key={agency.name}
-                  className="flex items-center gap-2 rounded-full border border-[#2A2A38] bg-[#111118] px-4 py-2"
+                  className="flex items-center gap-2 rounded-full border border-vvisa-border bg-vvisa-surface px-4 py-2"
                 >
-                  <div className="h-6 w-6 rounded-full bg-[#1A1A24] flex items-center justify-center text-[10px] font-bold text-[#9CA3AF]">
+                  <div className="h-6 w-6 rounded-full bg-vvisa-surface-2 flex items-center justify-center text-[10px] font-bold text-vvisa-text-secondary">
                     {agency.name[0]}
                   </div>
                   <div className="text-left">
-                    <p className="text-white text-xs font-medium leading-tight">{agency.name}</p>
-                    <p className="text-[#6B7280] text-[10px]">{agency.city}</p>
+                    <p className="text-foreground text-xs font-medium leading-tight">{agency.name}</p>
+                    <p className="text-vvisa-text-muted text-[10px]">{agency.city}</p>
                   </div>
                 </div>
               ))}
@@ -329,7 +329,7 @@ export default function LandingView() {
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white">
                 Why Choose VVisa?
               </h2>
-              <p className="mt-3 text-[#9CA3AF] max-w-xl mx-auto">
+              <p className="mt-3 text-vvisa-text-secondary max-w-xl mx-auto">
                 Everything your travel agency needs to process visas faster, cheaper, and with zero errors.
               </p>
             </div>
@@ -375,12 +375,12 @@ export default function LandingView() {
                       <feature.icon className="size-5 text-[#4F46E5]" />
                     </div>
                     <div>
-                      <h3 className="text-white font-semibold text-base sm:text-lg">
+                      <h3 className="text-foreground font-semibold text-base sm:text-lg">
                         {feature.title}
                       </h3>
                       <ul className="mt-1.5 space-y-1">
                         {feature.bullets.map((b) => (
-                          <li key={b} className="flex items-start gap-2 text-sm text-[#9CA3AF]">
+                          <li key={b} className="flex items-start gap-2 text-sm text-vvisa-text-secondary">
                             <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#4F46E5]" />
                             {b}
                           </li>
@@ -399,12 +399,12 @@ export default function LandingView() {
                 transition={{ duration: 0.6, ease: 'easeOut' }}
                 className="relative"
               >
-                <div className="rounded-2xl border border-[#2A2A38] bg-[#111118] p-6 shadow-2xl">
+                <div className="rounded-2xl border border-vvisa-border bg-vvisa-surface p-6 shadow-2xl">
                   <div className="flex items-center gap-2 mb-5">
                     <div className="h-3 w-3 rounded-full bg-red-500/60" />
                     <div className="h-3 w-3 rounded-full bg-amber-500/60" />
                     <div className="h-3 w-3 rounded-full bg-emerald-500/60" />
-                    <span className="ml-3 text-xs text-[#6B7280] font-mono">vvisa.app/dashboard</span>
+                    <span className="ml-3 text-xs text-vvisa-text-muted font-mono">vvisa.app/dashboard</span>
                   </div>
                   <div className="space-y-4">
                     {/* Notification */}
@@ -413,7 +413,7 @@ export default function LandingView() {
                         <CheckCircle className="size-5 text-emerald-400" />
                       </div>
                       <div>
-                        <p className="text-white text-sm font-medium">Guaranteed visa on Mar 15, 2026</p>
+                        <p className="text-foreground text-sm font-medium">Guaranteed visa on Mar 15, 2026</p>
                         <p className="text-emerald-400/80 text-xs mt-0.5">Vietnam e-Visa · 8 travelers approved</p>
                       </div>
                     </div>
@@ -426,10 +426,10 @@ export default function LandingView() {
                       ].map((row) => (
                         <div key={row.label}>
                           <div className="flex justify-between text-xs mb-1">
-                            <span className="text-[#9CA3AF]">{row.label}</span>
-                            <span className="text-white font-medium">{row.pct}%</span>
+                            <span className="text-vvisa-text-secondary">{row.label}</span>
+                            <span className="text-foreground font-medium">{row.pct}%</span>
                           </div>
-                          <div className="h-1.5 rounded-full bg-[#1A1A24]">
+                          <div className="h-1.5 rounded-full bg-vvisa-surface-2">
                             <div
                               className={`h-full rounded-full ${row.color} transition-all`}
                               style={{ width: `${row.pct}%` }}
@@ -448,7 +448,7 @@ export default function LandingView() {
         </section>
 
         {/* ────────────────────── 6. STATS ────────────────────── */}
-        <section className="bg-[#0D0D14] py-16 sm:py-20 px-4 sm:px-6 lg:px-8 border-y border-[#2A2A38]">
+        <section className="bg-[#0D0D14] py-16 sm:py-20 px-4 sm:px-6 lg:px-8 border-y border-vvisa-border">
           <motion.div
             {...staggerContainer}
             className="mx-auto max-w-7xl grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12"
@@ -467,7 +467,7 @@ export default function LandingView() {
                 <p className="text-3xl sm:text-4xl font-extrabold text-[#4F46E5] tracking-tight">
                   {stat.value}
                 </p>
-                <p className="mt-1.5 text-sm text-[#9CA3AF]">{stat.label}</p>
+                <p className="mt-1.5 text-sm text-vvisa-text-secondary">{stat.label}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -480,7 +480,7 @@ export default function LandingView() {
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white">
                 How to Apply in 30 Seconds
               </h2>
-              <p className="mt-3 text-[#9CA3AF]">Four simple steps. That&rsquo;s all it takes.</p>
+              <p className="mt-3 text-vvisa-text-secondary">Four simple steps. That&rsquo;s all it takes.</p>
             </div>
 
             <motion.div
@@ -500,13 +500,13 @@ export default function LandingView() {
                 >
                   {/* Connector line */}
                   {idx < 3 && (
-                    <div className="hidden lg:block absolute top-6 left-[calc(50%+28px)] w-[calc(100%-56px)] border-t-2 border-dashed border-[#2A2A38]" />
+                    <div className="hidden lg:block absolute top-6 left-[calc(50%+28px)] w-[calc(100%-56px)] border-t-2 border-dashed border-vvisa-border" />
                   )}
                   <div className="relative z-10 h-12 w-12 rounded-full bg-[#4F46E5]/15 border-2 border-[#4F46E5] flex items-center justify-center">
                     <item.icon className="size-5 text-[#4F46E5]" />
                   </div>
                   <p className="mt-4 text-xs font-bold text-[#4F46E5]">STEP {item.step}</p>
-                  <p className="mt-1 text-sm text-[#9CA3AF] leading-snug max-w-[160px]">{item.label}</p>
+                  <p className="mt-1 text-sm text-vvisa-text-secondary leading-snug max-w-[160px]">{item.label}</p>
                 </motion.div>
               ))}
             </motion.div>
@@ -556,7 +556,7 @@ export default function LandingView() {
                   className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
                     activeTestimonial === i
                       ? 'bg-[#4F46E5] text-white'
-                      : 'bg-[#111118] text-[#9CA3AF] border border-[#2A2A38] hover:border-[#3D3D54] hover:text-white'
+                      : 'bg-vvisa-surface text-vvisa-text-secondary border border-vvisa-border hover:border-[#3D3D54] hover:text-white'
                   }`}
                 >
                   {t.company}
@@ -577,8 +577,8 @@ export default function LandingView() {
                 &ldquo;{testimonial.quote}&rdquo;
               </blockquote>
               <div className="mt-6">
-                <p className="text-white font-semibold">{testimonial.author}</p>
-                <p className="text-sm text-[#9CA3AF]">
+                <p className="text-foreground font-semibold">{testimonial.author}</p>
+                <p className="text-sm text-vvisa-text-secondary">
                   {testimonial.role}, {testimonial.company}
                 </p>
               </div>
@@ -587,13 +587,13 @@ export default function LandingView() {
         </section>
 
         {/* ────────────────────── 10. FAQ ────────────────────── */}
-        <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-[#0D0D14] border-t border-[#2A2A38]">
+        <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-[#0D0D14] border-t border-vvisa-border">
           <motion.div {...fadeInUp} className="mx-auto max-w-3xl">
             <div className="text-center mb-12">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white">
                 Frequently Asked Questions
               </h2>
-              <p className="mt-3 text-[#9CA3AF]">Everything you need to know about VVisa.</p>
+              <p className="mt-3 text-vvisa-text-secondary">Everything you need to know about VVisa.</p>
             </div>
 
             <Accordion type="single" collapsible className="w-full">
@@ -601,12 +601,12 @@ export default function LandingView() {
                 <AccordionItem
                   key={faq.id}
                   value={`faq-${faq.id}`}
-                  className="border-[#2A2A38]"
+                  className="border-vvisa-border"
                 >
-                  <AccordionTrigger className="text-white text-sm sm:text-base hover:no-underline hover:text-white py-5">
+                  <AccordionTrigger className="text-foreground text-sm sm:text-base hover:no-underline hover:text-white py-5">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-[#9CA3AF] text-sm leading-relaxed">
+                  <AccordionContent className="text-vvisa-text-secondary text-sm leading-relaxed">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -617,23 +617,23 @@ export default function LandingView() {
       </main>
 
       {/* ────────────────────── 11. FOOTER ────────────────────── */}
-      <footer className="border-t border-[#2A2A38] bg-[#0A0A0F]">
+      <footer className="border-t border-vvisa-border bg-vvisa-bg">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 lg:gap-12">
             {/* Brand column */}
             <div className="col-span-2 md:col-span-4 lg:col-span-1 mb-4 lg:mb-0">
               <div className="flex items-center gap-2 mb-3">
                 <Image src="/logo.svg" alt="VVisa" width={28} height={28} />
-                <span className="text-white font-bold text-lg">VVisa</span>
+                <span className="text-foreground font-bold text-lg">VVisa</span>
               </div>
-              <p className="text-sm text-[#6B7280]">Built for India &hearts;</p>
+              <p className="text-sm text-vvisa-text-muted">Built for India &hearts;</p>
               {/* Social icons */}
               <div className="mt-5 flex items-center gap-3">
                 {[Facebook, Instagram, Twitter, Youtube].map((Icon, i) => (
                   <a
                     key={i}
                     href="#"
-                    className="h-9 w-9 rounded-lg bg-[#111118] border border-[#2A2A38] flex items-center justify-center text-[#6B7280] hover:text-white hover:border-[#3D3D54] transition-colors"
+                    className="h-9 w-9 rounded-lg bg-vvisa-surface border border-vvisa-border flex items-center justify-center text-vvisa-text-muted hover:text-white hover:border-[#3D3D54] transition-colors"
                   >
                     <Icon className="size-4" />
                   </a>
@@ -643,11 +643,11 @@ export default function LandingView() {
 
             {/* Company */}
             <div>
-              <h4 className="text-white text-sm font-semibold mb-4">Company</h4>
+              <h4 className="text-foreground text-sm font-semibold mb-4">Company</h4>
               <ul className="space-y-2.5">
                 {['About Us', 'Careers', 'Partners'].map((link) => (
                   <li key={link}>
-                    <a href="#" className="text-sm text-[#6B7280] hover:text-white transition-colors">
+                    <a href="#" className="text-sm text-vvisa-text-muted hover:text-white transition-colors">
                       {link}
                     </a>
                   </li>
@@ -657,11 +657,11 @@ export default function LandingView() {
 
             {/* Support */}
             <div>
-              <h4 className="text-white text-sm font-semibold mb-4">Support</h4>
+              <h4 className="text-foreground text-sm font-semibold mb-4">Support</h4>
               <ul className="space-y-2.5">
                 {['Help Center', 'Contact'].map((link) => (
                   <li key={link}>
-                    <a href="#" className="text-sm text-[#6B7280] hover:text-white transition-colors">
+                    <a href="#" className="text-sm text-vvisa-text-muted hover:text-white transition-colors">
                       {link}
                     </a>
                   </li>
@@ -671,11 +671,11 @@ export default function LandingView() {
 
             {/* Legal */}
             <div>
-              <h4 className="text-white text-sm font-semibold mb-4">Legal</h4>
+              <h4 className="text-foreground text-sm font-semibold mb-4">Legal</h4>
               <ul className="space-y-2.5">
                 {['Privacy', 'Terms'].map((link) => (
                   <li key={link}>
-                    <a href="#" className="text-sm text-[#6B7280] hover:text-white transition-colors">
+                    <a href="#" className="text-sm text-vvisa-text-muted hover:text-white transition-colors">
                       {link}
                     </a>
                   </li>
@@ -685,8 +685,8 @@ export default function LandingView() {
 
             {/* Offices */}
             <div className="col-span-2 md:col-span-4 lg:col-span-1">
-              <h4 className="text-white text-sm font-semibold mb-4">Offices</h4>
-              <ul className="space-y-2.5 text-sm text-[#6B7280]">
+              <h4 className="text-foreground text-sm font-semibold mb-4">Offices</h4>
+              <ul className="space-y-2.5 text-sm text-vvisa-text-muted">
                 <li>Mumbai, India</li>
                 <li>Delhi, India</li>
                 <li>New York, USA</li>
@@ -695,15 +695,15 @@ export default function LandingView() {
           </div>
 
           {/* Bottom bar */}
-          <div className="mt-12 pt-8 border-t border-[#2A2A38] flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-[#6B7280]">
+          <div className="mt-12 pt-8 border-t border-vvisa-border flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-vvisa-text-muted">
               &copy; 2026 VVisa AI Platform. All rights reserved.
             </p>
             <div className="flex items-center gap-4">
-              <a href="#" className="text-xs text-[#6B7280] hover:text-white transition-colors">
+              <a href="#" className="text-xs text-vvisa-text-muted hover:text-white transition-colors">
                 Privacy Policy
               </a>
-              <a href="#" className="text-xs text-[#6B7280] hover:text-white transition-colors">
+              <a href="#" className="text-xs text-vvisa-text-muted hover:text-white transition-colors">
                 Terms of Service
               </a>
             </div>

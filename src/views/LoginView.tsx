@@ -92,9 +92,9 @@ export default function LoginView() {
           {/* Logo + Brand */}
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm">
-              <span className="text-white font-bold text-xl">V</span>
+              <span className="text-foreground font-bold text-xl">V</span>
             </div>
-            <span className="text-white font-semibold text-xl tracking-tight">
+            <span className="text-foreground font-semibold text-xl tracking-tight">
               VVisa Business
             </span>
           </div>
@@ -120,7 +120,7 @@ export default function LoginView() {
                     <feature.icon className="size-4 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-white font-medium text-sm">
+                    <h3 className="text-foreground font-medium text-sm">
                       {feature.title}
                     </h3>
                     <ul className="mt-1.5 space-y-0.5">
@@ -146,13 +146,13 @@ export default function LoginView() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="w-full md:w-[60%] bg-[#0A0A0F] flex items-center justify-center p-6 md:p-12"
+        className="w-full md:w-[60%] bg-vvisa-bg flex items-center justify-center p-6 md:p-12"
       >
         <div className="w-full max-w-md">
           {/* Heading */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-white">Login to VVisa</h2>
-            <p className="mt-1.5 text-sm text-[#6B7280]">
+            <p className="mt-1.5 text-sm text-vvisa-text-muted">
               Enter your credentials to access your account
             </p>
           </div>
@@ -163,7 +163,7 @@ export default function LoginView() {
             <div className="space-y-2">
               <Label
                 htmlFor="login-email"
-                className="text-sm font-medium text-[#9CA3AF]"
+                className="text-sm font-medium text-vvisa-text-secondary"
               >
                 Email
               </Label>
@@ -171,7 +171,7 @@ export default function LoginView() {
                 id="login-email"
                 type="email"
                 placeholder="you@agency.com"
-                className="h-11 bg-[#111118] border-[#2A2A38] text-white placeholder:text-[#6B7280] focus:border-indigo-500 focus:ring-indigo-500/20"
+                className="h-11 bg-vvisa-surface border-vvisa-border text-white placeholder:text-vvisa-text-muted focus:border-indigo-500 focus:ring-indigo-500/20"
                 {...register('email')}
               />
               {errors.email && (
@@ -184,7 +184,7 @@ export default function LoginView() {
               <div className="flex items-center justify-between">
                 <Label
                   htmlFor="login-password"
-                  className="text-sm font-medium text-[#9CA3AF]"
+                  className="text-sm font-medium text-vvisa-text-secondary"
                 >
                   Password
                 </Label>
@@ -200,13 +200,13 @@ export default function LoginView() {
                   id="login-password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
-                  className="h-11 bg-[#111118] border-[#2A2A38] text-white placeholder:text-[#6B7280] focus:border-indigo-500 focus:ring-indigo-500/20 pr-10"
+                  className="h-11 bg-vvisa-surface border-vvisa-border text-white placeholder:text-vvisa-text-muted focus:border-indigo-500 focus:ring-indigo-500/20 pr-10"
                   {...register('password')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#9CA3AF] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-vvisa-text-muted hover:text-vvisa-text-secondary transition-colors"
                 >
                   {showPassword ? (
                     <EyeOff className="size-4" />
@@ -225,7 +225,7 @@ export default function LoginView() {
             {/* Sign In Button */}
             <Button
               type="submit"
-              className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-colors cursor-pointer"
+              className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-foreground font-medium transition-colors cursor-pointer"
             >
               Sign In
             </Button>
@@ -233,15 +233,15 @@ export default function LoginView() {
 
           {/* Divider */}
           <div className="flex items-center gap-4 my-6">
-            <Separator className="flex-1 bg-[#2A2A38]" />
-            <span className="text-xs text-[#6B7280] font-medium">OR</span>
-            <Separator className="flex-1 bg-[#2A2A38]" />
+            <Separator className="flex-1 bg-vvisa-border" />
+            <span className="text-xs text-vvisa-text-muted font-medium">OR</span>
+            <Separator className="flex-1 bg-vvisa-border" />
           </div>
 
           {/* Google Button */}
           <Button
             variant="outline"
-            className="w-full h-11 bg-[#111118] border-[#2A2A38] text-white hover:bg-[#1A1A24] hover:text-white font-medium transition-colors cursor-pointer"
+            className="w-full h-11 bg-vvisa-surface border-vvisa-border text-white hover:bg-vvisa-surface-2 hover:text-foreground font-medium transition-colors cursor-pointer"
           >
             <svg className="size-4 mr-2" viewBox="0 0 24 24">
               <path
@@ -265,7 +265,7 @@ export default function LoginView() {
           </Button>
 
           {/* Sign Up Link */}
-          <p className="mt-8 text-center text-sm text-[#6B7280]">
+          <p className="mt-8 text-center text-sm text-vvisa-text-muted">
             Don&apos;t have an account?{' '}
             <button
               onClick={() => navigate('signup')}

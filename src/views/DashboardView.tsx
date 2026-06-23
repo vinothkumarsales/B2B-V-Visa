@@ -67,26 +67,26 @@ export default function DashboardView() {
       className="space-y-6"
     >
       {/* Search Bar */}
-      <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl overflow-visible">
+      <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl overflow-visible">
         <CardContent className="p-6">
           <div className="flex flex-col lg:flex-row gap-3 items-end">
             {/* From */}
             <div className="flex-1 w-full lg:w-auto">
-              <label className="block text-xs text-[#9CA3AF] mb-1.5 font-medium">From</label>
+              <label className="block text-xs text-vvisa-text-secondary mb-1.5 font-medium">From</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm">🇮🇳</span>
                 <Input
                   value="India"
                   disabled
-                  className="bg-[#0A0A0F] border border-[#2A2A38] rounded-lg text-white pl-9 pr-3 h-11 opacity-60 cursor-not-allowed"
+                  className="bg-vvisa-bg border border-vvisa-border rounded-lg text-foreground pl-9 pr-3 h-11 opacity-60 cursor-not-allowed"
                 />
               </div>
             </div>
             {/* Going To */}
             <div className="flex-1 w-full lg:w-auto relative">
-              <label className="block text-xs text-[#9CA3AF] mb-1.5 font-medium">Going to</label>
+              <label className="block text-xs text-vvisa-text-secondary mb-1.5 font-medium">Going to</label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B7280]" />
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-vvisa-text-muted" />
                 <Input
                   value={goingTo}
                   onChange={(e) => {
@@ -96,7 +96,7 @@ export default function DashboardView() {
                   onFocus={() => setShowDropdown(true)}
                   onKeyDown={handleKeyDown}
                   placeholder="Search destination..."
-                  className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white pl-9 pr-3 h-11"
+                  className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-11"
                 />
                 <AnimatePresence>
                   {showDropdown && goingTo.length > 0 && filteredDestinations.length > 0 && (
@@ -104,15 +104,15 @@ export default function DashboardView() {
                       initial={{ opacity: 0, y: -4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -4 }}
-                      className="absolute top-full left-0 right-0 mt-1 bg-[#1A1A24] border border-[#2A2A38] rounded-lg z-50 max-h-48 overflow-y-auto"
+                      className="absolute top-full left-0 right-0 mt-1 bg-vvisa-surface-2 border border-vvisa-border rounded-lg z-50 max-h-48 overflow-y-auto"
                     >
                       {filteredDestinations.map((dest) => (
                         <button
                           key={dest}
                           onClick={() => handleSelectDestination(dest)}
-                          className="w-full px-4 py-2.5 text-left text-sm text-white hover:bg-[#252530] flex items-center gap-2 transition-colors"
+                          className="w-full px-4 py-2.5 text-left text-sm text-foreground hover:bg-vvisa-surface-2 flex items-center gap-2 transition-colors"
                         >
-                          <Plane className="h-3.5 w-3.5 text-[#6B7280]" />
+                          <Plane className="h-3.5 w-3.5 text-vvisa-text-muted" />
                           {dest}
                         </button>
                       ))}
@@ -123,27 +123,27 @@ export default function DashboardView() {
             </div>
             {/* Travel Date */}
             <div className="flex-1 w-full lg:w-auto">
-              <label className="block text-xs text-[#9CA3AF] mb-1.5 font-medium">Travel Date</label>
+              <label className="block text-xs text-vvisa-text-secondary mb-1.5 font-medium">Travel Date</label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B7280]" />
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-vvisa-text-muted" />
                 <Input
                   type="date"
                   value={travelDate}
                   onChange={(e) => setTravelDate(e.target.value)}
-                  className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white pl-9 pr-3 h-11"
+                  className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-11"
                 />
               </div>
             </div>
             {/* Return Date */}
             <div className="flex-1 w-full lg:w-auto">
-              <label className="block text-xs text-[#9CA3AF] mb-1.5 font-medium">Return Date</label>
+              <label className="block text-xs text-vvisa-text-secondary mb-1.5 font-medium">Return Date</label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B7280]" />
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-vvisa-text-muted" />
                 <Input
                   type="date"
                   value={returnDate}
                   onChange={(e) => setReturnDate(e.target.value)}
-                  className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white pl-9 pr-3 h-11"
+                  className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-11"
                 />
               </div>
             </div>
@@ -158,11 +158,11 @@ export default function DashboardView() {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-6 mt-5 border-b border-[#2A2A38]">
+          <div className="flex gap-6 mt-5 border-b border-vvisa-border">
             <button className="pb-2.5 text-sm font-medium text-indigo-400 border-b-2 border-indigo-500">
               Visas
             </button>
-            <button className="pb-2.5 text-sm font-medium text-[#6B7280] cursor-not-allowed" disabled>
+            <button className="pb-2.5 text-sm font-medium text-vvisa-text-muted cursor-not-allowed" disabled>
               Insurance
             </button>
           </div>
@@ -175,35 +175,35 @@ export default function DashboardView() {
         <div className="flex-1 space-y-6">
           {/* Quick Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl">
+            <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
               <CardContent className="p-4 flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-[#1A1A24]">
-                  <Briefcase className="h-5 w-5 text-[#9CA3AF]" />
+                <div className="p-2.5 rounded-lg bg-vvisa-surface-2">
+                  <Briefcase className="h-5 w-5 text-vvisa-text-secondary" />
                 </div>
                 <div>
-                  <p className="text-xs text-[#6B7280]">Total Applications</p>
-                  <p className="text-xl font-bold text-white">{stats.totalApplications}</p>
+                  <p className="text-xs text-vvisa-text-muted">Total Applications</p>
+                  <p className="text-xl font-bold text-foreground">{stats.totalApplications}</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl">
+            <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="p-2.5 rounded-lg bg-emerald-950/30">
                   <CheckCircle className="h-5 w-5 text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-[#6B7280]">Approved This Month</p>
+                  <p className="text-xs text-vvisa-text-muted">Approved This Month</p>
                   <p className="text-xl font-bold text-emerald-400">{stats.approvedThisMonth}</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl">
+            <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="p-2.5 rounded-lg bg-indigo-950/30">
                   <Wallet className="h-5 w-5 text-indigo-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-[#6B7280]">Wallet Balance</p>
+                  <p className="text-xs text-vvisa-text-muted">Wallet Balance</p>
                   <p className="text-xl font-bold text-indigo-400 font-mono">{formatINR(stats.walletBalance)}</p>
                 </div>
               </CardContent>
@@ -213,8 +213,8 @@ export default function DashboardView() {
           {/* Recent Applications */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-white">Recent Applications</h2>
-              <span className="text-xs text-[#3D3D54] font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
+              <h2 className="text-lg font-semibold text-foreground">Recent Applications</h2>
+              <span className="text-xs text-vvisa-border-active font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
               <button
                 onClick={() => navigate('applications')}
                 className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
@@ -228,7 +228,7 @@ export default function DashboardView() {
                 return (
                   <Card
                     key={app.id}
-                    className="bg-[#111118] border border-[#2A2A38] rounded-xl cursor-pointer hover:bg-[#1A1A24] transition-colors"
+                    className="bg-vvisa-surface border border-vvisa-border rounded-xl cursor-pointer hover:bg-vvisa-surface-2 transition-colors"
                     onClick={() => {
                       useAppStore.getState().setSelectedApplicationId(app.id);
                       navigate('application-detail');
@@ -236,20 +236,20 @@ export default function DashboardView() {
                   >
                     <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="p-2 rounded-lg bg-[#1A1A24] shrink-0">
-                          <Plane className="h-4 w-4 text-[#9CA3AF]" />
+                        <div className="p-2 rounded-lg bg-vvisa-surface-2 shrink-0">
+                          <Plane className="h-4 w-4 text-vvisa-text-secondary" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-white truncate">
+                          <p className="text-sm font-medium text-foreground truncate">
                             {app.groupName || app.travelers[0]?.firstName + ' ' + app.travelers[0]?.lastName}
                           </p>
-                          <p className="text-xs text-[#6B7280] truncate">
+                          <p className="text-xs text-vvisa-text-muted truncate">
                             {app.destination} · {app.visaType} · {app.travelers.length} traveler{app.travelers.length > 1 ? 's' : ''}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 sm:shrink-0">
-                        <span className="text-xs text-[#6B7280]">{formatDate(app.createdAt)}</span>
+                        <span className="text-xs text-vvisa-text-muted">{formatDate(app.createdAt)}</span>
                         <Badge
                           variant="secondary"
                           className={`${sc?.bg || ''} ${sc?.text || ''} text-xs font-medium border-0`}
@@ -275,29 +275,29 @@ export default function DashboardView() {
               exit={{ opacity: 0, x: 20 }}
               className="hidden lg:block w-80 shrink-0"
             >
-              <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl relative overflow-hidden">
+              <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl relative overflow-hidden">
                 <button
                   onClick={() => setShowAlliance(false)}
-                  className="absolute top-3 right-3 p-1 rounded-md hover:bg-[#1A1A24] transition-colors z-10"
+                  className="absolute top-3 right-3 p-1 rounded-md hover:bg-vvisa-surface-2 transition-colors z-10"
                 >
-                  <X className="h-4 w-4 text-[#6B7280]" />
+                  <X className="h-4 w-4 text-vvisa-text-muted" />
                 </button>
                 <CardContent className="p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <Sparkles className="h-5 w-5 text-indigo-400" />
-                    <h3 className="text-sm font-semibold text-white">VVisa Alliance Program</h3>
+                    <h3 className="text-sm font-semibold text-foreground">VVisa Alliance Program</h3>
                   </div>
-                  <p className="text-sm font-medium text-[#F9FAFB] mb-2">Introducing the VVisa Alliance Program</p>
+                  <p className="text-sm font-medium text-foreground mb-2">Introducing the VVisa Alliance Program</p>
                   <ul className="space-y-1.5 mb-4">
-                    <li className="text-xs text-[#9CA3AF] flex items-start gap-1.5">
+                    <li className="text-xs text-vvisa-text-secondary flex items-start gap-1.5">
                       <span className="text-indigo-400 mt-0.5">•</span>
                       Earn commissions on every referral
                     </li>
-                    <li className="text-xs text-[#9CA3AF] flex items-start gap-1.5">
+                    <li className="text-xs text-vvisa-text-secondary flex items-start gap-1.5">
                       <span className="text-indigo-400 mt-0.5">•</span>
                       Track links in real-time
                     </li>
-                    <li className="text-xs text-[#9CA3AF] flex items-start gap-1.5">
+                    <li className="text-xs text-vvisa-text-secondary flex items-start gap-1.5">
                       <span className="text-indigo-400 mt-0.5">•</span>
                       Dedicated support
                     </li>

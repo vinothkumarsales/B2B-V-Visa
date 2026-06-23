@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,7 @@ import {
   HelpCircle,
   ChevronRight,
 } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import type { ViewRoute } from '@/types';
 
 interface NavItem {
@@ -101,7 +102,7 @@ function SidebarNav({
           return (
             <div
               key={item.label}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[#6B7280] cursor-not-allowed opacity-60
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-vvisa-text-muted cursor-not-allowed opacity-60
                 ${collapsed ? 'justify-center' : ''}
               `}
             >
@@ -119,7 +120,7 @@ function SidebarNav({
               ${collapsed ? 'justify-center' : ''}
               ${isActive
                 ? 'bg-indigo-950/50 text-indigo-400 border-l-2 border-indigo-500'
-                : 'text-[#9CA3AF] hover:bg-[#1A1A24] hover:text-white'
+                : 'text-vvisa-text-secondary hover:bg-vvisa-surface-2 hover:text-foreground'
               }
             `}
           >
@@ -128,7 +129,7 @@ function SidebarNav({
               <span className="flex-1 text-left">{item.label}</span>
             )}
             {!collapsed && item.badge && (
-              <span className="text-xs text-[#6B7280]">{item.badge}</span>
+              <span className="text-xs text-vvisa-text-muted">{item.badge}</span>
             )}
             {!collapsed && isActive && <ChevronRight className="size-3.5 shrink-0 text-indigo-500" />}
           </button>
@@ -157,7 +158,8 @@ function SidebarContent({
   const navItems: NavItem[] = [
     { label: 'Profile', icon: User, route: 'profile' },
     { label: 'Alliance Dashboard', icon: LayoutDashboard, route: 'alliance' },
-    { label: 'Old Dashboard', icon: Archive, route: 'dashboard' as ViewRoute, disabled: true },
+    { label: 'Dashboard', icon: LayoutDashboard, route: 'dashboard' as ViewRoute },
+    { label: 'Applications', icon: Archive, route: 'applications' as ViewRoute },
     { label: 'Wallet', icon: Wallet, route: 'wallet', badge: `₹${walletBalance.toLocaleString('en-IN')}` },
     { label: 'Overstay', icon: FileText, route: 'overstay' },
     { label: 'Change Password', icon: Lock, route: 'change-password' },
@@ -170,16 +172,16 @@ function SidebarContent({
       <div className={`p-4 ${collapsed ? 'flex justify-center' : ''}`}>
         <div className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
           <Avatar className="size-9 shrink-0 bg-indigo-600">
-            <AvatarFallback className="bg-indigo-600 text-white text-xs font-semibold">
+            <AvatarFallback className="bg-indigo-600 text-foreground text-xs font-semibold">
               {initials}
             </AvatarFallback>
           </Avatar>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="text-sm font-medium text-white truncate">
+              <p className="text-sm font-medium text-foreground truncate">
                 {agency?.name ?? 'Agency'}
               </p>
-              <p className="text-xs text-[#6B7280] truncate">
+              <p className="text-xs text-vvisa-text-muted truncate">
                 {agency?.email ?? 'email@agency.com'}
               </p>
             </div>
@@ -191,7 +193,7 @@ function SidebarContent({
       <div className={`px-4 mb-2 ${collapsed ? '' : ''}`}>
         <Button
           onClick={() => onNavigate('explore')}
-          className={`bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-colors cursor-pointer
+          className={`bg-indigo-600 hover:bg-indigo-500 text-foreground font-medium transition-colors cursor-pointer
             ${collapsed ? 'w-10 h-10 p-0 flex items-center justify-center' : 'w-full h-10'}
           `}
         >
@@ -199,7 +201,7 @@ function SidebarContent({
         </Button>
       </div>
 
-      <Separator className="bg-[#2A2A38] mx-4" />
+      <Separator className="bg-vvisa-border mx-4" />
 
       {/* Nav Items */}
       <div className="flex-1 overflow-y-auto py-2">
@@ -212,7 +214,7 @@ function SidebarContent({
       </div>
 
       {/* Sign Out at bottom */}
-      <Separator className="bg-[#2A2A38] mx-4" />
+      <Separator className="bg-vvisa-border mx-4" />
       <div className="p-2 pb-4">
         <button
           onClick={onLogout}
@@ -228,6 +230,21 @@ function SidebarContent({
   );
 }
 
+const CLIENT_ID = 'enKOdaUD6df8RHXgzoP723VOvHA2';
+
+const routeToPath: Record<string, string> = {
+  dashboard: '/dashboard',
+  explore: '/explore',
+  apply: '/apply',
+  applications: '/applications',
+  'application-detail': '/application-detail',
+  wallet: '/wallet',
+  alliance: '/alliance',
+  overstay: '/overstay',
+  profile: '/profile',
+  'change-password': '/change-password',
+};
+
 export default function DashboardShell({ children }: { children: ReactNode }) {
   const currentView = useAppStore((s) => s.currentView);
   const agency = useAppStore((s) => s.agency);
@@ -235,6 +252,12 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
   const navigate = useAppStore((s) => s.navigate);
   const logout = useAppStore((s) => s.logout);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Update browser URL with view path + client ID
+  useEffect(() => {
+    const basePath = routeToPath[currentView] || '/dashboard';
+    window.history.replaceState(null, '', `${basePath}/${CLIENT_ID}`);
+  }, [currentView]);
 
   const handleNavigate = (route: ViewRoute) => {
     if (route === 'landing') {
@@ -268,9 +291,9 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
   const title = pageTitle[currentView] ?? 'Dashboard';
 
   return (
-    <div className="min-h-screen flex bg-[#0A0A0F]">
+    <div className="min-h-screen flex bg-vvisa-bg">
       {/* Desktop Sidebar — full on lg+, collapsed on md */}
-      <aside className="hidden md:flex flex-col w-60 lg:w-60 bg-[#111118] border-r border-[#2A2A38] shrink-0">
+      <aside className="hidden md:flex flex-col w-60 lg:w-60 bg-vvisa-surface border-r border-vvisa-border shrink-0">
         <SidebarContent
           onNavigate={handleNavigate}
           activeRoute={currentView}
@@ -282,7 +305,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Nav */}
-        <header className="h-14 border-b border-[#2A2A38] bg-[#0A0A0F] flex items-center justify-between px-4 lg:px-6 shrink-0 sticky top-0 z-30">
+        <header className="h-14 border-b border-vvisa-border bg-vvisa-bg flex items-center justify-between px-4 lg:px-6 shrink-0 sticky top-0 z-30">
           {/* Left: Mobile hamburger + title */}
           <div className="flex items-center gap-3">
             {/* Mobile Sheet */}
@@ -291,14 +314,14 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="md:hidden text-[#9CA3AF] hover:text-white hover:bg-[#1A1A24] cursor-pointer"
+                  className="md:hidden text-vvisa-text-secondary hover:text-foreground hover:bg-vvisa-surface-2 cursor-pointer"
                 >
                   <Menu className="size-5" />
                 </Button>
               </SheetTrigger>
               <SheetContent
                 side="left"
-                className="w-64 bg-[#111118] border-[#2A2A38] p-0"
+                className="w-64 bg-vvisa-surface border-vvisa-border p-0"
               >
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <SidebarContent
@@ -310,21 +333,22 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
               </SheetContent>
             </Sheet>
 
-            <h1 className="text-base font-semibold text-white">{title}</h1>
+            <h1 className="text-base font-semibold text-foreground">{title}</h1>
           </div>
 
-          {/* Right: Help, Wallet, Notifications, Avatar */}
-          <div className="flex items-center gap-3">
+          {/* Right: Theme Toggle, Help, Wallet, Notifications, Avatar */}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             {/* Need help? */}
-            <button className="hidden sm:flex items-center gap-1.5 text-xs text-[#6B7280] hover:text-[#9CA3AF] transition-colors cursor-pointer">
+            <button className="hidden sm:flex items-center gap-1.5 text-xs text-vvisa-text-muted hover:text-vvisa-text-secondary transition-colors cursor-pointer">
               <HelpCircle className="size-3.5" />
               <span>Need help?</span>
             </button>
 
             {/* Wallet Chip */}
-            <div className="hidden sm:flex items-center gap-1.5 bg-[#1A1A24] rounded-full px-3 py-1.5 border border-[#2A2A38]">
-              <Wallet className="size-3.5 text-[#6B7280]" />
-              <span className="text-xs font-medium text-white">
+            <div className="hidden sm:flex items-center gap-1.5 bg-vvisa-surface-2 rounded-full px-3 py-1.5 border border-vvisa-border">
+              <Wallet className="size-3.5 text-vvisa-text-muted" />
+              <span className="text-xs font-medium text-foreground">
                 {formatCurrency(walletBalance)}
               </span>
             </div>
@@ -333,7 +357,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
             <Button
               variant="ghost"
               size="icon"
-              className="relative text-[#9CA3AF] hover:text-white hover:bg-[#1A1A24] cursor-pointer"
+              className="relative text-vvisa-text-secondary hover:text-foreground hover:bg-vvisa-surface-2 cursor-pointer"
             >
               <Bell className="size-4" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full" />
@@ -344,7 +368,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 cursor-pointer">
                   <Avatar className="size-8 bg-indigo-600">
-                    <AvatarFallback className="bg-indigo-600 text-white text-xs font-semibold">
+                    <AvatarFallback className="bg-indigo-600 text-foreground text-xs font-semibold">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
@@ -352,34 +376,34 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-48 bg-[#111118] border-[#2A2A38]"
+                className="w-48 bg-vvisa-surface border-vvisa-border"
               >
-                <DropdownMenuLabel className="text-xs text-[#6B7280] font-normal">
+                <DropdownMenuLabel className="text-xs text-vvisa-text-muted font-normal">
                   {agency?.email ?? 'email@agency.com'}
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-[#2A2A38]" />
+                <DropdownMenuSeparator className="bg-vvisa-border" />
                 <DropdownMenuItem
                   onClick={() => handleNavigate('profile')}
-                  className="text-sm text-[#9CA3AF] focus:text-white focus:bg-[#1A1A24] cursor-pointer"
+                  className="text-sm text-vvisa-text-secondary focus:text-white focus:bg-vvisa-surface-2 cursor-pointer"
                 >
                   <User className="size-4 mr-2" />
                   Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleNavigate('wallet')}
-                  className="text-sm text-[#9CA3AF] focus:text-white focus:bg-[#1A1A24] cursor-pointer"
+                  className="text-sm text-vvisa-text-secondary focus:text-white focus:bg-vvisa-surface-2 cursor-pointer"
                 >
                   <Wallet className="size-4 mr-2" />
                   Wallet
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleNavigate('change-password')}
-                  className="text-sm text-[#9CA3AF] focus:text-white focus:bg-[#1A1A24] cursor-pointer"
+                  className="text-sm text-vvisa-text-secondary focus:text-white focus:bg-vvisa-surface-2 cursor-pointer"
                 >
                   <Lock className="size-4 mr-2" />
                   Change Password
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-[#2A2A38]" />
+                <DropdownMenuSeparator className="bg-vvisa-border" />
                 <DropdownMenuItem
                   onClick={handleLogout}
                   className="text-sm text-red-400 focus:text-red-400 focus:bg-red-950/30 cursor-pointer"

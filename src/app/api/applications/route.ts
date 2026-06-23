@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockApplications, statusConfig } from '@/lib/mock-data';
+import { generateApplicationId, generateGroupId, generateTransactionId } from '@/lib/transaction-id';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -59,10 +60,16 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // Generate unique IDs based on client ID
+    const appId = generateApplicationId(body.internalId);
+    const groupId = body.groupName ? generateGroupId() : undefined;
+    const transactionId = generateTransactionId();
+
     const newApplication = {
-      id: `app-${Date.now()}`,
+      id: appId,
       agencyId: body.agencyId || 'agency-001',
-      groupId: body.groupId || `grp-${Date.now()}`,
+      groupId: groupId,
+      transactionId: transactionId,
       internalId: body.internalId || '',
       groupName: body.groupName || '',
       destination: body.destination || '',
@@ -78,7 +85,11 @@ export async function POST(request: NextRequest) {
     };
 
     return NextResponse.json(
-      { application: newApplication, message: 'Application created successfully' },
+      {
+        application: newApplication,
+        transactionId,
+        message: 'Application created successfully',
+      },
       { status: 201 }
     );
   } catch {

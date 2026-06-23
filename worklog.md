@@ -267,3 +267,58 @@ Stage Summary:
 - 12 applications in unified sorted list
 - ocr.z.ai branding on all 6 upload zones
 - Client ID enKOdaUD6df8RHXgzoP723VOvHA2 on all dashboard sections
+
+---
+Task ID: 8-a
+Agent: Main Orchestrator
+Task: Dynamic additional documents per visa type, client-ID-based transaction IDs, UPI QR code
+
+Work Log:
+- Verified WalletView already has QR code (/phonepe-qr.jpg) and UPI ID (Q75148468@ybl) — task already done
+- Expanded docNameToMeta in ApplyView.tsx from 19 to 35+ document type mappings covering all 48 countries
+- Added normalizeDocName() function to handle variants like "Bank Statement (min ₹3L)" → "Bank Statement", "Hotel Booking Confirmation" → "Hotel Booking", "Medical Insurance" → "Health Insurance"
+- Updated getRequiredAdditionalDocs() to use normalization + deduplication by key
+- Added generateTransactionId() and generateApplicationId() to app.store.ts — format: enKOd-APP-{timestamp_hex}-{counter_hex}
+- Added submitApplication() action to Zustand store: validates wallet balance, creates app + wallet transaction, deducts balance, updates stats
+- Wired "Review and Save" buttons in ApplyView to handleSubmit with loading state
+- Added submission result modal: success shows unique transaction ID with copy button, destination/amount/travelers/balance summary, "View Applications" + "Submit Another" buttons; error shows dismiss dialog
+- Fixed React Compiler memoization lint error (submitResult?.txnId → submitResult)
+- ESLint: 0 errors
+
+Stage Summary:
+- Additional documents are now fully dynamic per visa type (reads from selectedVisaType.documents array)
+- 35+ document mappings cover all visa types across 48 countries including DS-160, Yellow Fever, Police Clearance, Sponsor Letter, etc.
+- Normalization handles parenthetical annotations and naming variations
+- Transaction IDs derived from client ID prefix "enKOd" + timestamp + counter
+- Submit flow creates application, debits wallet, shows unique transaction ID in modal
+
+---
+Task ID: 9
+Agent: Main Orchestrator
+Task: Add dark/light theme toggle button to DashboardShell header
+
+Work Log:
+- Analyzed user's screenshot via VLM: circular sun icon button, dark background, top-right corner
+- Verified next-themes v0.4.6 already installed, ThemeProvider configured in layout.tsx with attribute="class"
+- Created src/components/ThemeToggle.tsx — Sun/Moon animated toggle using useSyncExternalStore for hydration-safe mount detection
+- Added ThemeToggle to DashboardShell header (between hamburger menu area and "Need help?" button)
+- Migrated ~200 hardcoded `text-white` → `text-foreground` across 10 dashboard view files
+- Migrated `hover:text-white` → `hover:text-foreground` in DashboardShell and all views
+- Migrated `data-[state=active]:text-white` → `data-[state=active]:text-foreground` in tab components
+- Migrated hardcoded hex colors: `hover:bg-[#252530]` → `hover:bg-vvisa-surface-2`, `text-[#2A2A38]` → `text-vvisa-border`
+- Preserved `text-white` on elements with always-dark backgrounds (bg-indigo-600 buttons, step indicator circles)
+- Fixed React Compiler lint error: replaced useState+useEffect mounted pattern with useSyncExternalStore
+- ESLint: 0 errors
+
+Browser Verification:
+- Dark mode: confirmed dark background, light text, sun icon visible on toggle button
+- Light mode: confirmed white background, dark text, moon icon visible, cards/sidebar/header all readable
+- Tested Dashboard, Applications, Wallet views in both modes — all passed VLM visual quality check
+- No console errors or hydration issues
+
+Stage Summary:
+- Theme toggle (Sun/Moon animated) added to top-right of DashboardShell header
+- All 10 dashboard views fully theme-aware using CSS variable classes
+- Light mode: #F8FAFC bg, white surfaces, #0F172A text
+- Dark mode: #0A0A0F bg, #111118 surfaces, #F9FAFB text
+- Toggle persists preference via next-themes localStorage

@@ -31,9 +31,9 @@ const categoryConfig: Record<string, { icon: React.ReactNode; color: string; bgC
   },
   STANDARD: {
     icon: <Clock className="h-4 w-4" />,
-    color: 'text-[#9CA3AF]',
-    bgColor: 'bg-[#1A1A24]',
-    borderColor: 'border-[#2A2A38]',
+    color: 'text-vvisa-text-secondary',
+    bgColor: 'bg-vvisa-surface-2',
+    borderColor: 'border-vvisa-border',
   },
   MULTI_ENTRY: {
     icon: <Plane className="h-4 w-4" />,
@@ -101,25 +101,25 @@ export default function ExploreView() {
       className="space-y-6"
     >
       {/* Sticky Search Bar */}
-      <div className="sticky top-0 z-30 bg-[#0A0A0F] pt-2 pb-4">
-        <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl">
+      <div className="sticky top-0 z-30 bg-vvisa-bg pt-2 pb-4">
+        <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
           <CardContent className="p-4">
             <div className="flex flex-col lg:flex-row gap-3 items-end">
               <div className="flex-1 w-full lg:w-auto">
-                <label className="block text-xs text-[#9CA3AF] mb-1.5 font-medium">From</label>
+                <label className="block text-xs text-vvisa-text-secondary mb-1.5 font-medium">From</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm">🇮🇳</span>
                   <Input
                     value="India"
                     disabled
-                    className="bg-[#0A0A0F] border border-[#2A2A38] rounded-lg text-white pl-9 pr-3 h-10 opacity-60 cursor-not-allowed"
+                    className="bg-vvisa-bg border border-vvisa-border rounded-lg text-foreground pl-9 pr-3 h-10 opacity-60 cursor-not-allowed"
                   />
                 </div>
               </div>
               <div className="flex-1 w-full lg:w-auto relative">
-                <label className="block text-xs text-[#9CA3AF] mb-1.5 font-medium">Going to</label>
+                <label className="block text-xs text-vvisa-text-secondary mb-1.5 font-medium">Going to</label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B7280]" />
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-vvisa-text-muted" />
                   <Input
                     value={goingTo}
                     onChange={(e) => {
@@ -129,7 +129,7 @@ export default function ExploreView() {
                     onFocus={() => setShowDropdown(true)}
                     onKeyDown={handleKeyDown}
                     placeholder="Search destination..."
-                    className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white pl-9 pr-3 h-10"
+                    className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-10"
                   />
                   <AnimatePresence>
                     {showDropdown && goingTo.length > 0 && filteredDestinations.length > 0 && (
@@ -137,15 +137,15 @@ export default function ExploreView() {
                         initial={{ opacity: 0, y: -4 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -4 }}
-                        className="absolute top-full left-0 right-0 mt-1 bg-[#1A1A24] border border-[#2A2A38] rounded-lg z-50 max-h-48 overflow-y-auto"
+                        className="absolute top-full left-0 right-0 mt-1 bg-vvisa-surface-2 border border-vvisa-border rounded-lg z-50 max-h-48 overflow-y-auto"
                       >
                         {filteredDestinations.map((dest) => (
                           <button
                             key={dest}
                             onClick={() => handleSelectDestination(dest)}
-                            className="w-full px-4 py-2.5 text-left text-sm text-white hover:bg-[#252530] flex items-center gap-2 transition-colors"
+                            className="w-full px-4 py-2.5 text-left text-sm text-foreground hover:bg-vvisa-surface-2 flex items-center gap-2 transition-colors"
                           >
-                            <Plane className="h-3.5 w-3.5 text-[#6B7280]" />
+                            <Plane className="h-3.5 w-3.5 text-vvisa-text-muted" />
                             {dest}
                           </button>
                         ))}
@@ -155,26 +155,26 @@ export default function ExploreView() {
                 </div>
               </div>
               <div className="flex-1 w-full lg:w-auto">
-                <label className="block text-xs text-[#9CA3AF] mb-1.5 font-medium">Travel Date</label>
+                <label className="block text-xs text-vvisa-text-secondary mb-1.5 font-medium">Travel Date</label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B7280]" />
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-vvisa-text-muted" />
                   <Input
                     type="date"
                     value={travelDate}
                     onChange={(e) => setTravelDate(e.target.value)}
-                    className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white pl-9 pr-3 h-10"
+                    className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-10"
                   />
                 </div>
               </div>
               <div className="flex-1 w-full lg:w-auto">
-                <label className="block text-xs text-[#9CA3AF] mb-1.5 font-medium">Return Date</label>
+                <label className="block text-xs text-vvisa-text-secondary mb-1.5 font-medium">Return Date</label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B7280]" />
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-vvisa-text-muted" />
                   <Input
                     type="date"
                     value={returnDate}
                     onChange={(e) => setReturnDate(e.target.value)}
-                    className="bg-[#0A0A0F] border border-[#2A2A38] focus:border-indigo-500 rounded-lg text-white pl-9 pr-3 h-10"
+                    className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-foreground pl-9 pr-3 h-10"
                   />
                 </div>
               </div>
@@ -193,12 +193,12 @@ export default function ExploreView() {
       {/* Results Heading */}
       <div>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             {goingTo.trim() ? `${goingTo.trim()} Visa Types` : 'All Visa Types'}
           </h1>
-          <span className="text-xs text-[#6B7280] font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
+          <span className="text-xs text-vvisa-text-muted font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
         </div>
-        <p className="text-sm text-[#6B7280] mt-1">
+        <p className="text-sm text-vvisa-text-muted mt-1">
           {filteredVisas.length} visa option{filteredVisas.length !== 1 ? 's' : ''} available
         </p>
       </div>
@@ -216,7 +216,7 @@ export default function ExploreView() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className={`bg-[#111118] border rounded-xl overflow-hidden ${cat.borderColor}`}>
+              <Card className={`bg-vvisa-surface border rounded-xl overflow-hidden ${cat.borderColor}`}>
                 {/* Category Header */}
                 <div className={`${cat.bgColor} px-5 py-3.5 border-b ${cat.borderColor}`}>
                   <div className="flex items-center gap-2">
@@ -230,7 +230,7 @@ export default function ExploreView() {
                     </span>
                   </div>
                   {visa.category === 'LIGHTNING_FAST' && (
-                    <p className="text-xs text-[#9CA3AF] mt-1 ml-6">
+                    <p className="text-xs text-vvisa-text-secondary mt-1 ml-6">
                       Estimated visa arrival by{' '}
                       <span className="text-indigo-400 font-medium">{estArrival}</span>
                     </p>
@@ -240,24 +240,24 @@ export default function ExploreView() {
                 {/* Card Body */}
                 <CardContent className="p-5">
                   {/* Visa Name */}
-                  <h3 className="text-base font-semibold text-white mb-4">{visa.name}</h3>
+                  <h3 className="text-base font-semibold text-foreground mb-4">{visa.name}</h3>
 
                   {/* Detail Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-y-3 gap-x-4 mb-4">
                     <div>
-                      <p className="text-xs text-[#6B7280]">Entry</p>
-                      <p className="text-sm text-white font-medium">{visa.entry}</p>
+                      <p className="text-xs text-vvisa-text-muted">Entry</p>
+                      <p className="text-sm text-foreground font-medium">{visa.entry}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[#6B7280]">Validity</p>
-                      <p className="text-sm text-white font-medium">{visa.validity}</p>
+                      <p className="text-xs text-vvisa-text-muted">Validity</p>
+                      <p className="text-sm text-foreground font-medium">{visa.validity}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[#6B7280]">Duration</p>
-                      <p className="text-sm text-white font-medium">{visa.duration}</p>
+                      <p className="text-xs text-vvisa-text-muted">Duration</p>
+                      <p className="text-sm text-foreground font-medium">{visa.duration}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[#6B7280]">Documents</p>
+                      <p className="text-xs text-vvisa-text-muted">Documents</p>
                       <button
                         onClick={() => handleViewDocs(visa)}
                         className="text-sm text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1 transition-colors"
@@ -266,14 +266,14 @@ export default function ExploreView() {
                       </button>
                     </div>
                     <div>
-                      <p className="text-xs text-[#6B7280]">Processing Time</p>
-                      <p className="text-sm text-white font-medium">{visa.processingTime}</p>
+                      <p className="text-xs text-vvisa-text-muted">Processing Time</p>
+                      <p className="text-sm text-foreground font-medium">{visa.processingTime}</p>
                     </div>
                   </div>
 
                   {/* Footer: Price + Select */}
-                  <div className="flex items-center justify-between pt-3 border-t border-[#2A2A38]">
-                    <span className="text-xl font-bold font-mono text-white">
+                  <div className="flex items-center justify-between pt-3 border-t border-vvisa-border">
+                    <span className="text-xl font-bold font-mono text-foreground">
                       {formatINR(visa.price)}
                     </span>
                     <Button
@@ -292,35 +292,35 @@ export default function ExploreView() {
 
         {filteredVisas.length === 0 && (
           <div className="text-center py-16">
-            <Search className="h-12 w-12 text-[#2A2A38] mx-auto mb-3" />
-            <p className="text-[#6B7280] text-sm">No visa types found for &quot;{goingTo}&quot;</p>
-            <p className="text-[#6B7280] text-xs mt-1">Try a different destination</p>
+            <Search className="h-12 w-12 text-vvisa-border mx-auto mb-3" />
+            <p className="text-vvisa-text-muted text-sm">No visa types found for &quot;{goingTo}&quot;</p>
+            <p className="text-vvisa-text-muted text-xs mt-1">Try a different destination</p>
           </div>
         )}
       </div>
 
       {/* Document Dialog */}
       <Dialog open={docDialogOpen} onOpenChange={setDocDialogOpen}>
-        <DialogContent className="bg-[#111118] border border-[#2A2A38] rounded-xl max-w-md">
+        <DialogContent className="bg-vvisa-surface border border-vvisa-border rounded-xl max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-white flex items-center gap-2">
+            <DialogTitle className="text-foreground flex items-center gap-2">
               <FileText className="h-5 w-5 text-indigo-400" />
               Required Documents
             </DialogTitle>
           </DialogHeader>
           {selectedDocVisa && (
             <div className="space-y-2 mt-2">
-              <p className="text-sm text-[#9CA3AF] mb-3">
+              <p className="text-sm text-vvisa-text-secondary mb-3">
                 Documents required for {selectedDocVisa.name}:
               </p>
               <ul className="space-y-2">
                 {selectedDocVisa.documents.map((doc, i) => (
                   <li
                     key={i}
-                    className="flex items-center gap-3 p-2.5 rounded-lg bg-[#0A0A0F] border border-[#2A2A38]"
+                    className="flex items-center gap-3 p-2.5 rounded-lg bg-vvisa-bg border border-vvisa-border"
                   >
                     <FileText className="h-4 w-4 text-indigo-400 shrink-0" />
-                    <span className="text-sm text-white">{doc}</span>
+                    <span className="text-sm text-foreground">{doc}</span>
                   </li>
                 ))}
               </ul>

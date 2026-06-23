@@ -50,7 +50,7 @@ export default function ApplicationDetailView() {
         transition={{ duration: 0.3, ease: 'easeOut' }}
         className="text-center py-16"
       >
-        <p className="text-[#6B7280] text-sm">Application not found</p>
+        <p className="text-vvisa-text-muted text-sm">Application not found</p>
         <Button
           variant="ghost"
           onClick={() => navigate('applications')}
@@ -75,7 +75,7 @@ export default function ApplicationDetailView() {
       {/* Back Link */}
       <button
         onClick={() => navigate('applications')}
-        className="text-sm text-[#9CA3AF] hover:text-white flex items-center gap-1.5 transition-colors"
+        className="text-sm text-vvisa-text-secondary hover:text-foreground flex items-center gap-1.5 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Applications
@@ -85,19 +85,19 @@ export default function ApplicationDetailView() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-bold text-white">{app.groupName || 'Application'}</h1>
-            <span className="text-[9px] text-[#3D3D54] font-mono ml-2">enKOdaUD6df8RHXgzoP723VOvHA2</span>
+            <h1 className="text-xl font-bold text-foreground">{app.groupName || 'Application'}</h1>
+            <span className="text-[9px] text-vvisa-border-active font-mono ml-2">enKOdaUD6df8RHXgzoP723VOvHA2</span>
             {app.internalId && (
-              <Badge variant="secondary" className="bg-[#1A1A24] text-[#9CA3AF] text-xs border-0 font-mono">
+              <Badge variant="secondary" className="bg-vvisa-surface-2 text-vvisa-text-secondary text-xs border-0 font-mono">
                 {app.internalId}
               </Badge>
             )}
-            <Badge variant="secondary" className="bg-[#1A1A24] text-[#9CA3AF] text-xs border-0">
+            <Badge variant="secondary" className="bg-vvisa-surface-2 text-vvisa-text-secondary text-xs border-0">
               <Lock className="h-3 w-3 mr-1" />
               Group Locked
             </Badge>
           </div>
-          <div className="flex items-center gap-3 mt-1.5 text-xs text-[#6B7280]">
+          <div className="flex items-center gap-3 mt-1.5 text-xs text-vvisa-text-muted">
             <span>Created On: {formatDateTime(app.createdAt)}</span>
             <span>·</span>
             <span>{app.travelers.length} Applicants</span>
@@ -106,21 +106,21 @@ export default function ApplicationDetailView() {
       </div>
 
       {/* Action Bar */}
-      <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl">
+      <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
         <CardContent className="p-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-[#9CA3AF]">
+          <div className="flex items-center gap-2 text-sm text-vvisa-text-secondary">
             <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
             Checking for visas...
           </div>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              className="border-[#2A2A38] text-[#9CA3AF] hover:bg-[#1A1A24] hover:text-white rounded-lg text-xs h-8"
+              className="border-vvisa-border text-vvisa-text-secondary hover:bg-vvisa-surface-2 hover:text-foreground rounded-lg text-xs h-8"
             >
               <Download className="h-3.5 w-3.5 mr-1.5" />
               Download Group Invoice
             </Button>
-            <Button variant="ghost" className="text-[#6B7280] hover:text-white h-8 w-8 p-0">
+            <Button variant="ghost" className="text-vvisa-text-muted hover:text-foreground h-8 w-8 p-0">
               <MoreVertical className="h-4 w-4" />
             </Button>
           </div>
@@ -134,13 +134,13 @@ export default function ApplicationDetailView() {
           return (
             <Card
               key={traveler.id}
-              className={`bg-[#111118] border rounded-xl ${isApproved ? 'border-t-2 border-t-emerald-500' : 'border-[#2A2A38]'}`}
+              className={`bg-vvisa-surface border rounded-xl ${isApproved ? 'border-t-2 border-t-emerald-500' : 'border-vvisa-border'}`}
             >
               <CardContent className="p-4 sm:p-5">
                 {/* Traveler Header */}
                 <div className="flex items-center gap-2 mb-3 flex-wrap">
                   {isApproved && (
-                    <Badge className="bg-emerald-600 text-white text-xs font-medium border-0 px-2.5 py-0.5">
+                    <Badge className="bg-emerald-600 text-foreground text-xs font-medium border-0 px-2.5 py-0.5">
                       ✅ VISA APPROVED
                     </Badge>
                   )}
@@ -154,23 +154,23 @@ export default function ApplicationDetailView() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                   <div>
-                    <p className="text-base font-semibold text-white">
+                    <p className="text-base font-semibold text-foreground">
                       {traveler.firstName} {traveler.lastName}
                     </p>
-                    <p className="text-xs text-[#6B7280] mt-0.5">Passport: {traveler.passportNumber}</p>
+                    <p className="text-xs text-vvisa-text-muted mt-0.5">Passport: {traveler.passportNumber}</p>
                   </div>
                   <div className="text-right sm:text-right">
-                    <p className="text-xs text-[#6B7280]">
+                    <p className="text-xs text-vvisa-text-muted">
                       {app.destination} — {app.visaType}
                     </p>
                     {traveler.referenceNo && (
-                      <p className="text-xs text-[#6B7280] mt-0.5 font-mono">Ref: {traveler.referenceNo}</p>
+                      <p className="text-xs text-vvisa-text-muted mt-0.5 font-mono">Ref: {traveler.referenceNo}</p>
                     )}
                   </div>
                 </div>
 
                 {app.travelDate && app.returnDate && (
-                  <p className="text-xs text-[#6B7280] flex items-center gap-1.5 mb-3">
+                  <p className="text-xs text-vvisa-text-muted flex items-center gap-1.5 mb-3">
                     <Calendar className="h-3 w-3" />
                     Travel: {formatDate(app.travelDate)} → {formatDate(app.returnDate)}
                   </p>
@@ -184,7 +184,7 @@ export default function ApplicationDetailView() {
                         <div className="w-4 h-4 rounded-full bg-emerald-600/20 flex items-center justify-center shrink-0">
                           <Check className="h-2.5 w-2.5 text-emerald-400" />
                         </div>
-                        <span className="text-xs text-[#9CA3AF]">{step.label}</span>
+                        <span className="text-xs text-vvisa-text-secondary">{step.label}</span>
                       </div>
                     ))}
                     <div className="flex items-center gap-2">
@@ -200,7 +200,7 @@ export default function ApplicationDetailView() {
                 {isApproved && (
                   <Button
                     variant="outline"
-                    className="border-[#2A2A38] text-[#9CA3AF] hover:bg-[#1A1A24] hover:text-white rounded-lg text-xs h-8"
+                    className="border-vvisa-border text-vvisa-text-secondary hover:bg-vvisa-surface-2 hover:text-foreground rounded-lg text-xs h-8"
                   >
                     <Download className="h-3.5 w-3.5 mr-1.5" />
                     Download Visa

@@ -1814,16 +1814,16 @@ export const mockApplications: VisaApplication[] = [
 ];
 
 export const mockTransactions: WalletTransaction[] = [
-  { id: 'txn-001', type: 'DEPOSIT', amount: 50000, method: 'BANK_TRANSFER', status: 'COMPLETED', description: 'Bank Transfer - YES Bank', createdAt: '2026-03-01T10:00:00' },
-  { id: 'txn-002', type: 'PAYMENT', amount: -21600, method: 'WALLET', status: 'COMPLETED', description: 'Vietnam Visa - Sapna Chhajer Group (8 travelers)', createdAt: '2026-03-07T18:45:00' },
-  { id: 'txn-003', type: 'PAYMENT', amount: -10800, method: 'WALLET', status: 'COMPLETED', description: 'Vietnam Visa - Vishal Gireeya Group (4 travelers)', createdAt: '2026-03-05T14:25:00' },
-  { id: 'txn-004', type: 'PAYMENT', amount: -2700, method: 'WALLET', status: 'COMPLETED', description: 'Vietnam Visa - Akash Kothari', createdAt: '2026-03-06T13:50:00' },
-  { id: 'txn-005', type: 'PAYMENT', amount: -2700, method: 'WALLET', status: 'COMPLETED', description: 'Vietnam Visa - Nisarga Shavahalli Prakash', createdAt: '2026-02-25T09:20:00' },
-  { id: 'txn-006', type: 'REFUND', amount: 500, method: 'WALLET', status: 'COMPLETED', description: 'Refund - Duplicate payment correction', createdAt: '2026-03-08T11:00:00' },
-  { id: 'txn-007', type: 'DEPOSIT', amount: 25000, method: 'UPI', status: 'COMPLETED', description: 'UPI Deposit', createdAt: '2026-03-10T09:00:00' },
-  { id: 'txn-008', type: 'PAYMENT', amount: -19497, method: 'WALLET', status: 'COMPLETED', description: 'UAE Visa - Rahul Sharma Group (3 travelers)', createdAt: '2026-03-15T16:35:00' },
-  { id: 'txn-009', type: 'WITHDRAWAL', amount: -5403, method: 'BANK_TRANSFER', status: 'PENDING', description: 'Withdrawal to registered bank', createdAt: '2026-03-16T10:00:00' },
-  { id: 'txn-010', type: 'DEPOSIT', amount: 10000, method: 'CREDIT_CARD', status: 'COMPLETED', description: 'Credit Card Deposit (2% fee: ₹200)', createdAt: '2026-03-12T14:30:00' },
+  { id: 'enKOd-67a3f201-a1b2', type: 'DEPOSIT', amount: 50000, method: 'BANK_TRANSFER', status: 'COMPLETED', description: 'Bank Transfer - YES Bank', createdAt: '2026-03-01T10:00:00' },
+  { id: 'enKOd-APP-67a3f202-c3d4', type: 'PAYMENT', amount: -21600, method: 'WALLET', status: 'COMPLETED', description: 'Vietnam Visa - Sapna Chhajer Group (8 travelers)', createdAt: '2026-03-07T18:45:00' },
+  { id: 'enKOd-APP-67a3f203-e5f6', type: 'PAYMENT', amount: -10800, method: 'WALLET', status: 'COMPLETED', description: 'Vietnam Visa - Vishal Gireeya Group (4 travelers)', createdAt: '2026-03-05T14:25:00' },
+  { id: 'enKOd-APP-67a3f204-g7h8', type: 'PAYMENT', amount: -2700, method: 'WALLET', status: 'COMPLETED', description: 'Vietnam Visa - Akash Kothari', createdAt: '2026-03-06T13:50:00' },
+  { id: 'enKOd-APP-67a3f205-i9j0', type: 'PAYMENT', amount: -2700, method: 'WALLET', status: 'COMPLETED', description: 'Vietnam Visa - Nisarga Shavahalli Prakash', createdAt: '2026-02-25T09:20:00' },
+  { id: 'enKOd-67a3f206-k1l2', type: 'REFUND', amount: 500, method: 'WALLET', status: 'COMPLETED', description: 'Refund - Duplicate payment correction', createdAt: '2026-03-08T11:00:00' },
+  { id: 'enKOd-67a3f207-m3n4', type: 'DEPOSIT', amount: 25000, method: 'UPI', status: 'COMPLETED', description: 'UPI Deposit', createdAt: '2026-03-10T09:00:00' },
+  { id: 'enKOd-APP-67a3f208-o5p6', type: 'PAYMENT', amount: -19497, method: 'WALLET', status: 'COMPLETED', description: 'UAE Visa - Rahul Sharma Group (3 travelers)', createdAt: '2026-03-15T16:35:00' },
+  { id: 'enKOd-67a3f209-q7r8', type: 'WITHDRAWAL', amount: -5403, method: 'BANK_TRANSFER', status: 'PENDING', description: 'Withdrawal to registered bank', createdAt: '2026-03-16T10:00:00' },
+  { id: 'enKOd-67a3f20a-s9t0', type: 'DEPOSIT', amount: 10000, method: 'CREDIT_CARD', status: 'COMPLETED', description: 'Credit Card Deposit (2% fee: ₹200)', createdAt: '2026-03-12T14:30:00' },
 ];
 
 export const mockAllianceLinks: AllianceLink[] = [];

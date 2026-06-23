@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockTransactions } from '@/lib/mock-data';
+import { generateTransactionId } from '@/lib/transaction-id';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     const newTransaction = {
-      id: `txn-${Date.now()}`,
+      id: generateTransactionId(),
       type,
       amount,
       method: method || null,

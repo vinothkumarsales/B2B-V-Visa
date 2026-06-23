@@ -1,0 +1,1067 @@
+     1→'use client';
+     2→
+     3→import { useState, useRef, useCallback, useMemo } from 'react';
+     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→import { useAppStore } from '@/store/app.store';
+     6→import { Button } from '@/components/ui/button';
+     7→import { Input } from '@/components/ui/input';
+     8→import { Label } from '@/components/ui/label';
+     9→import { Card, CardContent } from '@/components/ui/card';
+    10→import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+    11→import { Separator } from '@/components/ui/separator';
+    12→import {
+    13→  Upload, AlertTriangle, Plus, ArrowRight, Check, Circle, Scan,
+    14→  Loader2, X, FileCheck, ChevronDown, ChevronUp, Image as ImageIcon,
+    15→  Trash2, FileText, Copy, CheckCircle2, Receipt,
+    16→} from 'lucide-react';
+    17→import type { Traveler } from '@/types';
+    18→
+    19→const pageVariants = {
+    20→  initial: { opacity: 0, y: 8 },
+    21→  animate: { opacity: 1, y: 0 },
+    22→  exit: { opacity: 0, y: -8 },
+    23→};
+    24→
+    25→const CLIENT_ID = 'enKOdaUD6df8RHXgzoP723VOvHA2';
+    26→
+    27→function formatINR(amount: number): string {
+    28→  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+    29→}
+    30→
+    31→interface TravelerData {
+    32→  id: string;
+    33→  passportNumber: string;
+    34→  firstName: string;
+    35→  lastName: string;
+    36→  nationality: string;
+    37→  sex: string;
+    38→  dateOfBirth: string;
+    39→  placeOfBirth: string;
+    40→  placeOfIssue: string;
+    41→  maritalStatus: string;
+    42→  dateOfIssue: string;
+    43→  dateOfExpiry: string;
+    44→  passportFileName: string;
+    45→  ocrStatus: 'idle' | 'scanning' | 'done' | 'error';
+    46→  ocrError: string;
+    47→  additionalDocs: { [key: string]: string | null };
+    48→  expanded: boolean;
+    49→}
+    50→
+    51→// Normalize document names — strip parenthetical annotations (e.g. "Bank Statement (min ₹3L)" → "Bank Statement")
+    52→function normalizeDocName(name: string): string {
+    53→  const cleaned = name.replace(/\s*\(.*?\)\s*/g, '').trim();
+    54→  // Also normalize common variations
+    55→  const map: Record<string, string> = {
+    56→    'Hotel Booking Confirmation': 'Hotel Booking',
+    57→    'Medical Insurance': 'Health Insurance',
+    58→  };
+    59→  return map[cleaned] || cleaned;
+    60→}
+    61→
+    62→// Map document names from visa types to upload zone metadata
+    63→const docNameToMeta: Record<string, { key: string; helper: string }> = {
+    64→  'Travel Itinerary': { key: 'travelItinerary', helper: 'Flight tickets or travel plan' },
+    65→  'Bank Statement': { key: 'bankStatement', helper: 'Last 6 months bank statement' },
+    66→  'Hotel Booking': { key: 'hotelBooking', helper: 'Confirmed hotel reservation' },
+    67→  'Hotel Booking Confirmation': { key: 'hotelBooking', helper: 'Confirmed hotel reservation' },
+    68→  'National ID': { key: 'nationalId', helper: 'Aadhar card or voter ID' },
+    69→  'ITR': { key: 'itr', helper: 'Income Tax Return for last 2 years' },
+    70→  'Salary Slips': { key: 'salarySlips', helper: 'Last 3 months salary slips' },
+    71→  'Covering Letter': { key: 'coveringLetter', helper: 'From employer on company letterhead' },
+    72→  'Form 54': { key: 'form54', helper: 'Family composition form (if applicable)' },
+    73→  'Employment Letter': { key: 'employmentLetter', helper: 'Employment verification letter from company' },
+    74→  'Business Invitation Letter': { key: 'businessInvitation', helper: 'Invitation letter from business partner' },
+    75→  'Company Registration': { key: 'companyRegistration', helper: 'Company registration / incorporation certificate' },
+    76→  'Onward Flight Ticket': { key: 'onwardFlight', helper: 'Onward/return flight ticket' },
+    77→  'Return Flight Ticket': { key: 'returnFlight', helper: 'Confirmed return flight ticket' },
+    78→  'Offer Letter': { key: 'offerLetter', helper: 'Job offer letter from employer' },
+    79→  'GTE Statement': { key: 'gteStatement', helper: 'Genuine Temporary Entrant statement' },
+    80→  'Financial Documents': { key: 'financialDocs', helper: 'Proof of financial capacity' },
+    81→  'Health Insurance': { key: 'healthInsurance', helper: 'Travel health insurance policy' },
+    82→  'Medical Insurance': { key: 'healthInsurance', helper: 'Medical / travel health insurance policy' },
+    83→  'English Test Scores': { key: 'englishScores', helper: 'IELTS / TOEFL / PTE score report' },
+    84→  'Travel Insurance': { key: 'travelInsurance', helper: 'Travel insurance policy document' },
+    85→  'DS-160 Confirmation': { key: 'ds160Confirmation', helper: 'DS-160 form confirmation page' },
+    86→  'Property Documents': { key: 'propertyDocs', helper: 'Property ownership documents' },
+    87→  'Accommodation Proof': { key: 'accommodationProof', helper: 'Proof of accommodation / hotel reservation' },
+    88→  'Invitation from Child/Grandchild': { key: 'invitationLetter', helper: 'Invitation letter from child or grandchild in Canada' },
+    89→  'Medical Exam Report': { key: 'medicalExamReport', helper: 'Immigration medical examination report' },
+    90→  'Previous Japan Visas': { key: 'previousJapanVisas', helper: 'Copies of previous Japan visa stamps' },
+    91→  'Previous China Visas': { key: 'previousChinaVisas', helper: 'Copies of previous China visa stamps' },
+    92→  'Employment Contract': { key: 'employmentContract', helper: 'Employment contract from employer' },
+    93→  'Qualification Certificates': { key: 'qualificationCerts', helper: 'Educational qualification certificates' },
+    94→  'Hotel Voucher': { key: 'hotelVoucher', helper: 'Hotel voucher / confirmation from tour operator' },
+    95→  'Sponsor Letter': { key: 'sponsorLetter', helper: 'Sponsor letter from Indonesian sponsor' },
+    96→  'Medical Certificate': { key: 'medicalCertificate', helper: 'Medical fitness certificate' },
+    97→  'Police Clearance': { key: 'policeClearance', helper: 'Police clearance certificate (PCC)' },
+    98→  'Daily Package Payment Proof': { key: 'dailyPackageProof', helper: 'Proof of daily package payment to Bhutanese tour operator' },
+    99→  'Yellow Fever Certificate': { key: 'yellowFeverCert', helper: 'Yellow fever vaccination certificate' },
+   100→  'Purpose of Visit Letter': { key: 'purposeOfVisitLetter', helper: 'Letter explaining purpose of visit to Canada' },
+   101→};
+   102→
+   103→// Documents that are always covered by the passport upload section (not shown as additional)
+   104→const ALWAYS_COVERED = new Set(['Passport', 'Photo']);
+   105→
+   106→function getRequiredAdditionalDocs(visaDocuments: string[]): { key: string; title: string; helper: string }[] {
+   107→  const seen = new Set<string>();
+   108→  return visaDocuments
+   109→    .filter((doc) => !ALWAYS_COVERED.has(doc))
+   110→    .map((doc) => {
+   111→      const normalized = normalizeDocName(doc);
+   112→      const meta = docNameToMeta[normalized] || docNameToMeta[doc];
+   113→      if (meta) {
+   114→        // Deduplicate by key in case two doc names normalize to same key
+   115→        if (seen.has(meta.key)) return null;
+   116→        seen.add(meta.key);
+   117→        return { key: meta.key, title: doc, helper: meta.helper };
+   118→      }
+   119→      // Fallback for unknown doc names
+   120→      const key = normalized.toLowerCase().replace(/[^a-z0-9]/g, '_');
+   121→      if (seen.has(key)) return null;
+   122→      seen.add(key);
+   123→      return { key, title: doc, helper: `Upload ${doc}` };
+   124→    })
+   125→    .filter(Boolean) as { key: string; title: string; helper: string }[];
+   126→}
+   127→
+   128→function createEmptyTraveler(index: number, requiredDocKeys: string[]): TravelerData {
+   129→  return {
+   130→    id: `traveler-${Date.now()}-${index}`,
+   131→    passportNumber: '',
+   132→    firstName: '',
+   133→    lastName: '',
+   134→    nationality: 'Indian',
+   135→    sex: '',
+   136→    dateOfBirth: '',
+   137→    placeOfBirth: '',
+   138→    placeOfIssue: '',
+   139→    maritalStatus: '',
+   140→    dateOfIssue: '',
+   141→    dateOfExpiry: '',
+   142→    passportFileName: '',
+   143→    ocrStatus: 'idle',
+   144→    ocrError: '',
+   145→    additionalDocs: Object.fromEntries(requiredDocKeys.map((k) => [k, null])),
+   146→    expanded: index === 0,
+   147→  };
+   148→}
+   149→
+   150→function formatDateForInput(dateStr: string): string {
+   151→  if (!dateStr) return '';
+   152→  // Handle DD/MM/YYYY format from OCR
+   153→  const parts = dateStr.split(/[\/\-\.]/);
+   154→  if (parts.length === 3) {
+   155→    const [d, m, y] = parts.map((p) => p.trim());
+   156→    // If year is 2 digits, convert to 4 digits
+   157→    const fullYear = y.length === 2 ? (parseInt(y) > 50 ? '19' + y : '20' + y) : y;
+   158→    return `${fullYear}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+   159→  }
+   160→  return '';
+   161→}
+   162→
+   163→/* ─── Traveler Card Component ─── */
+   164→function TravelerCard({
+   165→  traveler,
+   166→  index,
+   167→  onUpdate,
+   168→  onRemove,
+   169→  canRemove,
+   170→  requiredDocs,
+   171→}: {
+   172→  traveler: TravelerData;
+   173→  index: number;
+   174→  onUpdate: (id: string, field: keyof TravelerData, value: string) => void;
+   175→  onRemove: (id: string) => void;
+   176→  canRemove: boolean;
+   177→  requiredDocs: { key: string; title: string; helper: string }[];
+   178→}) {
+   179→  const passportInputRef = useRef<HTMLInputElement>(null);
+   180→  const [showAddDocs, setShowAddDocs] = useState(false);
+   181→  const docInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+   182→
+   183→  const handlePassportUpload = useCallback(
+   184→    async (e: React.ChangeEvent<HTMLInputElement>) => {
+   185→      const file = e.target.files?.[0];
+   186→      if (!file) return;
+   187→
+   188→      // Validate file size (5MB)
+   189→      if (file.size > 5 * 1024 * 1024) {
+   190→        onUpdate(traveler.id, 'ocrError', 'File size exceeds 5 MB limit');
+   191→        onUpdate(traveler.id, 'ocrStatus', 'error');
+   192→        return;
+   193→      }
+   194→
+   195→      // Update file name
+   196→      onUpdate(traveler.id, 'passportFileName', file.name);
+   197→      onUpdate(traveler.id, 'ocrStatus', 'scanning');
+   198→      onUpdate(traveler.id, 'ocrError', '');
+   199→
+   200→      try {
+   201→        const base64 = await fileToBase64(file);
+   202→        const res = await fetch('/api/ocr', {
+   203→          method: 'POST',
+   204→          headers: { 'Content-Type': 'application/json' },
+   205→          body: JSON.stringify({ imageBase64: base64, documentType: 'passport' }),
+   206→        });
+   207→        const data = await res.json();
+   208→
+   209→        if (data.success && data.fields) {
+   210→          for (const f of data.fields) {
+   211→            if (f.value) {
+   212→              const key = f.field as keyof TravelerData;
+   213→              if (key === 'dateOfBirth' || key === 'dateOfIssue' || key === 'dateOfExpiry') {
+   214→                const formatted = formatDateForInput(f.value);
+   215→                if (formatted) onUpdate(traveler.id, key, formatted);
+   216→              } else {
+   217→                onUpdate(traveler.id, key, f.value);
+   218→              }
+   219→            }
+   220→          }
+   221→          onUpdate(traveler.id, 'ocrStatus', 'done');
+   222→        } else {
+   223→          onUpdate(traveler.id, 'ocrError', data.error || 'OCR failed. Please enter details manually.');
+   224→          onUpdate(traveler.id, 'ocrStatus', 'error');
+   225→        }
+   226→      } catch (err) {
+   227→        console.error('OCR upload error:', err);
+   228→        onUpdate(traveler.id, 'ocrError', 'Network error. Please try again.');
+   229→        onUpdate(traveler.id, 'ocrStatus', 'error');
+   230→      }
+   231→
+   232→      // Reset file input
+   233→      if (passportInputRef.current) passportInputRef.current.value = '';
+   234→    },
+   235→    [traveler.id, onUpdate]
+   236→  );
+   237→
+   238→  const handleDocUpload = useCallback(
+   239→    async (docKey: string, e: React.ChangeEvent<HTMLInputElement>) => {
+   240→      const file = e.target.files?.[0];
+   241→      if (!file) return;
+   242→
+   243→      if (file.size > 5 * 1024 * 1024) return;
+   244→
+   245→      try {
+   246→        const base64 = await fileToBase64(file);
+   247→        const res = await fetch('/api/ocr', {
+   248→          method: 'POST',
+   249→          headers: { 'Content-Type': 'application/json' },
+   250→          body: JSON.stringify({ imageBase64: base64, documentType: docKey }),
+   251→        });
+   252→        const data = await res.json();
+   253→        if (data.success) {
+   254→          onUpdate(traveler.id, 'additionalDocs' as any, JSON.stringify({ ...traveler.additionalDocs, [docKey]: file.name }));
+   255→        }
+   256→      } catch {
+   257→        // Silently fail for additional docs
+   258→      }
+   259→
+   260→      if (docInputRefs.current[docKey]) docInputRefs.current[docKey]!.value = '';
+   261→    },
+   262→    [traveler.id, traveler.additionalDocs, onUpdate]
+   263→  );
+   264→
+   265→  const toggleExpand = () => {
+   266→    onUpdate(traveler.id, 'expanded', traveler.expanded ? 'false' : 'true');
+   267→  };
+   268→
+   269→  return (
+   270→    <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl overflow-hidden">
+   271→      {/* Traveler Header - Always visible */}
+   272→      <div
+   273→        className="p-4 sm:p-5 cursor-pointer hover:bg-vvisa-surface-2/50 transition-colors"
+   274→        onClick={toggleExpand}
+   275→      >
+   276→        <div className="flex items-center justify-between">
+   277→          <div className="flex items-center gap-3">
+   278→            <div className="w-8 h-8 rounded-full bg-indigo-600/20 flex items-center justify-center text-sm font-bold text-indigo-400">
+   279→              {index + 1}
+   280→            </div>
+   281→            <div>
+   282→              <h3 className="text-sm font-semibold text-white">
+   283→                Traveler {index + 1}
+   284→                {traveler.firstName && (
+   285→                  <span className="text-vvisa-text-secondary font-normal"> — {traveler.firstName} {traveler.lastName}</span>
+   286→                )}
+   287→              </h3>
+   288→              <div className="flex items-center gap-2 mt-0.5">
+   289→                {traveler.ocrStatus === 'done' && (
+   290→                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400">
+   291→                    <FileCheck className="h-3 w-3" /> OCR Complete
+   292→                  </span>
+   293→                )}
+   294→                {traveler.ocrStatus === 'scanning' && (
+   295→                  <span className="inline-flex items-center gap-1 text-[10px] text-indigo-400">
+   296→                    <Loader2 className="h-3 w-3 animate-spin" /> Scanning with ocr.z.ai...
+   297→                  </span>
+   298→                )}
+   299→                {traveler.ocrStatus === 'error' && (
+   300→                  <span className="inline-flex items-center gap-1 text-[10px] text-red-400">
+   301→                    <X className="h-3 w-3" /> {traveler.ocrError}
+   302→                  </span>
+   303→                )}
+   304→                {traveler.ocrStatus === 'idle' && !traveler.passportFileName && (
+   305→                  <span className="text-[10px] text-vvisa-text-muted">Awaiting passport upload</span>
+   306→                )}
+   307→                {traveler.passportFileName && traveler.ocrStatus !== 'scanning' && (
+   308→                  <span className="text-[10px] text-vvisa-text-muted">
+   309→                    <ImageIcon className="h-3 w-3 inline mr-0.5" /> {traveler.passportFileName}
+   310→                  </span>
+   311→                )}
+   312→              </div>
+   313→            </div>
+   314→          </div>
+   315→          <div className="flex items-center gap-2">
+   316→            {canRemove && (
+   317→              <button
+   318→                onClick={(e) => {
+   319→                  e.stopPropagation();
+   320→                  onRemove(traveler.id);
+   321→                }}
+   322→                className="p-1.5 rounded-lg hover:bg-red-950/30 text-vvisa-text-muted hover:text-red-400 transition-colors"
+   323→              >
+   324→                <Trash2 className="h-4 w-4" />
+   325→              </button>
+   326→            )}
+   327→            {traveler.expanded ? (
+   328→              <ChevronUp className="h-4 w-4 text-vvisa-text-muted" />
+   329→            ) : (
+   330→              <ChevronDown className="h-4 w-4 text-vvisa-text-muted" />
+   331→            )}
+   332→          </div>
+   333→        </div>
+   334→      </div>
+   335→
+   336→      {/* Expanded Traveler Details */}
+   337→      <AnimatePresence>
+   338→        {traveler.expanded && (
+   339→          <motion.div
+   340→            initial={{ height: 0, opacity: 0 }}
+   341→            animate={{ height: 'auto', opacity: 1 }}
+   342→            exit={{ height: 0, opacity: 0 }}
+   343→            transition={{ duration: 0.3 }}
+   344→            className="overflow-hidden"
+   345→          >
+   346→            <div className="px-4 sm:px-5 pb-5 border-t border-vvisa-border">
+   347→              <div className="flex items-center justify-between mt-4 mb-1">
+   348→                <h4 className="text-sm font-medium text-white flex items-center gap-2">
+   349→                  <Scan className="h-4 w-4 text-indigo-400" />
+   350→                  Passport Upload & OCR Scan
+   351→                </h4>
+   352→                <span className="text-[9px] text-vvisa-border-active font-mono">{CLIENT_ID}</span>
+   353→              </div>
+   354→
+   355→              {/* Warning Banner */}
+   356→              <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-950/30 border border-amber-800/30 mb-4">
+   357→                <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+   358→                <p className="text-xs text-amber-200/80">
+   359→                  VVisa uses <span className="text-indigo-400 font-medium">ocr.z.ai</span> for 99.9% accurate passport scanning. Upload a clear passport image and details will be filled automatically. However, it is mandatory to review the information before submitting.
+   360→                </p>
+   361→              </div>
+   362→
+   363→              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+   364→                {/* Upload Zone */}
+   365→                <div
+   366→                  className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center transition-all min-h-[200px] cursor-pointer
+   367→                    ${traveler.ocrStatus === 'scanning'
+   368→                      ? 'border-indigo-500 bg-indigo-950/10'
+   369→                      : traveler.ocrStatus === 'done'
+   370→                        ? 'border-emerald-500/50 bg-emerald-950/10'
+   371→                        : 'border-vvisa-border hover:border-indigo-500/50'
+   372→                    }`}
+   373→                  onClick={() => passportInputRef.current?.click()}
+   374→                >
+   375→                  <input
+   376→                    ref={passportInputRef}
+   377→                    type="file"
+   378→                    accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+   379→                    className="hidden"
+   380→                    onChange={handlePassportUpload}
+   381→                  />
+   382→
+   383→                  {traveler.ocrStatus === 'scanning' ? (
+   384→                    <>
+   385→                      <Loader2 className="h-8 w-8 text-indigo-400 animate-spin mb-3" />
+   386→                      <p className="text-sm text-indigo-400 font-medium mb-1">Scanning with ocr.z.ai...</p>
+   387→                      <p className="text-xs text-vvisa-text-muted">Extracting passport data</p>
+   388→                    </>
+   389→                  ) : traveler.ocrStatus === 'done' ? (
+   390→                    <>
+   391→                      <div className="w-10 h-10 rounded-full bg-emerald-600/20 flex items-center justify-center mb-2">
+   392→                        <Check className="h-5 w-5 text-emerald-400" />
+   393→                      </div>
+   394→                      <p className="text-sm text-emerald-400 font-medium mb-1">Scan Complete</p>
+   395→                      <p className="text-xs text-vvisa-text-muted">Click to re-scan</p>
+   396→                    </>
+   397→                  ) : (
+   398→                    <>
+   399→                      <Upload className="h-8 w-8 text-vvisa-text-muted mb-3" />
+   400→                      <p className="text-sm text-vvisa-text-secondary mb-1">Drag & drop passport image</p>
+   401→                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-950/30 border border-indigo-800/30 text-[10px] text-indigo-400 font-medium">
+   402→                        <Scan className="h-3 w-3" />
+   403→                        Powered by ocr.z.ai
+   404→                      </span>
+   405→                      <p className="text-xs text-vvisa-text-muted mt-2">JPG, PNG or PDF — max 5 MB</p>
+   406→                      <Button
+   407→                        variant="outline"
+   408→                        className="mt-3 border-vvisa-border text-vvisa-text-secondary hover:bg-vvisa-surface-2 hover:text-white rounded-lg text-xs"
+   409→                        onClick={(e) => {
+   410→                          e.stopPropagation();
+   411→                          passportInputRef.current?.click();
+   412→                        }}
+   413→                      >
+   414→                        Choose File
+   415→                      </Button>
+   416→                    </>
+   417→                  )}
+   418→                </div>
+   419→
+   420→                {/* Auto-populated Fields */}
+   421→                <div className="space-y-3">
+   422→                  <div>
+   423→                    <Label className="text-xs text-vvisa-text-muted">Passport Number</Label>
+   424→                    <Input
+   425→                      value={traveler.passportNumber}
+   426→                      onChange={(e) => onUpdate(traveler.id, 'passportNumber', e.target.value)}
+   427→                      placeholder="Auto-filled after upload"
+   428→                      className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   429→                    />
+   430→                  </div>
+   431→                  <div className="grid grid-cols-2 gap-3">
+   432→                    <div>
+   433→                      <Label className="text-xs text-vvisa-text-muted">First Name</Label>
+   434→                      <Input
+   435→                        value={traveler.firstName}
+   436→                        onChange={(e) => onUpdate(traveler.id, 'firstName', e.target.value)}
+   437→                        placeholder="First name"
+   438→                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   439→                      />
+   440→                    </div>
+   441→                    <div>
+   442→                      <Label className="text-xs text-vvisa-text-muted">Last Name</Label>
+   443→                      <Input
+   444→                        value={traveler.lastName}
+   445→                        onChange={(e) => onUpdate(traveler.id, 'lastName', e.target.value)}
+   446→                        placeholder="Last name"
+   447→                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   448→                      />
+   449→                    </div>
+   450→                  </div>
+   451→                  <div className="grid grid-cols-2 gap-3">
+   452→                    <div>
+   453→                      <Label className="text-xs text-vvisa-text-muted">Nationality</Label>
+   454→                      <Input
+   455→                        value={traveler.nationality}
+   456→                        onChange={(e) => onUpdate(traveler.id, 'nationality', e.target.value)}
+   457→                        placeholder="Indian"
+   458→                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   459→                      />
+   460→                    </div>
+   461→                    <div>
+   462→                      <Label className="text-xs text-vvisa-text-muted">Sex</Label>
+   463→                      <Input
+   464→                        value={traveler.sex}
+   465→                        onChange={(e) => onUpdate(traveler.id, 'sex', e.target.value)}
+   466→                        placeholder="Male / Female"
+   467→                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   468→                      />
+   469→                    </div>
+   470→                  </div>
+   471→                  <div>
+   472→                    <Label className="text-xs text-vvisa-text-muted">Date of Birth</Label>
+   473→                    <Input
+   474→                      type="date"
+   475→                      value={traveler.dateOfBirth}
+   476→                      onChange={(e) => onUpdate(traveler.id, 'dateOfBirth', e.target.value)}
+   477→                      className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   478→                    />
+   479→                  </div>
+   480→                  <div className="grid grid-cols-2 gap-3">
+   481→                    <div>
+   482→                      <Label className="text-xs text-vvisa-text-muted">Place of Birth</Label>
+   483→                      <Input
+   484→                        value={traveler.placeOfBirth}
+   485→                        onChange={(e) => onUpdate(traveler.id, 'placeOfBirth', e.target.value)}
+   486→                        placeholder="City"
+   487→                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   488→                      />
+   489→                    </div>
+   490→                    <div>
+   491→                      <Label className="text-xs text-vvisa-text-muted">Place of Issue</Label>
+   492→                      <Input
+   493→                        value={traveler.placeOfIssue}
+   494→                        onChange={(e) => onUpdate(traveler.id, 'placeOfIssue', e.target.value)}
+   495→                        placeholder="City"
+   496→                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   497→                      />
+   498→                    </div>
+   499→                  </div>
+   500→                  <div className="grid grid-cols-3 gap-3">
+   501→                    <div>
+   502→                      <Label className="text-xs text-vvisa-text-muted">Marital Status</Label>
+   503→                      <Input
+   504→                        value={traveler.maritalStatus}
+   505→                        onChange={(e) => onUpdate(traveler.id, 'maritalStatus', e.target.value)}
+   506→                        placeholder="Single"
+   507→                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   508→                      />
+   509→                    </div>
+   510→                    <div>
+   511→                      <Label className="text-xs text-vvisa-text-muted">Date of Issue</Label>
+   512→                      <Input
+   513→                        type="date"
+   514→                        value={traveler.dateOfIssue}
+   515→                        onChange={(e) => onUpdate(traveler.id, 'dateOfIssue', e.target.value)}
+   516→                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   517→                      />
+   518→                    </div>
+   519→                    <div>
+   520→                      <Label className="text-xs text-vvisa-text-muted">Date of Expiry</Label>
+   521→                      <Input
+   522→                        type="date"
+   523→                        value={traveler.dateOfExpiry}
+   524→                        onChange={(e) => onUpdate(traveler.id, 'dateOfExpiry', e.target.value)}
+   525→                        className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-white h-9 text-sm mt-1"
+   526→                      />
+   527→                    </div>
+   528→                  </div>
+   529→                </div>
+   530→              </div>
+   531→
+   532→              {/* Additional Documents Section for this Traveler */}
+   533→              <Separator className="bg-vvisa-border my-5" />
+   534→
+   535→              <div className="flex items-center justify-between mb-3">
+   536→                <h4 className="text-sm font-medium text-white flex items-center gap-2">
+   537→                  <FileText className="h-4 w-4 text-indigo-400" />
+   538→                  Required Documents for Traveler {index + 1}
+   539→                  <span className="text-xs text-vvisa-text-muted font-normal">({requiredDocs.length} document{requiredDocs.length !== 1 ? 's' : ''})</span>
+   540→                </h4>
+   541→                <button
+   542→                  onClick={() => setShowAddDocs(!showAddDocs)}
+   543→                  className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
+   544→                >
+   545→                  {showAddDocs ? 'Hide' : 'Show'} Documents
+   546→                  {showAddDocs ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+   547→                </button>
+   548→              </div>
+   549→
+   550→              {requiredDocs.length === 0 ? (
+   551→                <p className="text-xs text-vvisa-text-muted py-4 text-center">No additional documents required for this visa type (only Passport & Photo).</p>
+   552→              ) : (
+   553→                <AnimatePresence>
+   554→                  {showAddDocs && (
+   555→                    <motion.div
+   556→                      initial={{ height: 0, opacity: 0 }}
+   557→                      animate={{ height: 'auto', opacity: 1 }}
+   558→                      exit={{ height: 0, opacity: 0 }}
+   559→                      transition={{ duration: 0.2 }}
+   560→                      className="overflow-hidden"
+   561→                    >
+   562→                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   563→                        {requiredDocs.map((doc) => {
+   564→                        const uploadedName = traveler.additionalDocs[doc.key];
+   565→                        return (
+   566→                          <div key={doc.key} className="space-y-1.5">
+   567→                            <Label className="text-sm text-foreground font-medium">{doc.title}</Label>
+   568→                            <p className="text-xs text-vvisa-text-muted">{doc.helper}</p>
+   569→                            <input
+   570→                              ref={(el) => { docInputRefs.current[doc.key] = el; }}
+   571→                              type="file"
+   572→                              accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+   573→                              className="hidden"
+   574→                              onChange={(e) => handleDocUpload(doc.key, e)}
+   575→                            />
+   576→                            <div
+   577→                              className={`border border-dashed rounded-lg p-3 flex flex-col items-center justify-center text-center transition-colors cursor-pointer h-20
+   578→                                ${uploadedName
+   579→                                  ? 'border-emerald-500/50 bg-emerald-950/10'
+   580→                                  : 'border-vvisa-border hover:border-indigo-500/50'
+   581→                                }`}
+   582→                              onClick={() => docInputRefs.current[doc.key]?.click()}
+   583→                            >
+   584→                              {uploadedName ? (
+   585→                                <>
+   586→                                  <FileCheck className="h-3.5 w-3.5 text-emerald-400 mb-1" />
+   587→                                  <p className="text-xs text-emerald-400 font-medium truncate max-w-full px-2">{uploadedName}</p>
+   588→                                  <span className="text-[9px] text-vvisa-text-muted mt-0.5">Click to replace</span>
+   589→                                </>
+   590→                              ) : (
+   591→                                <>
+   592→                                  <Scan className="h-3.5 w-3.5 text-vvisa-text-muted mb-1" />
+   593→                                  <p className="text-xs text-vvisa-text-muted">Click to upload</p>
+   594→                                  <span className="inline-flex items-center gap-0.5 text-[9px] text-indigo-400 mt-0.5">
+   595→                                    <Scan className="h-2.5 w-2.5" /> ocr.z.ai ready
+   596→                                  </span>
+   597→                                </>
+   598→                              )}
+   599→                            </div>
+   600→                          </div>
+   601→                        );
+   602→                      })}
+   603→                    </div>
+   604→                  </motion.div>
+   605→                )}
+   606→              </AnimatePresence>
+   607→              )}
+   608→            </div>
+   609→          </motion.div>
+   610→        )}
+   611→      </AnimatePresence>
+   612→    </Card>
+   613→  );
+   614→}
+   615→
+   616→/* ─── Helper: Convert File to Base64 ─── */
+   617→function fileToBase64(file: File): Promise<string> {
+   618→  return new Promise((resolve, reject) => {
+   619→    const reader = new FileReader();
+   620→    reader.onload = () => {
+   621→      const result = reader.result as string;
+   622→      // Remove the data URL prefix
+   623→      const base64 = result.split(',')[1];
+   624→      resolve(base64);
+   625→    };
+   626→    reader.onerror = reject;
+   627→    reader.readAsDataURL(file);
+   628→  });
+   629→}
+   630→
+   631→/* ─── Progress Stepper Component ─── */
+   632→function ProgressStepper({ currentStep }: { currentStep: number }) {
+   633→  const steps = ['Application Type', 'Internal ID', 'Traveler Details', 'Additional Documents', 'Review', 'Submit'];
+   634→
+   635→  return (
+   636→    <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
+   637→      <CardContent className="p-4">
+   638→        <div className="flex items-center justify-between mb-4">
+   639→          <p className="text-xs text-vvisa-text-muted font-medium">APPLICATION PROGRESS</p>
+   640→          <span className="text-[9px] text-vvisa-border-active font-mono">{CLIENT_ID}</span>
+   641→        </div>
+   642→        <div className="space-y-0">
+   643→          {steps.map((step, i) => {
+   644→            const stepNum = i + 1;
+   645→            const isCompleted = stepNum < currentStep;
+   646→            const isActive = stepNum === currentStep;
+   647→
+   648→            return (
+   649→              <div key={i} className="flex items-start gap-3">
+   650→                <div className="flex flex-col items-center">
+   651→                  {isCompleted ? (
+   652→                    <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
+   653→                      <Check className="h-3.5 w-3.5 text-white" />
+   654→                    </div>
+   655→                  ) : isActive ? (
+   656→                    <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center shrink-0 ring-4 ring-indigo-600/20">
+   657→                      <Circle className="h-2 w-2 text-white fill-white" />
+   658→                    </div>
+   659→                  ) : (
+   660→                    <div className="w-6 h-6 rounded-full bg-vvisa-surface-2 border border-vvisa-border flex items-center justify-center shrink-0">
+   661→                      <Circle className="h-2 w-2 text-vvisa-text-muted" />
+   662→                    </div>
+   663→                  )}
+   664→                  {i < steps.length - 1 && (
+   665→                    <div className={`w-0.5 h-6 ${isCompleted ? 'bg-indigo-600' : 'bg-vvisa-border'}`} />
+   666→                  )}
+   667→                </div>
+   668→                <p className={`text-xs pt-1 ${isActive ? 'text-foreground font-medium' : isCompleted ? 'text-vvisa-text-secondary' : 'text-vvisa-text-muted'}`}>
+   669→                  {step}
+   670→                </p>
+   671→              </div>
+   672→            );
+   673→          })}
+   674→        </div>
+   675→      </CardContent>
+   676→    </Card>
+   677→  );
+   678→}
+   679→
+   680→/* ─── Main ApplyView ─── */
+   681→export default function ApplyView() {
+   682→  const { selectedVisaType, walletBalance, submitApplication, navigate } = useAppStore();
+   683→  const [appType, setAppType] = useState<'individual' | 'group'>('group');
+   684→  const [internalId, setInternalId] = useState('');
+   685→  const [groupName, setGroupName] = useState('');
+   686→  const [submitting, setSubmitting] = useState(false);
+   687→  const [submitResult, setSubmitResult] = useState<{ txnId: string; appId: string; error?: string } | null>(null);
+   688→  const [copiedTxn, setCopiedTxn] = useState(false);
+   689→
+   690→  // Compute required additional docs from the selected visa type
+   691→  const requiredDocs = useMemo(() => {
+   692→    if (!selectedVisaType?.documents) return [];
+   693→    return getRequiredAdditionalDocs(selectedVisaType.documents);
+   694→  }, [selectedVisaType]);
+   695→
+   696→  const requiredDocKeys = useMemo(() => requiredDocs.map((d) => d.key), [requiredDocs]);
+   697→
+   698→  const [travelers, setTravelers] = useState<TravelerData[]>(() => [createEmptyTraveler(0, requiredDocKeys)]);
+   699→
+   700→  const pricePerTraveler = selectedVisaType?.price || 13499;
+   701→  const total = pricePerTraveler * travelers.length;
+   702→
+   703→  const handleUpdateTraveler = useCallback(
+   704→    (id: string, field: string, value: string) => {
+   705→      setTravelers((prev) =>
+   706→        prev.map((t) => (t.id === id ? { ...t, [field]: value } : t))
+   707→      );
+   708→    },
+   709→    []
+   710→  );
+   711→
+   712→  const handleRemoveTraveler = useCallback((id: string) => {
+   713→    setTravelers((prev) => prev.filter((t) => t.id !== id));
+   714→  }, []);
+   715→
+   716→  const handleAddTraveler = () => {
+   717→    setTravelers((prev) => [...prev, createEmptyTraveler(prev.length, requiredDocKeys)]);
+   718→  };
+   719→
+   720→  const handleSubmit = useCallback(() => {
+   721→    if (!selectedVisaType || submitting) return;
+   722→    setSubmitting(true);
+   723→
+   724→    // Build travelers array for submission
+   725→    const travelersPayload: Traveler[] = travelers.map((t) => ({
+   726→      id: t.id,
+   727→      firstName: t.firstName,
+   728→      lastName: t.lastName,
+   729→      passportNumber: t.passportNumber,
+   730→      nationality: t.nationality,
+   731→      sex: t.sex || undefined,
+   732→      dateOfBirth: t.dateOfBirth || undefined,
+   733→      placeOfBirth: t.placeOfIssue || undefined,
+   734→      placeOfIssue: t.placeOfIssue || undefined,
+   735→      maritalStatus: t.maritalStatus || undefined,
+   736→      dateOfIssue: t.dateOfIssue || undefined,
+   737→      dateOfExpiry: t.dateOfExpiry || undefined,
+   738→      isChild: false,
+   739→      status: 'PAYMENT_PENDING' as const,
+   740→    }));
+   741→
+   742→    const result = submitApplication({
+   743→      internalId,
+   744→      groupName: appType === 'group' ? groupName : '',
+   745→      destination: selectedVisaType.destination,
+   746→      visaType: selectedVisaType.name,
+   747→      visaCategory: selectedVisaType.category,
+   748→      totalPrice: total,
+   749→      travelers: travelersPayload,
+   750→    });
+   751→
+   752→    setSubmitting(false);
+   753→
+   754→    if (result.success) {
+   755→      setSubmitResult({ txnId: result.transactionId, appId: result.applicationId });
+   756→    } else {
+   757→      setSubmitResult({ txnId: '', appId: '', error: result.error });
+   758→    }
+   759→  }, [selectedVisaType, submitting, travelers, internalId, groupName, appType, total, submitApplication]);
+   760→
+   761→  const copyTxnId = useCallback(() => {
+   762→    if (submitResult?.txnId) {
+   763→      navigator.clipboard.writeText(submitResult.txnId);
+   764→      setCopiedTxn(true);
+   765→      setTimeout(() => setCopiedTxn(false), 2000);
+   766→    }
+   767→  }, [submitResult]);
+   768→
+   769→  // Determine current step based on form completion
+   770→  const currentStep = travelers.length > 1 ? 3 : travelers[0]?.ocrStatus === 'done' ? 3 : 2;
+   771→
+   772→  return (
+   773→    <motion.div
+   774→      variants={pageVariants}
+   775→      initial="initial"
+   776→      animate="animate"
+   777→      transition={{ duration: 0.3, ease: 'easeOut' }}
+   778→      className="space-y-6"
+   779→    >
+   780→      {/* Application Setup */}
+   781→      <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
+   782→        <CardContent className="p-5">
+   783→          <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+   784→            <div className="flex-1">
+   785→              <div className="flex items-center justify-between">
+   786→                <Label className="text-xs text-vvisa-text-secondary mb-1.5 block font-medium">Are You Applying For</Label>
+   787→                <span className="text-[9px] text-vvisa-border-active font-mono">{CLIENT_ID}</span>
+   788→              </div>
+   789→              <ToggleGroup
+   790→                type="single"
+   791→                value={appType}
+   792→                onValueChange={(val) => val && setAppType(val as 'individual' | 'group')}
+   793→                className="bg-vvisa-bg border border-vvisa-border rounded-lg p-1"
+   794→              >
+   795→                <ToggleGroupItem
+   796→                  value="individual"
+   797→                  className="data-[state=on]:bg-indigo-600 data-[state=on]:text-white text-vvisa-text-secondary rounded-md px-4 h-9 text-sm"
+   798→                >
+   799→                  Individual
+   800→                </ToggleGroupItem>
+   801→                <ToggleGroupItem
+   802→                  value="group"
+   803→                  className="data-[state=on]:bg-indigo-600 data-[state=on]:text-white text-vvisa-text-secondary rounded-md px-4 h-9 text-sm"
+   804→                >
+   805→                  Group
+   806→                </ToggleGroupItem>
+   807→              </ToggleGroup>
+   808→            </div>
+   809→            <div className="flex-1">
+   810→              <Label className="text-xs text-vvisa-text-secondary mb-1.5 block font-medium">Internal ID</Label>
+   811→              <Input
+   812→                value={internalId}
+   813→                onChange={(e) => setInternalId(e.target.value)}
+   814→                placeholder="e.g. C7612934"
+   815→                className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-white h-10"
+   816→              />
+   817→            </div>
+   818→            {appType === 'group' && (
+   819→              <div className="flex-1">
+   820→                <Label className="text-xs text-vvisa-text-secondary mb-1.5 block font-medium">Group Name</Label>
+   821→                <Input
+   822→                  value={groupName}
+   823→                  onChange={(e) => setGroupName(e.target.value)}
+   824→                  placeholder="e.g. SAPNA CHHAJER"
+   825→                  className="bg-vvisa-bg border border-vvisa-border focus:border-indigo-500 rounded-lg text-white h-10"
+   826→                />
+   827→              </div>
+   828→            )}
+   829→          </div>
+   830→
+   831→          {/* Visa Type Display */}
+   832→          {selectedVisaType && (
+   833→            <div className="mt-4 p-3 rounded-lg bg-indigo-950/20 border border-indigo-800/30 flex items-center justify-between">
+   834→              <div>
+   835→                <p className="text-xs text-vvisa-text-muted">Selected Visa Type</p>
+   836→                <p className="text-sm font-medium text-white">{selectedVisaType.name}</p>
+   837→              </div>
+   838→              <span className="text-sm font-bold font-mono text-indigo-400">
+   839→                {formatINR(selectedVisaType.price)}
+   840→              </span>
+   841→            </div>
+   842→          )}
+   843→        </CardContent>
+   844→      </Card>
+   845→
+   846→      {/* 3-Column Layout */}
+   847→      <div className="flex gap-6">
+   848→        {/* Left: Progress Stepper */}
+   849→        <div className="hidden lg:block w-56 shrink-0">
+   850→          <div className="sticky top-24">
+   851→            <ProgressStepper currentStep={currentStep} />
+   852→          </div>
+   853→        </div>
+   854→
+   855→        {/* Center: Traveler Cards */}
+   856→        <div className="flex-1 space-y-4 min-w-0">
+   857→          {/* Traveler Cards */}
+   858→          <AnimatePresence mode="popLayout">
+   859→            {travelers.map((traveler, i) => (
+   860→              <motion.div
+   861→                key={traveler.id}
+   862→                initial={{ opacity: 0, y: 16 }}
+   863→                animate={{ opacity: 1, y: 0 }}
+   864→                exit={{ opacity: 0, y: -16, scale: 0.95 }}
+   865→                transition={{ duration: 0.3 }}
+   866→              >
+   867→                <TravelerCard
+   868→                  traveler={traveler}
+   869→                  index={i}
+   870→                  onUpdate={handleUpdateTraveler}
+   871→                  onRemove={handleRemoveTraveler}
+   872→                  canRemove={travelers.length > 1}
+   873→                  requiredDocs={requiredDocs}
+   874→                />
+   875→              </motion.div>
+   876→            ))}
+   877→          </AnimatePresence>
+   878→
+   879→          {/* Add Traveler Button */}
+   880→          <Button
+   881→            variant="outline"
+   882→            onClick={handleAddTraveler}
+   883→            className="w-full border-dashed border-vvisa-border text-vvisa-text-secondary hover:bg-vvisa-surface-2 hover:text-white hover:border-indigo-500/50 rounded-xl h-12 flex items-center gap-2 text-sm transition-all"
+   884→          >
+   885→            <Plus className="h-4 w-4" />
+   886→            Add Another Traveler
+   887→            <span className="text-xs text-vvisa-text-muted ml-1">
+   888→              (+{formatINR(pricePerTraveler)})
+   889→            </span>
+   890→          </Button>
+   891→
+   892→          {/* Review CTA (mobile) */}
+   893→          <div className="lg:hidden">
+   894→            <Button
+   895→              onClick={handleSubmit}
+   896→              disabled={submitting || !selectedVisaType}
+   897→              className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-11 flex items-center justify-center gap-2"
+   898→            >
+   899→              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+   900→              {submitting ? 'Submitting...' : 'Review and Save'} <ArrowRight className="h-4 w-4" />
+   901→            </Button>
+   902→          </div>
+   903→        </div>
+   904→
+   905→        {/* Right: Price Summary */}
+   906→        <div className="hidden lg:block w-72 shrink-0">
+   907→          <div className="sticky top-24">
+   908→            <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
+   909→              <CardContent className="p-5">
+   910→                <div className="flex items-center justify-between mb-4">
+   911→                  <h3 className="text-sm font-semibold text-white">Price Summary</h3>
+   912→                  <span className="text-[9px] text-vvisa-border-active font-mono">{CLIENT_ID}</span>
+   913→                </div>
+   914→
+   915→                <div className="space-y-3 mb-4 max-h-48 overflow-y-auto">
+   916→                  {travelers.map((t, i) => (
+   917→                    <div key={t.id} className="flex justify-between items-center">
+   918→                      <span className="text-xs text-vvisa-text-secondary">
+   919→                        Traveler {i + 1}
+   920→                        {t.firstName ? ` — ${t.firstName} ${t.lastName}` : ''}
+   921→                      </span>
+   922→                      <span className="text-sm font-mono text-white">{formatINR(pricePerTraveler)}</span>
+   923→                    </div>
+   924→                  ))}
+   925→                </div>
+   926→
+   927→                <Separator className="bg-vvisa-border my-3" />
+   928→
+   929→                <div className="flex justify-between items-center mb-4">
+   930→                  <span className="text-sm font-semibold text-white">Total ({travelers.length} traveler{travelers.length > 1 ? 's' : ''})</span>
+   931→                  <span className="text-lg font-bold font-mono text-white">{formatINR(total)}</span>
+   932→                </div>
+   933→
+   934→                <Separator className="bg-vvisa-border my-3" />
+   935→
+   936→                <div className="flex justify-between items-center mb-5">
+   937→                  <span className="text-xs text-vvisa-text-muted">Current Wallet Balance</span>
+   938→                  <span className="text-sm font-mono text-indigo-400">{formatINR(walletBalance)}</span>
+   939→                </div>
+   940→
+   941→                <div className="flex justify-between items-center mb-5">
+   942→                  <span className="text-xs text-vvisa-text-muted">After Payment</span>
+   943→                  <span className={`text-sm font-mono ${walletBalance - total >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+   944→                    {formatINR(walletBalance - total)}
+   945→                  </span>
+   946→                </div>
+   947→
+   948→                <Button
+   949→                  onClick={handleSubmit}
+   950→                  disabled={submitting || !selectedVisaType || walletBalance < total}
+   951→                  className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-10 flex items-center justify-center gap-2 text-sm"
+   952→                >
+   953→                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+   954→                  {submitting ? 'Submitting...' : 'Review and Save'} <ArrowRight className="h-4 w-4" />
+   955→                </Button>
+   956→              </CardContent>
+   957→            </Card>
+   958→          </div>
+   959→        </div>
+   960→      </div>
+   961→
+   962→      {/* Submission Result Dialog */}
+   963→      <AnimatePresence>
+   964→        {submitResult && (
+   965→          <motion.div
+   966→            initial={{ opacity: 0 }}
+   967→            animate={{ opacity: 1 }}
+   968→            exit={{ opacity: 0 }}
+   969→            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+   970→            onClick={() => setSubmitResult(null)}
+   971→          >
+   972→            <motion.div
+   973→              initial={{ scale: 0.9, opacity: 0 }}
+   974→              animate={{ scale: 1, opacity: 1 }}
+   975→              exit={{ scale: 0.9, opacity: 0 }}
+   976→              className="bg-vvisa-surface border border-vvisa-border rounded-2xl p-6 max-w-md w-full shadow-2xl"
+   977→              onClick={(e) => e.stopPropagation()}
+   978→            >
+   979→              {submitResult.error ? (
+   980→                <>
+   981→                  <div className="flex items-center justify-center mb-4">
+   982→                    <div className="w-14 h-14 rounded-full bg-red-950/30 flex items-center justify-center">
+   983→                      <X className="h-7 w-7 text-red-400" />
+   984→                    </div>
+   985→                  </div>
+   986→                  <h3 className="text-lg font-semibold text-white text-center mb-2">Submission Failed</h3>
+   987→                  <p className="text-sm text-vvisa-text-secondary text-center mb-6">{submitResult.error}</p>
+   988→                  <Button onClick={() => setSubmitResult(null)} className="w-full bg-vvisa-surface-2 border border-vvisa-border hover:bg-vvisa-border text-white rounded-lg h-10">
+   989→                    Dismiss
+   990→                  </Button>
+   991→                </>
+   992→              ) : (
+   993→                <>
+   994→                  <div className="flex items-center justify-center mb-4">
+   995→                    <div className="w-14 h-14 rounded-full bg-emerald-950/30 flex items-center justify-center">
+   996→                      <CheckCircle2 className="h-7 w-7 text-emerald-400" />
+   997→                    </div>
+   998→                  </div>
+   999→                  <h3 className="text-lg font-semibold text-white text-center mb-1">Application Submitted</h3>
+  1000→                  <p className="text-xs text-vvisa-text-muted text-center mb-5">Your wallet has been debited. Track status in Applications.</p>
+  1001→
+  1002→                  {/* Transaction ID */}
+  1003→                  <div className="bg-vvisa-bg border border-vvisa-border rounded-xl p-4 mb-4">
+  1004→                    <div className="flex items-center gap-2 mb-2">
+  1005→                      <Receipt className="h-4 w-4 text-indigo-400" />
+  1006→                      <span className="text-xs text-vvisa-text-secondary font-medium">Unique Transaction ID</span>
+  1007→                    </div>
+  1008→                    <div className="flex items-center justify-between gap-2">
+  1009→                      <code className="text-sm font-mono text-white break-all">{submitResult.txnId}</code>
+  1010→                      <button
+  1011→                        onClick={copyTxnId}
+  1012→                        className="shrink-0 p-1.5 rounded-lg hover:bg-vvisa-surface-2 transition-colors"
+  1013→                        title="Copy Transaction ID"
+  1014→                      >
+  1015→                        {copiedTxn ? (
+  1016→                          <Check className="h-4 w-4 text-emerald-400" />
+  1017→                        ) : (
+  1018→                          <Copy className="h-4 w-4 text-vvisa-text-muted" />
+  1019→                        )}
+  1020→                      </button>
+  1021→                    </div>
+  1022→                    <p className="text-[10px] text-vvisa-border-active font-mono mt-2">Derived from Client ID: {CLIENT_ID}</p>
+  1023→                  </div>
+  1024→
+  1025→                  {/* Summary */}
+  1026→                  <div className="grid grid-cols-2 gap-3 mb-5 text-xs">
+  1027→                    <div className="bg-vvisa-bg rounded-lg p-3">
+  1028→                      <p className="text-vvisa-text-muted">Destination</p>
+  1029→                      <p className="text-foreground font-medium mt-0.5">{selectedVisaType?.destination}</p>
+  1030→                    </div>
+  1031→                    <div className="bg-vvisa-bg rounded-lg p-3">
+  1032→                      <p className="text-vvisa-text-muted">Amount Debited</p>
+  1033→                      <p className="text-foreground font-mono font-medium mt-0.5">{formatINR(total)}</p>
+  1034→                    </div>
+  1035→                    <div className="bg-vvisa-bg rounded-lg p-3">
+  1036→                      <p className="text-vvisa-text-muted">Travelers</p>
+  1037→                      <p className="text-foreground font-medium mt-0.5">{travelers.length}</p>
+  1038→                    </div>
+  1039→                    <div className="bg-vvisa-bg rounded-lg p-3">
+  1040→                      <p className="text-vvisa-text-muted">Remaining Balance</p>
+  1041→                      <p className="text-emerald-400 font-mono font-medium mt-0.5">{formatINR(walletBalance - total)}</p>
+  1042→                    </div>
+  1043→                  </div>
+  1044→
+  1045→                  <div className="flex gap-3">
+  1046→                    <Button
+  1047→                      onClick={() => { setSubmitResult(null); navigate('applications'); }}
+  1048→                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-10 text-sm"
+  1049→                    >
+  1050→                      View Applications
+  1051→                    </Button>
+  1052→                    <Button
+  1053→                      onClick={() => setSubmitResult(null)}
+  1054→                      className="flex-1 bg-vvisa-surface-2 border border-vvisa-border hover:bg-vvisa-border text-white rounded-lg h-10 text-sm"
+  1055→                    >
+  1056→                      Submit Another
+  1057→                    </Button>
+  1058→                  </div>
+  1059→                </>
+  1060→              )}
+  1061→            </motion.div>
+  1062→          </motion.div>
+  1063→        )}
+  1064→      </AnimatePresence>
+  1065→    </motion.div>
+  1066→  );
+  1067→}
