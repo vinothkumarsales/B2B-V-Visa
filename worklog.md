@@ -164,3 +164,106 @@ Stage Summary:
 - Full SPA routing working: landing → login → dashboard → all sub-views
 - API routes provide backend data layer
 - Lazy loading for dashboard views improves initial load
+
+---
+Task ID: 7-b
+Agent: Applications View Rebuilder
+Task: Rebuild Applications page — unified list, client ID, enhanced tabs, three card types
+
+Work Log:
+- Read types/index.ts, mock-data.ts, app.store.ts, and existing ApplicationsView.tsx for context
+- Completely rewrote src/views/ApplicationsView.tsx with the following changes:
+  1. Added CLIENT_ID constant `enKOdaUD6df8RHXgzoP723VOvHA2` displayed in section header and every card
+  2. Unified all applications (group + individual) into ONE list sorted by createdAt descending
+  3. Enhanced tab system: All, Approved, Pending Payment, Submitted, Draft — each with dynamic count badges
+  4. Three distinct card types:
+     - GroupCard: group name + internal ID + date, applicants/approved counts (green check if all approved, amber if partial), visa type, travel dates, client ID, "View Group →" button
+     - IndividualApprovedCard: green top border, "✅ VISA APPROVED" badge, name/passport/submitted date, destination+visa type panel, two-column layout (Application Details steps | Visa Approved Card with estimated/delivered dates + "before time" indigo text), 3 action buttons
+     - IndividualDefaultCard: name/passport/submitted date, destination panel, StatusBadge component (inline, uses statusConfig), 2 action buttons
+  5. Added inline StatusBadge component with pulse dot, rounded pill, uppercase tracking
+  6. Added Framer Motion stagger animations (listVariants + cardVariants)
+  7. Responsive: full-width cards on all screen sizes
+  8. Dark theme: bg-[#111118], border-[#2A2A38], consistent design system
+- Verified clean ESLint pass (zero errors)
+- Dev server compiles successfully with no errors
+
+Stage Summary:
+- Unified applications list with group and individual cards in one feed
+- Client ID shown in header and every card
+- 5 tabs with dynamic counts computed via useMemo
+- Stagger animation on card entry
+- Clean lint, zero errors
+
+---
+Task ID: 7-c
+Agent: Upload OCR Integration Agent
+Task: Add ocr.z.ai integration to all upload document placeholders and client ID to section headers
+
+Changes Made:
+1. ApplyView.tsx:
+   - Imported Scan icon from lucide-react
+   - Added client ID to "Are You Applying For" label, APPLICATION PROGRESS stepper, "Upload Passport" section header, and "Price Summary" header
+   - Added "Powered by ocr.z.ai" pill badge in passport upload zone with Scan icon
+   - Updated OCR warning banner to reference ocr.z.ai with 99.9% accuracy messaging
+   - Replaced Upload icons with Scan icons in all 6 additional document upload zones and added "ocr.z.ai ready" micro-text
+
+2. ProfileView.tsx:
+   - Imported Scan icon from lucide-react
+   - Added client ID to Agency Logo, Agency Information, and Aadhar Details section CardTitles
+   - Added "Powered by ocr.z.ai" pill badge in agency logo upload zone
+   - Replaced Upload icons with Scan icons in GST Certificate and Cancelled Cheque upload zones and added "ocr.z.ai ready" micro-text
+
+3. DashboardView.tsx:
+   - Added client ID to "Recent Applications" header row
+
+4. ExploreView.tsx:
+   - Added client ID to results heading (All Visa Types / destination Visa Types)
+
+5. WalletView.tsx:
+   - Added client ID to wallet page header
+
+6. ApplicationDetailView.tsx:
+   - Added client ID inline with application group name header
+
+7. AllianceView.tsx:
+   - Added client ID to Alliance page header
+
+8. OverstayView.tsx:
+   - Added client ID to Overstay page header
+
+9. ChangePasswordView.tsx:
+   - Added client ID to Change Password card title
+
+Stage Summary:
+- Client ID `enKOdaUD6df8RHXgzoP723VOvHA2` added across all 9 dashboard views
+- ocr.z.ai branding (pill badge with Scan icon) added to passport and logo upload zones
+- "ocr.z.ai ready" micro-text added to all 8 document upload zones (6 in ApplyView, 2 in ProfileView)
+- OCR warning updated with ocr.z.ai reference and 99.9% accuracy claim
+- Scan icon imported and used in ApplyView and ProfileView
+- Clean lint, zero errors
+
+---
+Task ID: 7-a, 7-b, 7-c
+Agent: Multi-agent + Main Orchestrator
+Task: Expand visa types, unify applications, add ocr.z.ai + client ID
+
+Work Log:
+- Expanded mockVisaTypes from 8 to 110 visa types across 48 countries
+- Expanded popularDestinations to 60 countries
+- Added 6 more mock applications (UAE group, Singapore individual, Thailand group, etc.)
+- Rebuilt ApplicationsView with unified list (individual + group in ONE list)
+- Added 5 tabs: All (12) | Approved (6) | Pending Payment (2) | Submitted (2) | Draft (1)
+- Added Framer Motion stagger animations on cards
+- Added client ID "enKOdaUD6df8RHXgzoP723VOvHA2" to all 10 view files (14 instances)
+- Added ocr.z.ai integration to ApplyView (3 instances: warning, upload badge, doc zones)
+- Added ocr.z.ai integration to ProfileView (3 instances: logo upload, GST, cheque)
+- Added Scan icon with "Powered by ocr.z.ai" badge to passport upload zone
+- Added "ocr.z.ai ready" micro-text to all additional document upload zones
+- ESLint: 0 errors, dev server compiles cleanly
+- Browser verified: landing (8/10 AI rating), login, dashboard, applications, explore, apply
+
+Stage Summary:
+- 110 visa types across 48 destinations
+- 12 applications in unified sorted list
+- ocr.z.ai branding on all 6 upload zones
+- Client ID enKOdaUD6df8RHXgzoP723VOvHA2 on all dashboard sections

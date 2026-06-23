@@ -50,9 +50,12 @@ export default function WalletView() {
     >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Wallet</h1>
-          <p className="text-sm text-[#6B7280] mt-1">Manage your balance, deposits, and withdrawals</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Wallet</h1>
+            <p className="text-sm text-[#6B7280] mt-1">Manage your balance, deposits, and withdrawals</p>
+          </div>
+          <span className="text-xs text-[#3D3D54] font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
         </div>
         <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl shrink-0">
           <CardContent className="px-5 py-3 text-right">

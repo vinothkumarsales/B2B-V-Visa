@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Upload, AlertTriangle, Lock, User, Building2 } from 'lucide-react';
+import { Upload, AlertTriangle, Lock, User, Building2, Scan } from 'lucide-react';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -42,9 +42,12 @@ export default function ProfileView() {
       {/* Section 1: Agency Logo */}
       <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-[#9CA3AF]" />
-            Agency Logo
+          <CardTitle className="text-base font-semibold text-white flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-[#9CA3AF]" />
+              Agency Logo
+            </div>
+            <span className="text-xs text-[#6B7280] font-mono font-normal">enKOdaUD6df8RHXgzoP723VOvHA2</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -52,6 +55,10 @@ export default function ProfileView() {
             <div className="border-2 border-dashed border-[#2A2A38] rounded-xl w-32 h-32 flex flex-col items-center justify-center text-center hover:border-indigo-500/50 transition-colors cursor-pointer shrink-0">
               <Upload className="h-6 w-6 text-[#6B7280] mb-1" />
               <p className="text-xs text-[#6B7280]">Upload</p>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-950/30 border border-indigo-800/30 text-[10px] text-indigo-400 font-medium mt-2">
+                <Scan className="h-3 w-3" />
+                Powered by ocr.z.ai
+              </span>
             </div>
             <div className="flex-1 space-y-3">
               <p className="text-sm text-[#9CA3AF]">
@@ -71,9 +78,12 @@ export default function ProfileView() {
       {/* Section 2: Agency Information */}
       <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
-            <User className="h-4 w-4 text-[#9CA3AF]" />
-            Agency Information
+          <CardTitle className="text-base font-semibold text-white flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-[#9CA3AF]" />
+              Agency Information
+            </div>
+            <span className="text-xs text-[#6B7280] font-mono font-normal">enKOdaUD6df8RHXgzoP723VOvHA2</span>
           </CardTitle>
           <p className="text-xs text-[#6B7280]">Update your GST, PAN, and address details</p>
         </CardHeader>
@@ -148,16 +158,18 @@ export default function ProfileView() {
                 <Label className="text-sm text-white font-medium">GST Certificate</Label>
                 <p className="text-xs text-[#6B7280]">PDF — max 5 MB</p>
                 <div className="border border-dashed border-[#2A2A38] rounded-lg p-4 flex flex-col items-center justify-center text-center hover:border-indigo-500/50 transition-colors cursor-pointer h-20">
-                  <Upload className="h-4 w-4 text-[#6B7280] mb-1" />
+                  <Scan className="h-3.5 w-3.5 text-[#6B7280] mb-1" />
                   <p className="text-xs text-[#6B7280]">Click to upload</p>
+                  <span className="text-[9px] text-[#3D3D54] mt-0.5">ocr.z.ai ready</span>
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-sm text-white font-medium">Cancelled Cheque</Label>
                 <p className="text-xs text-[#6B7280]">JPG, PNG or PDF — max 5 MB</p>
                 <div className="border border-dashed border-[#2A2A38] rounded-lg p-4 flex flex-col items-center justify-center text-center hover:border-indigo-500/50 transition-colors cursor-pointer h-20">
-                  <Upload className="h-4 w-4 text-[#6B7280] mb-1" />
+                  <Scan className="h-3.5 w-3.5 text-[#6B7280] mb-1" />
                   <p className="text-xs text-[#6B7280]">Click to upload</p>
+                  <span className="text-[9px] text-[#3D3D54] mt-0.5">ocr.z.ai ready</span>
                 </div>
               </div>
             </div>
@@ -224,9 +236,12 @@ export default function ProfileView() {
       {/* Section 3: Aadhar Details */}
       <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
-            <Lock className="h-4 w-4 text-[#9CA3AF]" />
-            Aadhar Details
+          <CardTitle className="text-base font-semibold text-white flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Lock className="h-4 w-4 text-[#9CA3AF]" />
+              Aadhar Details
+            </div>
+            <span className="text-xs text-[#6B7280] font-mono font-normal">enKOdaUD6df8RHXgzoP723VOvHA2</span>
           </CardTitle>
           <p className="text-xs text-[#6B7280]">Identity verification information</p>
         </CardHeader>

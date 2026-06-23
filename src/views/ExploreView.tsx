@@ -192,9 +192,12 @@ export default function ExploreView() {
 
       {/* Results Heading */}
       <div>
-        <h1 className="text-2xl font-bold text-white">
-          {goingTo.trim() ? `${goingTo.trim()} Visa Types` : 'All Visa Types'}
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-white">
+            {goingTo.trim() ? `${goingTo.trim()} Visa Types` : 'All Visa Types'}
+          </h1>
+          <span className="text-xs text-[#6B7280] font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
+        </div>
         <p className="text-sm text-[#6B7280] mt-1">
           {filteredVisas.length} visa option{filteredVisas.length !== 1 ? 's' : ''} available
         </p>

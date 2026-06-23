@@ -33,9 +33,12 @@ export default function AllianceView() {
       className="space-y-6"
     >
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">Alliance</h1>
-        <p className="text-sm text-[#6B7280] mt-1">View and filter alliance links created for your clients</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Alliance</h1>
+          <p className="text-sm text-[#6B7280] mt-1">View and filter alliance links created for your clients</p>
+        </div>
+        <span className="text-xs text-[#3D3D54] font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
       </div>
 
       {/* Filters */}

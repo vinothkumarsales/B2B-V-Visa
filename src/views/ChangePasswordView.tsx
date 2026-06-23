@@ -43,9 +43,12 @@ export default function ChangePasswordView() {
 
       <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl">
         <CardHeader>
-          <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
-            <Lock className="h-4 w-4 text-[#9CA3AF]" />
-            Change Password
+          <CardTitle className="text-base font-semibold text-white flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Lock className="h-4 w-4 text-[#9CA3AF]" />
+              Change Password
+            </div>
+            <span className="text-xs text-[#6B7280] font-mono font-normal">enKOdaUD6df8RHXgzoP723VOvHA2</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">

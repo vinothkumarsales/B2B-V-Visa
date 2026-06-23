@@ -81,7 +81,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setTransactions: (txns) => set({ transactions: txns }),
 
   // Stats
-  stats: { totalApplications: 47, approvedThisMonth: 25, walletBalance: 28040, pendingPayment: 2 },
+  stats: { totalApplications: 12, approvedThisMonth: 6, walletBalance: 28040, pendingPayment: 2 },
   setStats: (stats) => set({ stats }),
 
   // Alliance

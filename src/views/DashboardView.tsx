@@ -214,6 +214,7 @@ export default function DashboardView() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-white">Recent Applications</h2>
+              <span className="text-xs text-[#3D3D54] font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
               <button
                 onClick={() => navigate('applications')}
                 className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"

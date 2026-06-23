@@ -86,6 +86,7 @@ export default function ApplicationDetailView() {
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold text-white">{app.groupName || 'Application'}</h1>
+            <span className="text-[9px] text-[#3D3D54] font-mono ml-2">enKOdaUD6df8RHXgzoP723VOvHA2</span>
             {app.internalId && (
               <Badge variant="secondary" className="bg-[#1A1A24] text-[#9CA3AF] text-xs border-0 font-mono">
                 {app.internalId}

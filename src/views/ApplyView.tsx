@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Separator } from '@/components/ui/separator';
-import { Upload, AlertTriangle, Plus, ArrowRight, Check, Circle, ChevronRight } from 'lucide-react';
+import { Upload, AlertTriangle, Plus, ArrowRight, Check, Circle, ChevronRight, Scan } from 'lucide-react';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -62,7 +62,10 @@ export default function ApplyView() {
         <CardContent className="p-5">
           <div className="flex flex-col sm:flex-row sm:items-end gap-4">
             <div className="flex-1">
-              <Label className="text-xs text-[#9CA3AF] mb-1.5 block font-medium">Are You Applying For</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-[#9CA3AF] mb-1.5 block font-medium">Are You Applying For</Label>
+                <span className="text-[9px] text-[#3D3D54] font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
+              </div>
               <ToggleGroup
                 type="single"
                 value={appType}
@@ -127,7 +130,10 @@ export default function ApplyView() {
           <div className="sticky top-24">
             <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl">
               <CardContent className="p-4">
-                <p className="text-xs text-[#6B7280] font-medium mb-4">APPLICATION PROGRESS</p>
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs text-[#6B7280] font-medium">APPLICATION PROGRESS</p>
+                  <span className="text-[9px] text-[#3D3D54] font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
+                </div>
                 <div className="space-y-0">
                   {stepperSteps.map((step, i) => (
                     <div key={i} className="flex items-start gap-3">
@@ -165,14 +171,17 @@ export default function ApplyView() {
           {/* Upload Passport Section */}
           <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl">
             <CardContent className="p-5">
-              <h3 className="text-base font-semibold text-white mb-1">Upload Passport</h3>
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-base font-semibold text-white">Upload Passport</h3>
+                <span className="text-xs text-[#6B7280] font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
+              </div>
               <p className="text-xs text-[#6B7280] mb-4">Traveler {1}</p>
 
               {/* Warning Banner */}
               <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-950/30 border border-amber-800/30 mb-5">
                 <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-200/80">
-                  Please ensure the passport image is clear and all details are legible. OCR auto-fill may have errors — verify all fields before proceeding.
+                  VVisa uses <span className="text-indigo-400 font-medium">ocr.z.ai</span> for 99.9% accurate passport scanning. Upload a clear passport image and details will be filled automatically. However, it is mandatory to review the information before submitting.
                 </p>
               </div>
 
@@ -181,7 +190,11 @@ export default function ApplyView() {
                 <div className="border-2 border-dashed border-[#2A2A38] rounded-xl p-8 flex flex-col items-center justify-center text-center hover:border-indigo-500/50 transition-colors cursor-pointer min-h-[200px]">
                   <Upload className="h-8 w-8 text-[#6B7280] mb-3" />
                   <p className="text-sm text-[#9CA3AF] mb-1">Drag & drop passport image</p>
-                  <p className="text-xs text-[#6B7280]">JPG, PNG or PDF — max 5 MB</p>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-950/30 border border-indigo-800/30 text-[10px] text-indigo-400 font-medium">
+                    <Scan className="h-3 w-3" />
+                    Powered by ocr.z.ai
+                  </span>
+                  <p className="text-xs text-[#6B7280] mt-2">JPG, PNG or PDF — max 5 MB</p>
                   <Button
                     variant="outline"
                     className="mt-4 border-[#2A2A38] text-[#9CA3AF] hover:bg-[#1A1A24] hover:text-white rounded-lg text-xs"
@@ -293,8 +306,9 @@ export default function ApplyView() {
                     <Label className="text-sm text-white font-medium">{doc.title}</Label>
                     <p className="text-xs text-[#6B7280]">{doc.helper}</p>
                     <div className="border border-dashed border-[#2A2A38] rounded-lg p-4 flex flex-col items-center justify-center text-center hover:border-indigo-500/50 transition-colors cursor-pointer h-20">
-                      <Upload className="h-4 w-4 text-[#6B7280] mb-1" />
+                      <Scan className="h-3.5 w-3.5 text-[#6B7280] mb-1" />
                       <p className="text-xs text-[#6B7280]">Click to upload</p>
+                      <span className="text-[9px] text-[#3D3D54] mt-0.5">ocr.z.ai ready</span>
                     </div>
                   </div>
                 ))}
@@ -327,7 +341,10 @@ export default function ApplyView() {
           <div className="sticky top-24">
             <Card className="bg-[#111118] border border-[#2A2A38] rounded-xl">
               <CardContent className="p-5">
-                <h3 className="text-sm font-semibold text-white mb-4">Price Summary</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-white">Price Summary</h3>
+                  <span className="text-[9px] text-[#3D3D54] font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
+                </div>
 
                 <div className="space-y-3 mb-4">
                   {Array.from({ length: travelers }, (_, i) => (
