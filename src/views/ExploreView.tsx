@@ -15,6 +15,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PriceBreakdownPopover } from '@/components/pricing/PriceBreakdownPopover';
 import { Search, ArrowRight, MapPin, Plane, Calendar, Zap, Clock, FileText } from 'lucide-react';
+import type { VisaDocumentRequirement, VisaStickerRoute } from '@/types';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -56,6 +57,28 @@ function getEstimatedArrival(processingTime: string): string {
   const date = new Date();
   date.setDate(date.getDate() + days + 2);
   return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function getDocumentGroups(visa: VisaType): { mandatory: VisaDocumentRequirement[]; optional: VisaDocumentRequirement[] } {
+  if (visa.documentRequirements) {
+    return {
+      mandatory: visa.documentRequirements.mandatory ?? [],
+      optional: visa.documentRequirements.optional ?? [],
+    };
+  }
+
+  return {
+    mandatory: visa.documents.map((doc, index) => ({
+      id: `${visa.id}-doc-${index}`,
+      label: doc,
+      requirement: 'MANDATORY',
+    })),
+    optional: [],
+  };
+}
+
+function getStickerRoutes(visa: VisaType): VisaStickerRoute[] {
+  return visa.stickerRoutes?.length ? visa.stickerRoutes : visa.courierRules?.routes ?? [];
 }
 
 export default function ExploreView() {
@@ -327,6 +350,8 @@ export default function ExploreView() {
         {visibleVisas.map((visa) => {
           const cat = categoryConfig[visa.category] || categoryConfig.STANDARD;
           const estArrival = getEstimatedArrival(visa.processingTime);
+          const stickerRoutes = getStickerRoutes(visa);
+          const isStickerVisa = visa.visaKind === 'STICKER_VISA';
 
           return (
             <motion.div
@@ -390,13 +415,27 @@ export default function ExploreView() {
                     </div>
                   </div>
 
+                  {isStickerVisa && (
+                    <div className="mb-4 rounded-lg border border-amber-800/30 bg-amber-950/20 p-3">
+                      <p className="text-xs font-medium text-amber-200">Passport origin city required</p>
+                      <p className="mt-1 text-xs text-amber-200/80">
+                        {stickerRoutes.length > 0
+                          ? `Available route${stickerRoutes.length !== 1 ? 's' : ''}: ${stickerRoutes
+                              .map((route) => route.originCityLabel ?? route.origin)
+                              .filter(Boolean)
+                              .join(', ')}`
+                          : 'No courier route is mapped yet. This visa will need manual quotation before confirmation.'}
+                      </p>
+                    </div>
+                  )}
+
                   {/* Footer: Price + Select */}
                   <div className="flex items-center justify-between pt-3 border-t border-vvisa-border">
                     <div className="flex items-center gap-1.5">
                       <span className="text-xl font-bold font-mono text-foreground">
                         {formatINR(visa.price)}
                       </span>
-                      <PriceBreakdownPopover amount={visa.price} currency={visa.currency} />
+                      <PriceBreakdownPopover amount={visa.price} currency={visa.currency} lineItems={visa.pricingLineItems} />
                     </div>
                     <Button
                       onClick={() => handleSelectVisa(visa)}
@@ -454,17 +493,47 @@ export default function ExploreView() {
               <p className="text-sm text-vvisa-text-secondary mb-3">
                 Documents required for {selectedDocVisa.name}:
               </p>
-              <ul className="space-y-2">
-                {selectedDocVisa.documents.map((doc, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center gap-3 p-2.5 rounded-lg bg-vvisa-bg border border-vvisa-border"
-                  >
-                    <FileText className="h-4 w-4 text-primary shrink-0" />
-                    <span className="text-sm text-foreground">{doc}</span>
-                  </li>
-                ))}
-              </ul>
+              {(() => {
+                const groups = getDocumentGroups(selectedDocVisa);
+                return (
+                  <div className="space-y-4">
+                    <div>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-vvisa-text-muted">Mandatory (*)</p>
+                      <ul className="space-y-2">
+                        {groups.mandatory.map((doc) => (
+                          <li
+                            key={doc.id}
+                            className="flex items-center gap-3 p-2.5 rounded-lg bg-vvisa-bg border border-vvisa-border"
+                          >
+                            <FileText className="h-4 w-4 text-primary shrink-0" />
+                            <span className="text-sm text-foreground">{doc.label} *</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-vvisa-text-muted">Optional</p>
+                      {groups.optional.length > 0 ? (
+                        <ul className="space-y-2">
+                          {groups.optional.map((doc) => (
+                            <li
+                              key={doc.id}
+                              className="flex items-center gap-3 p-2.5 rounded-lg bg-vvisa-bg border border-vvisa-border"
+                            >
+                              <FileText className="h-4 w-4 text-vvisa-text-muted shrink-0" />
+                              <span className="text-sm text-foreground">{doc.label}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="rounded-lg border border-vvisa-border bg-vvisa-bg p-2.5 text-sm text-vvisa-text-muted">
+                          No optional documents listed.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </DialogContent>

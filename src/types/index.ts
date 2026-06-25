@@ -14,6 +14,150 @@ export type ApplicationStatus =
 
 export type VisaCategory = 'LIGHTNING_FAST' | 'STANDARD' | 'MULTI_ENTRY';
 
+export type VisaKind = 'E_VISA' | 'STICKER_VISA' | 'VISA_ON_ARRIVAL' | 'ETA' | 'OTHER';
+
+export type VisaEntryType = 'SINGLE' | 'DOUBLE' | 'MULTIPLE' | 'NOT_SPECIFIED';
+export type CourierDirection =
+  | 'AGENT_TO_PROCESSING_CENTRE'
+  | 'PROCESSING_CENTRE_TO_AGENT'
+  | 'BOTH'
+  | 'NOT_REQUIRED'
+  | 'NOT_SPECIFIED';
+export type RequirementStatus = 'CONFIRMED' | 'REVIEW_REQUIRED';
+export type PassportValidityRuleCode =
+  | 'SIX_MONTHS_FROM_TRAVEL'
+  | 'SIX_MONTHS_FROM_ARRIVAL'
+  | 'SIX_MONTHS_FROM_RETURN'
+  | 'THREE_MONTHS_FROM_DEPARTURE'
+  | 'VALID_FOR_STAY_DURATION'
+  | 'MANUAL_RULE'
+  | 'UNKNOWN';
+
+export type VisaDocumentRequirementType = 'MANDATORY' | 'OPTIONAL';
+
+export type VisaPricingLineType =
+  | 'VISA_FEE'
+  | 'VVISA_SERVICE_FEE'
+  | 'VFS_FEE'
+  | 'COURIER_FEE'
+  | 'INSURANCE_FEE'
+  | 'CONVENIENCE_FEE'
+  | 'OTHER_FEE'
+  | 'GST'
+  | 'DISCOUNT'
+  | 'CONSULAR_FEE'
+  | 'SERVICE_FEE'
+  | 'TAX'
+  | 'OTHER';
+
+export type VisaStickerRouteType = 'SUBMISSION' | 'COLLECTION' | 'ROUND_TRIP';
+
+export interface VisaDocumentRequirement {
+  id: string;
+  label: string;
+  requirement: VisaDocumentRequirementType;
+  documentCode?: string;
+  documentName?: string;
+  description?: string;
+  isMandatory?: boolean;
+  isOptional?: boolean;
+  appliesToAdult?: boolean;
+  appliesToMinor?: boolean;
+  appliesToStickerVisa?: boolean;
+  appliesToEVisa?: boolean;
+  uploadRequired?: boolean;
+  physicalOriginalRequired?: boolean;
+  courierRequired?: boolean;
+  sampleAvailable?: boolean;
+  requirementStatus?: RequirementStatus;
+  notes?: string;
+  acceptedFormats?: string[];
+  maxFileSizeMb?: number;
+  appliesTo?: 'TRAVELER' | 'AGENCY' | 'SPONSOR' | 'GROUP';
+}
+
+export interface VisaPricingLineItem {
+  id: string;
+  label: string;
+  type: VisaPricingLineType;
+  amount: number;
+  currency: string;
+  taxable: boolean;
+  quantity?: number;
+  includedInBasePrice?: boolean;
+  amountMinor?: number;
+}
+
+export interface VisaStickerRoute {
+  id: string;
+  type: VisaStickerRouteType;
+  origin: string;
+  destination: string;
+  visaProductId?: string;
+  originCityCode?: string;
+  originCityLabel?: string;
+  processingCentreCity?: string;
+  processingCentreAddress?: string;
+  courierFeeMinor?: number;
+  serviceFeeAdjustmentMinor?: number;
+  estimatedOutboundDays?: number;
+  estimatedReturnDays?: number;
+  deliveryInstructions?: string;
+  isActive?: boolean;
+  carrier?: string;
+  estimatedDays?: number;
+  notes?: string;
+}
+
+export interface VisaCourierRules {
+  required: boolean;
+  available: boolean;
+  physicalSubmissionRequired?: boolean;
+  courierRequired?: boolean;
+  courierDirection?: CourierDirection;
+  submissionCentreName?: string;
+  submissionAddress?: string;
+  submissionCity?: string;
+  returnCourierAvailable?: boolean;
+  returnCourierFeeMinor?: number;
+  outboundCourierFeeMinor?: number;
+  courierInstructions?: string;
+  passportCollectionAvailable?: boolean;
+  passportCollectionCities?: string[];
+  routes?: VisaStickerRoute[];
+  allowSelfDropOff?: boolean;
+  allowSelfCollection?: boolean;
+  notes?: string;
+}
+
+export interface VisaPassportValidityRule {
+  minimumMonthsFrom?: 'ARRIVAL_DATE' | 'DEPARTURE_DATE' | 'APPLICATION_DATE';
+  minimumMonths: number;
+  rule?: PassportValidityRuleCode;
+  blankPagesRequired?: number;
+  passportTypeNotes?: string;
+}
+
+export interface VisaPrice {
+  visaFeeMinor: number;
+  vvisaServiceFeeMinor: number;
+  courierFeeMinor?: number;
+  insuranceFeeMinor?: number;
+  convenienceFeeMinor?: number;
+  otherFeeMinor?: number;
+  discountMinor?: number;
+  gstMinor: number;
+  totalAmountMinor: number;
+  currency: string;
+  lines: VisaPricingLineItem[];
+}
+
+export interface MinorGuardianLink {
+  minorApplicantId: string;
+  guardianApplicantId: string;
+  relationship: 'FATHER' | 'MOTHER' | 'LEGAL_GUARDIAN' | 'OTHER_GUARDIAN';
+}
+
 export type WalletTransactionType = 'DEPOSIT' | 'WITHDRAWAL' | 'PAYMENT' | 'REFUND';
 
 export type PaymentMethod = 'BANK_TRANSFER' | 'UPI' | 'CREDIT_CARD' | 'WALLET';
@@ -65,6 +209,8 @@ export interface Traveler {
   dateOfIssue?: string;
   dateOfExpiry?: string;
   isChild: boolean;
+  guardianApplicantId?: string;
+  guardianRelationship?: MinorGuardianLink['relationship'];
   status: ApplicationStatus;
   referenceNo?: string;
   estimatedArrival?: string;
@@ -92,15 +238,35 @@ export interface VisaApplication {
 export interface VisaType {
   id: string;
   destination: string;
+  destinationCode?: string;
   name: string;
   category: VisaCategory;
   entry: string;
+  entryType?: VisaEntryType;
+  visaKind?: VisaKind;
+  purpose?: string;
+  nationalityEligibility?: string[];
   validity: string;
+  visaValidityDays?: number;
   duration: string;
+  maximumStayDays?: number;
   processingTime: string;
+  processingTimeMinDays?: number;
+  processingTimeMaxDays?: number;
+  processingTimeLabel?: string;
   price: number;
   currency: string;
   documents: string[];
+  documentRequirements?: {
+    mandatory: VisaDocumentRequirement[];
+    optional: VisaDocumentRequirement[];
+  };
+  pricingLineItems?: VisaPricingLineItem[];
+  pricing?: VisaPrice;
+  stickerRoutes?: VisaStickerRoute[];
+  courierRules?: VisaCourierRules;
+  passportValidityRule?: VisaPassportValidityRule;
+  minimumPassportValidityMonths?: number;
   cutoffTime?: string;
 }
 

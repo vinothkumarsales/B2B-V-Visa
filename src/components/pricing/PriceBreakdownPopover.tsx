@@ -5,11 +5,13 @@ import { Info } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { buildVisaPriceBreakdown, formatMoneyMinor, getNonZeroPriceRows, rupeesToMinor } from '@/lib/pricing';
 import { cn } from '@/lib/utils';
+import type { VisaPricingLineItem } from '@/types';
 
 interface PriceBreakdownPopoverProps {
   amount: number;
   currency?: string;
   quantity?: number;
+  lineItems?: VisaPricingLineItem[];
   className?: string;
 }
 
@@ -17,12 +19,24 @@ export function PriceBreakdownPopover({
   amount,
   currency = 'INR',
   quantity = 1,
+  lineItems,
   className,
 }: PriceBreakdownPopoverProps) {
   const [open, setOpen] = useState(false);
   const totalMinor = rupeesToMinor(amount);
-  const breakdown = buildVisaPriceBreakdown(totalMinor, currency, undefined, quantity);
-  const rows = getNonZeroPriceRows(breakdown);
+  const explicitRows = lineItems
+    ?.map((line) => ({
+      label: line.label,
+      amountMinor: line.amountMinor ?? rupeesToMinor(line.amount * (line.quantity ?? 1)),
+      emphasis: false,
+    }))
+    .filter((line) => line.amountMinor !== 0);
+  const rows = explicitRows?.length
+    ? [
+        ...explicitRows,
+        { label: 'Total', amountMinor: totalMinor, emphasis: true },
+      ]
+    : getNonZeroPriceRows(buildVisaPriceBreakdown(totalMinor, currency, undefined, quantity));
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -55,6 +69,9 @@ export function PriceBreakdownPopover({
             {quantity > 1 && (
               <p className="mt-0.5 text-xs text-vvisa-text-muted">{quantity} travellers included</p>
             )}
+            {explicitRows?.length ? (
+              <p className="mt-0.5 text-xs text-vvisa-text-muted">Supplier line items shown; total is final.</p>
+            ) : null}
           </div>
           <div className="space-y-2">
             {rows.map((row) => (

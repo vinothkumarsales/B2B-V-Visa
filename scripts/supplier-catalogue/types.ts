@@ -1,6 +1,50 @@
-export type SupplierId = "stampmyvisa" | (string & {});
-export type EntryType = "single" | "multiple" | "unknown";
+export type SupplierId = "stampmyvisa" | "stamp-my-visa" | "atlys-b2b" | (string & {});
+export type VisaKind =
+  | "tourist"
+  | "business"
+  | "transit"
+  | "student"
+  | "work"
+  | "evisa"
+  | "unknown";
+export type EntryType = "single" | "multiple" | "double" | "unknown";
 export type ImportMode = "sample" | "local";
+export type ReviewStatus = "ready_for_review" | "needs_review" | "rejected";
+export type ChangeDetectionStatus =
+  | "NEW_PRODUCT"
+  | "NO_CHANGE"
+  | "PRICE_CHANGED"
+  | "CONTENT_CHANGED"
+  | "REMOVED_PRODUCT"
+  | "NEEDS_REVIEW";
+
+export interface SupplierDocumentInput {
+  name: string;
+  mandatory?: boolean;
+  note?: string;
+  acceptedFormats?: string[];
+}
+
+export interface SupplierDocument {
+  name: string;
+  mandatory: boolean;
+  note: string | null;
+  acceptedFormats: string[];
+}
+
+export interface SupplierPriceLineInput {
+  label?: string;
+  amount?: number | string;
+  currency?: string;
+  included?: boolean;
+}
+
+export interface SupplierPriceLine {
+  label: string;
+  amount: number | null;
+  currency: string;
+  included: boolean;
+}
 
 export interface SupplierProductInput {
   supplierProductId?: string;
@@ -13,7 +57,13 @@ export interface SupplierProductInput {
   processingTime?: string;
   currency?: string;
   netPrice?: number | string;
-  documents?: string[];
+  documents?: Array<string | SupplierDocumentInput>;
+  stickerRequired?: boolean;
+  courierRequired?: boolean;
+  submissionCity?: string;
+  collectionCity?: string;
+  routeCities?: string[];
+  priceLines?: SupplierPriceLineInput[];
   sourceUrl?: string;
   raw?: unknown;
 }
@@ -36,6 +86,7 @@ export interface NormalizedSupplierProduct {
   destinationCountry: string;
   destinationSlug: string;
   visaType: string;
+  visaKind: VisaKind;
   visaTypeSlug: string;
   title: string;
   entryType: EntryType;
@@ -44,11 +95,21 @@ export interface NormalizedSupplierProduct {
   processingTime: string | null;
   currency: string;
   netPrice: number | null;
-  documents: string[];
+  documents: SupplierDocument[];
+  mandatoryDocuments: SupplierDocument[];
+  optionalDocuments: SupplierDocument[];
+  stickerRequired: boolean | null;
+  courierRequired: boolean | null;
+  submissionCity: string | null;
+  collectionCity: string | null;
+  routeCities: string[];
+  priceLines: SupplierPriceLine[];
   sourceUrl: string | null;
   sourceCapturedAt: string;
   sourceMode: ImportMode;
-  importStatus: "ready_for_review" | "needs_review" | "rejected";
+  importStatus: ReviewStatus;
+  reviewStatus: ReviewStatus;
+  changeDetectionStatus: ChangeDetectionStatus;
   reviewNotes: string[];
 }
 

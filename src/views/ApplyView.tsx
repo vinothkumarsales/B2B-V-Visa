@@ -20,7 +20,7 @@ import {
   Loader2, X, FileCheck, ChevronDown, ChevronUp, Image as ImageIcon,
   Trash2, FileText, Copy, CheckCircle2, Receipt,
 } from 'lucide-react';
-import type { Traveler } from '@/types';
+import type { Traveler, VisaDocumentRequirement, VisaPricingLineItem, VisaStickerRoute, VisaType } from '@/types';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -52,6 +52,12 @@ interface TravelerData {
   ocrError: string;
   additionalDocs: { [key: string]: string | null };
   expanded: boolean;
+}
+
+interface ApplicantValidationIssue {
+  travelerId: string;
+  message: string;
+  blocksSubmit: boolean;
 }
 
 // Normalize document names — strip parenthetical annotations (e.g. "Bank Statement (min ₹3L)" → "Bank Statement")
@@ -109,26 +115,56 @@ const docNameToMeta: Record<string, { key: string; helper: string }> = {
 // Documents that are always covered by the passport upload section (not shown as additional)
 const ALWAYS_COVERED = new Set(['Passport', 'Photo']);
 
-function getRequiredAdditionalDocs(visaDocuments: string[]): { key: string; title: string; helper: string }[] {
+function getUploadableDoc(doc: VisaDocumentRequirement): { key: string; title: string; helper: string } | null {
+  if (doc.uploadRequired === false || doc.appliesTo === 'AGENCY' || doc.appliesTo === 'SPONSOR') return null;
+  const title = doc.documentName ?? doc.label;
+  if (ALWAYS_COVERED.has(normalizeDocName(title))) return null;
+  const normalized = normalizeDocName(title);
+  const meta = docNameToMeta[normalized] || docNameToMeta[title];
+
+  return {
+    key: meta?.key ?? doc.documentCode ?? normalized.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+    title: doc.requirement === 'MANDATORY' ? `${title} *` : title,
+    helper: doc.description ?? doc.notes ?? meta?.helper ?? `Upload ${title}`,
+  };
+}
+
+function getRequiredAdditionalDocs(visa: VisaType): { key: string; title: string; helper: string }[] {
   const seen = new Set<string>();
-  return visaDocuments
+  const structuredMandatory = visa.documentRequirements?.mandatory ?? [];
+  const docs = structuredMandatory.length
+    ? structuredMandatory.map(getUploadableDoc).filter(Boolean)
+    : visa.documents
     .filter((doc) => !ALWAYS_COVERED.has(doc))
     .map((doc) => {
       const normalized = normalizeDocName(doc);
       const meta = docNameToMeta[normalized] || docNameToMeta[doc];
       if (meta) {
-        // Deduplicate by key in case two doc names normalize to same key
-        if (seen.has(meta.key)) return null;
-        seen.add(meta.key);
         return { key: meta.key, title: doc, helper: meta.helper };
       }
-      // Fallback for unknown doc names
       const key = normalized.toLowerCase().replace(/[^a-z0-9]/g, '_');
-      if (seen.has(key)) return null;
-      seen.add(key);
       return { key, title: doc, helper: `Upload ${doc}` };
-    })
-    .filter(Boolean) as { key: string; title: string; helper: string }[];
+    });
+
+  return (docs as { key: string; title: string; helper: string }[]).filter((doc) => {
+    if (seen.has(doc.key)) return false;
+    seen.add(doc.key);
+    return true;
+  });
+}
+
+function scalePricingLineItems(lineItems: VisaPricingLineItem[] | undefined, quantity: number): VisaPricingLineItem[] | undefined {
+  if (!lineItems?.length || quantity <= 1) return lineItems;
+  return lineItems.map((line) => ({
+    ...line,
+    amount: line.amount * quantity,
+    amountMinor: line.amountMinor !== undefined ? line.amountMinor * quantity : undefined,
+    quantity: (line.quantity ?? 1) * quantity,
+  }));
+}
+
+function getStickerRoutes(visa: VisaType): VisaStickerRoute[] {
+  return visa.stickerRoutes?.length ? visa.stickerRoutes : visa.courierRules?.routes ?? [];
 }
 
 function createEmptyTraveler(index: number, requiredDocKeys: string[]): TravelerData {
@@ -153,6 +189,65 @@ function createEmptyTraveler(index: number, requiredDocKeys: string[]): Traveler
     additionalDocs: Object.fromEntries(requiredDocKeys.map((k) => [k, null])),
     expanded: index === 0,
   };
+}
+
+function getAgeReferenceDate(travelDate: string): string {
+  return travelDate || new Date().toISOString().slice(0, 10);
+}
+
+function getTravelerDisplayName(traveler: TravelerData, index: number): string {
+  const name = `${traveler.firstName} ${traveler.lastName}`.trim();
+  return name || `Traveler ${index + 1}`;
+}
+
+function validateApplicants(travelers: TravelerData[], travelDate: string): ApplicantValidationIssue[] {
+  const ageReferenceDate = getAgeReferenceDate(travelDate);
+  const adultIds = new Set(
+    travelers
+      .filter((traveler) => {
+        const age = calculateAge(traveler.dateOfBirth, ageReferenceDate);
+        return age !== null && age >= 18;
+      })
+      .map((traveler) => traveler.id)
+  );
+
+  return travelers.flatMap((traveler, index) => {
+    const issues: ApplicantValidationIssue[] = [];
+    const displayName = getTravelerDisplayName(traveler, index);
+    const passportValidity = evaluatePassportValidity({
+      passportExpiryDate: traveler.dateOfExpiry,
+      travelDate: travelDate || undefined,
+      rule: 'UNKNOWN',
+    });
+
+    if (passportValidity.blocksProgress) {
+      issues.push({
+        travelerId: traveler.id,
+        message: `${displayName}: passport is expired for the travel date.`,
+        blocksSubmit: true,
+      });
+    }
+
+    const age = calculateAge(traveler.dateOfBirth, ageReferenceDate);
+    const isMinor = age !== null && age < 18;
+    if (isMinor) {
+      if (adultIds.size === 0) {
+        issues.push({
+          travelerId: traveler.id,
+          message: `${displayName}: no adult traveler is available, so guardian details need manual review.`,
+          blocksSubmit: true,
+        });
+      } else if (!traveler.guardianApplicantId || !traveler.guardianRelationship || !adultIds.has(traveler.guardianApplicantId)) {
+        issues.push({
+          travelerId: traveler.id,
+          message: `${displayName}: link a travelling parent or guardian and select the relationship.`,
+          blocksSubmit: true,
+        });
+      }
+    }
+
+    return issues;
+  });
 }
 
 function readStoredVisaType() {
@@ -772,16 +867,23 @@ export default function ApplyView() {
   const [submitting, setSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<{ txnId: string; appId: string; error?: string } | null>(null);
   const [copiedTxn, setCopiedTxn] = useState(false);
+  const [passportOriginCity, setPassportOriginCity] = useState('');
 
-  // Compute required additional docs from the selected visa type
   const requiredDocs = useMemo(() => {
-    if (!activeVisaType?.documents) return [];
-    return getRequiredAdditionalDocs(activeVisaType.documents);
+    if (!activeVisaType) return [];
+    return getRequiredAdditionalDocs(activeVisaType);
   }, [activeVisaType]);
 
   const requiredDocKeys = useMemo(() => requiredDocs.map((d) => d.key), [requiredDocs]);
+  const stickerRoutes = useMemo(() => activeVisaType ? getStickerRoutes(activeVisaType) : [], [activeVisaType]);
+  const isStickerVisa = activeVisaType?.visaKind === 'STICKER_VISA';
+  const selectedPassportOriginCity = passportOriginCity || stickerRoutes[0]?.id || '';
 
   const [travelers, setTravelers] = useState<TravelerData[]>(() => [createEmptyTraveler(0, requiredDocKeys)]);
+  const totalPricingLineItems = useMemo(
+    () => scalePricingLineItems(activeVisaType?.pricingLineItems, travelers.length),
+    [activeVisaType?.pricingLineItems, travelers.length]
+  );
 
   useEffect(() => {
     if (!selectedVisaType && activeVisaType) {
@@ -792,17 +894,84 @@ export default function ApplyView() {
   const pricePerTraveler = activeVisaType?.price || 13499;
   const total = pricePerTraveler * travelers.length;
 
+  const validationIssues = useMemo(() => validateApplicants(travelers, travelDate), [travelers, travelDate]);
+  const blockingValidationIssues = useMemo(
+    () => validationIssues.filter((issue) => issue.blocksSubmit),
+    [validationIssues]
+  );
+  const canSubmit = Boolean(activeVisaType) && walletBalance >= total && blockingValidationIssues.length === 0;
+
+  const handleTravelDateChange = useCallback((nextTravelDate: string) => {
+    setTravelDate(nextTravelDate);
+    setTravelers((prev) => {
+      const ageReferenceDate = getAgeReferenceDate(nextTravelDate);
+      const adultIds = new Set(
+        prev
+          .filter((traveler) => {
+            const age = calculateAge(traveler.dateOfBirth, ageReferenceDate);
+            return age !== null && age >= 18;
+          })
+          .map((traveler) => traveler.id)
+      );
+
+      let changed = false;
+      const next = prev.map((traveler) => {
+        const age = calculateAge(traveler.dateOfBirth, ageReferenceDate);
+        const isMinor = age !== null && age < 18;
+        const nextTraveler = { ...traveler };
+
+        if (!isMinor && (nextTraveler.guardianApplicantId || nextTraveler.guardianRelationship)) {
+          nextTraveler.guardianApplicantId = '';
+          nextTraveler.guardianRelationship = '';
+          changed = true;
+        } else if (isMinor && nextTraveler.guardianApplicantId && !adultIds.has(nextTraveler.guardianApplicantId)) {
+          nextTraveler.guardianApplicantId = '';
+          changed = true;
+        }
+
+        return nextTraveler;
+      });
+
+      return changed ? next : prev;
+    });
+  }, []);
+
   const handleUpdateTraveler = useCallback(
     (id: string, field: keyof TravelerData, value: TravelerData[keyof TravelerData]) => {
-      setTravelers((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, [field]: value } : t))
-      );
+      setTravelers((prev) => {
+        const next = prev.map((t) => (t.id === id ? { ...t, [field]: value } : t));
+        const ageReferenceDate = getAgeReferenceDate(travelDate);
+        const adultIds = new Set(
+          next
+            .filter((traveler) => {
+              const age = calculateAge(traveler.dateOfBirth, ageReferenceDate);
+              return age !== null && age >= 18;
+            })
+            .map((traveler) => traveler.id)
+        );
+
+        return next.map((traveler) => {
+          const age = calculateAge(traveler.dateOfBirth, ageReferenceDate);
+          const isMinor = age !== null && age < 18;
+          if (!isMinor && (traveler.guardianApplicantId || traveler.guardianRelationship)) {
+            return { ...traveler, guardianApplicantId: '', guardianRelationship: '' };
+          }
+          if (isMinor && traveler.guardianApplicantId && !adultIds.has(traveler.guardianApplicantId)) {
+            return { ...traveler, guardianApplicantId: '' };
+          }
+          return traveler;
+        });
+      });
     },
-    []
+    [travelDate]
   );
 
   const handleRemoveTraveler = useCallback((id: string) => {
-    setTravelers((prev) => prev.filter((t) => t.id !== id));
+    setTravelers((prev) =>
+      prev
+        .filter((t) => t.id !== id)
+        .map((t) => (t.guardianApplicantId === id ? { ...t, guardianApplicantId: '' } : t))
+    );
   }, []);
 
   const handleAddTraveler = () => {
@@ -811,6 +980,10 @@ export default function ApplyView() {
 
   const handleSubmit = useCallback(() => {
     if (!activeVisaType || submitting) return;
+    if (blockingValidationIssues.length > 0) {
+      setSubmitResult({ txnId: '', appId: '', error: blockingValidationIssues.map((issue) => issue.message).join(' ') });
+      return;
+    }
     setSubmitting(true);
 
     // Build travelers array for submission
@@ -825,6 +998,8 @@ export default function ApplyView() {
       placeOfBirth: t.placeOfIssue || undefined,
       placeOfIssue: t.placeOfIssue || undefined,
       maritalStatus: t.maritalStatus || undefined,
+      guardianApplicantId: t.guardianApplicantId || undefined,
+      guardianRelationship: t.guardianRelationship || undefined,
       dateOfIssue: t.dateOfIssue || undefined,
       dateOfExpiry: t.dateOfExpiry || undefined,
       isChild: calculateAge(t.dateOfBirth, travelDate || new Date().toISOString().slice(0, 10)) !== null
@@ -852,7 +1027,7 @@ export default function ApplyView() {
     } else {
       setSubmitResult({ txnId: '', appId: '', error: result.error });
     }
-  }, [activeVisaType, submitting, travelers, internalId, groupName, appType, total, travelDate, returnDate, submitApplication]);
+  }, [activeVisaType, submitting, blockingValidationIssues, travelers, internalId, groupName, appType, total, travelDate, returnDate, submitApplication]);
 
   const copyTxnId = useCallback(() => {
     if (submitResult?.txnId) {
@@ -926,7 +1101,7 @@ export default function ApplyView() {
               <Input
                 type="date"
                 value={travelDate}
-                onChange={(e) => setTravelDate(e.target.value)}
+                onChange={(e) => handleTravelDateChange(e.target.value)}
                 className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
               />
             </div>
@@ -952,7 +1127,42 @@ export default function ApplyView() {
                 <span className="text-sm font-bold font-mono text-primary">
                   {formatINR(activeVisaType.price)}
                 </span>
-                <PriceBreakdownPopover amount={activeVisaType.price} currency={activeVisaType.currency} />
+                <PriceBreakdownPopover
+                  amount={activeVisaType.price}
+                  currency={activeVisaType.currency}
+                  lineItems={activeVisaType.pricingLineItems}
+                />
+              </div>
+            </div>
+          )}
+
+          {activeVisaType && isStickerVisa && (
+            <div className="mt-4 rounded-lg border border-amber-800/30 bg-amber-950/20 p-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1.2fr] sm:items-end">
+                <div>
+                  <Label className="text-xs text-amber-200 mb-1.5 block font-medium">Passport Origin City</Label>
+                  <select
+                    value={selectedPassportOriginCity}
+                    onChange={(event) => setPassportOriginCity(event.target.value)}
+                    disabled={stickerRoutes.length === 0}
+                    className="h-10 w-full rounded-lg border border-amber-800/40 bg-vvisa-bg px-3 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {stickerRoutes.length > 0 ? (
+                      stickerRoutes.map((route) => (
+                        <option key={route.id} value={route.id}>
+                          {route.originCityLabel ?? route.origin}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="">Manual quotation required</option>
+                    )}
+                  </select>
+                </div>
+                <p className="text-xs leading-5 text-amber-200/80">
+                  {stickerRoutes.length > 0
+                    ? 'Sticker visas require passport handover. Pricing can include route-specific courier or centre handling when provided.'
+                    : 'No passport route is mapped for this sticker visa yet. Save the application for manual quotation before final confirmation.'}
+                </p>
               </div>
             </div>
           )}
@@ -1007,11 +1217,24 @@ export default function ApplyView() {
             </span>
           </Button>
 
+          {blockingValidationIssues.length > 0 && (
+            <div className="rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-xs leading-5 text-amber-100">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                <div className="space-y-1">
+                  {blockingValidationIssues.map((issue) => (
+                    <p key={`${issue.travelerId}-${issue.message}`}>{issue.message}</p>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Review CTA (mobile) */}
           <div className="lg:hidden">
             <Button
               onClick={handleSubmit}
-              disabled={submitting || !activeVisaType}
+              disabled={submitting || !canSubmit}
               className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-11 flex items-center justify-center gap-2"
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
@@ -1038,7 +1261,11 @@ export default function ApplyView() {
                       </span>
                       <span className="flex items-center gap-1.5">
                         <span className="text-sm font-mono text-foreground">{formatINR(pricePerTraveler)}</span>
-                        <PriceBreakdownPopover amount={pricePerTraveler} currency={activeVisaType?.currency} />
+                        <PriceBreakdownPopover
+                          amount={pricePerTraveler}
+                          currency={activeVisaType?.currency}
+                          lineItems={activeVisaType?.pricingLineItems}
+                        />
                       </span>
                     </div>
                   ))}
@@ -1050,11 +1277,29 @@ export default function ApplyView() {
                   <span className="text-sm font-semibold text-foreground">Total ({travelers.length} traveler{travelers.length > 1 ? 's' : ''})</span>
                   <span className="flex items-center gap-1.5">
                     <span className="text-lg font-bold font-mono text-foreground">{formatINR(total)}</span>
-                    <PriceBreakdownPopover amount={total} currency={activeVisaType?.currency} quantity={travelers.length} />
+                    <PriceBreakdownPopover
+                      amount={total}
+                      currency={activeVisaType?.currency}
+                      quantity={travelers.length}
+                      lineItems={totalPricingLineItems}
+                    />
                   </span>
                 </div>
 
                 <Separator className="bg-vvisa-border my-3" />
+
+                {blockingValidationIssues.length > 0 && (
+                  <div className="mb-4 rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-xs leading-5 text-amber-100">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                      <div className="space-y-1">
+                        {blockingValidationIssues.map((issue) => (
+                          <p key={`${issue.travelerId}-${issue.message}`}>{issue.message}</p>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex justify-between items-center mb-5">
                   <span className="text-xs text-vvisa-text-muted">{demoMode ? 'Demo Wallet Balance' : 'Current Wallet Balance'}</span>
@@ -1070,7 +1315,7 @@ export default function ApplyView() {
 
                 <Button
                   onClick={handleSubmit}
-                  disabled={submitting || !activeVisaType || walletBalance < total}
+                  disabled={submitting || !canSubmit}
                   className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-10 flex items-center justify-center gap-2 text-sm"
                 >
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
@@ -1158,7 +1403,12 @@ export default function ApplyView() {
                       <p className="text-vvisa-text-muted">{demoMode ? 'Amount Preview' : 'Amount Debited'}</p>
                       <div className="mt-0.5 flex items-center gap-1.5">
                         <p className="text-foreground font-mono font-medium">{formatINR(total)}</p>
-                        <PriceBreakdownPopover amount={total} currency={activeVisaType?.currency} quantity={travelers.length} />
+                        <PriceBreakdownPopover
+                          amount={total}
+                          currency={activeVisaType?.currency}
+                          quantity={travelers.length}
+                          lineItems={totalPricingLineItems}
+                        />
                       </div>
                     </div>
                     <div className="bg-vvisa-bg rounded-lg p-3">

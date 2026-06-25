@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { dedupeProducts } from "./dedupe.ts";
 import { normalizeCountry, normalizeProducts, slugify } from "./normalize.ts";
-import { buildReviewExport, writeReviewExport } from "./review-export.ts";
+import { buildReviewExport, loadLatestReviewProducts, writeReviewExport } from "./review-export.ts";
 import { loadSupplierSource } from "./sources.ts";
 import type { ImportMode, SupplierId } from "./types.ts";
 import { validateProducts } from "./validate.ts";
@@ -32,6 +32,11 @@ async function main(): Promise<void> {
   const validated = validateProducts(destinationMatched);
   const dedupe = dedupeProducts(validated);
   const output = options.output ?? defaultOutputPath(options.supplier, normalizedDestination);
+  const previousProducts = await loadLatestReviewProducts({
+    reviewDir: resolve("data", "supplier-imports", "reviews"),
+    supplierId: options.supplier,
+    destinationSlug: slugify(normalizedDestination),
+  });
   const review = buildReviewExport({
     supplierId: options.supplier,
     destination: normalizedDestination,
@@ -41,6 +46,7 @@ async function main(): Promise<void> {
     readCount: source.products.length,
     destinationMatchedCount: destinationMatched.length,
     dedupe,
+    previousProducts,
   });
 
   const writtenOutput = await writeReviewExport(output, review);
@@ -55,6 +61,7 @@ async function main(): Promise<void> {
     `duplicates=${review.summary.duplicateCount}`,
     `errors=${review.summary.errorCount}`,
     `warnings=${review.summary.warningCount}`,
+    `statuses=${summarizeStatuses(review.products.map((product) => product.changeDetectionStatus))}`,
     `output=${writtenOutput}`,
   ].join(" "));
 }
@@ -106,6 +113,12 @@ function defaultOutputPath(supplier: SupplierId, destination: string): string {
     "reviews",
     `${date}-${supplier}-${slugify(destination)}.review.json`,
   );
+}
+
+function summarizeStatuses(statuses: string[]): string {
+  const counts = new Map<string, number>();
+  for (const status of statuses) counts.set(status, (counts.get(status) ?? 0) + 1);
+  return Array.from(counts.entries()).map(([status, count]) => `${status}:${count}`).join(",");
 }
 
 main().catch((error: unknown) => {

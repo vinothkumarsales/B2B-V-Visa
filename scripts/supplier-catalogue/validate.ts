@@ -59,11 +59,27 @@ function validateProduct(product: NormalizedSupplierProduct): ValidationIssue[] 
     });
   }
 
+  if (product.visaKind === "unknown") {
+    issues.push({
+      level: "warning",
+      field: "visaKind",
+      message: "visa kind needs manual review",
+    });
+  }
+
   if (product.documents.length === 0) {
     issues.push({
       level: "warning",
       field: "documents",
       message: "document checklist is empty",
+    });
+  }
+
+  if (product.priceLines.some((line) => line.amount !== null && line.amount < 0)) {
+    issues.push({
+      level: "warning",
+      field: "priceLines",
+      message: "negative price line needs manual review",
     });
   }
 

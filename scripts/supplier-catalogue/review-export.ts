@@ -1,6 +1,13 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, extname, join, basename } from "node:path";
-import type { DedupeResult, ImportMode, ReviewExport, SupplierId } from "./types.ts";
+import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { basename, dirname, extname, join, resolve } from "node:path";
+import type {
+  ChangeDetectionStatus,
+  DedupeResult,
+  ImportMode,
+  NormalizedSupplierProduct,
+  ReviewExport,
+  SupplierId,
+} from "./types.ts";
 
 export interface BuildReviewExportInput {
   supplierId: SupplierId;
@@ -11,10 +18,17 @@ export interface BuildReviewExportInput {
   readCount: number;
   destinationMatchedCount: number;
   dedupe: DedupeResult;
+  previousProducts?: NormalizedSupplierProduct[];
 }
 
 export function buildReviewExport(input: BuildReviewExportInput): ReviewExport {
-  const selected = input.dedupe.kept.slice(0, input.requestedLimit);
+  const previousByKey = new Map(
+    (input.previousProducts ?? []).map((product) => [product.catalogueKey, product]),
+  );
+  const selected = input.dedupe.kept.slice(0, input.requestedLimit).map((item) => ({
+    ...item,
+    product: applyChangeDetection(item.product, previousByKey.get(item.product.catalogueKey)),
+  }));
   const validation = selected
     .filter((item) => item.issues.length > 0)
     .map((item) => ({
@@ -43,6 +57,96 @@ export function buildReviewExport(input: BuildReviewExportInput): ReviewExport {
     validation,
     duplicates: input.dedupe.duplicates,
   };
+}
+
+export async function loadLatestReviewProducts(options: {
+  reviewDir: string;
+  supplierId: SupplierId;
+  destinationSlug: string;
+}): Promise<NormalizedSupplierProduct[]> {
+  const reviewDir = resolve(options.reviewDir);
+  let entries: string[];
+
+  try {
+    entries = await readdir(reviewDir);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+    throw error;
+  }
+
+  const supplierSegment = String(options.supplierId);
+  const matching = await Promise.all(entries
+    .filter((entry) =>
+      entry.includes(`-${supplierSegment}-${options.destinationSlug}.review`) &&
+      entry.endsWith(".json"),
+    )
+    .map(async (entry) => ({
+      entry,
+      modifiedAt: (await stat(join(reviewDir, entry))).mtimeMs,
+    })));
+
+  matching.sort((left, right) => right.modifiedAt - left.modifiedAt);
+
+  for (const { entry } of matching) {
+    const parsed = JSON.parse(await readFile(join(reviewDir, entry), "utf8")) as ReviewExport;
+    if (Array.isArray(parsed.products)) return parsed.products;
+  }
+
+  return [];
+}
+
+function applyChangeDetection(
+  product: NormalizedSupplierProduct,
+  previous?: NormalizedSupplierProduct,
+): NormalizedSupplierProduct {
+  const changeDetectionStatus = detectChange(product, previous);
+  const reviewStatus = changeDetectionStatus === "NO_CHANGE"
+    ? product.reviewStatus
+    : "needs_review";
+
+  return {
+    ...product,
+    changeDetectionStatus,
+    reviewStatus,
+    importStatus: reviewStatus,
+  };
+}
+
+function detectChange(
+  current: NormalizedSupplierProduct,
+  previous?: NormalizedSupplierProduct,
+): ChangeDetectionStatus {
+  if (!previous) return "NEW_PRODUCT";
+
+  if (
+    current.netPrice !== previous.netPrice ||
+    current.currency !== previous.currency ||
+    JSON.stringify(current.priceLines ?? []) !== JSON.stringify(previous.priceLines ?? [])
+  ) {
+    return "PRICE_CHANGED";
+  }
+
+  const contentFields: Array<keyof NormalizedSupplierProduct> = [
+    "title",
+    "visaType",
+    "visaKind",
+    "entryType",
+    "validityDays",
+    "stayDays",
+    "processingTime",
+    "documents",
+    "stickerRequired",
+    "courierRequired",
+    "submissionCity",
+    "collectionCity",
+    "routeCities",
+  ];
+
+  const changed = contentFields.some((field) =>
+    JSON.stringify(current[field]) !== JSON.stringify(previous[field]),
+  );
+
+  return changed ? "CONTENT_CHANGED" : "NO_CHANGE";
 }
 
 export async function writeReviewExport(
