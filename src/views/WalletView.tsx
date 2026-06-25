@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
-import { mockTransactions, statusConfig } from '@/lib/mock-data';
+import { mockTransactions } from '@/lib/mock-data';
+import { demoModeCopy } from '@/lib/demo-data';
+import { isDemoMode } from '@/lib/app-mode';
 import type { WalletTransactionType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +41,7 @@ const typeConfig: Record<string, { label: string; bg: string; text: string }> = 
 export default function WalletView() {
   const { walletBalance } = useAppStore();
   const [depositTab, setDepositTab] = useState('bank');
+  const demoMode = isDemoMode();
 
   return (
     <motion.div
@@ -52,14 +55,15 @@ export default function WalletView() {
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Wallet</h1>
-            <p className="text-sm text-vvisa-text-muted mt-1">Manage your balance, deposits, and withdrawals</p>
+            <h1 className="text-2xl font-bold text-foreground">{demoMode ? 'Demo Wallet' : 'Wallet'}</h1>
+            <p className="text-sm text-vvisa-text-muted mt-1">
+              {demoMode ? 'Demo values only - no real deposits, withdrawals, or payment processing.' : 'Manage your balance, deposits, and withdrawals'}
+            </p>
           </div>
-          <span className="text-xs text-vvisa-border-active font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
         </div>
         <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl shrink-0">
           <CardContent className="px-5 py-3 text-right">
-            <p className="text-xs text-vvisa-text-muted">Current Balance</p>
+            <p className="text-xs text-vvisa-text-muted">{demoMode ? 'Demo Balance' : 'Current Balance'}</p>
             <p className="text-2xl font-bold font-mono text-foreground">{formatINR(walletBalance)}</p>
           </CardContent>
         </Card>
@@ -119,7 +123,7 @@ export default function WalletView() {
               <div className="flex items-start gap-2 p-3 rounded-lg bg-vvisa-surface-2 border border-vvisa-border">
                 <Info className="h-4 w-4 text-vvisa-text-secondary shrink-0 mt-0.5" />
                 <p className="text-xs text-vvisa-text-secondary">
-                  Please use only the account details provided below. Deposits from other accounts may not be credited or may be delayed.
+                  {demoMode ? demoModeCopy.paymentNotice : 'Please use only the account details provided below. Deposits from other accounts may not be credited or may be delayed.'}
                 </p>
               </div>
 
@@ -217,7 +221,9 @@ export default function WalletView() {
                   />
                 </div>
                 <p className="text-sm text-foreground font-medium mb-1 font-mono">Q75148468@ybl</p>
-                <p className="text-xs text-vvisa-text-muted">Scan QR code or send to this UPI ID</p>
+                <p className="text-xs text-vvisa-text-muted">
+                  {demoMode ? 'Demo only - do not send money to this UPI ID from the portal.' : 'Scan QR code or send to this UPI ID'}
+                </p>
                 <div className="flex items-center gap-2 mt-3">
                   <Badge variant="secondary" className="bg-vvisa-surface-2 text-vvisa-text-secondary text-xs border-0">PhonePe</Badge>
                   <Badge variant="secondary" className="bg-vvisa-surface-2 text-vvisa-text-secondary text-xs border-0">0% fee</Badge>
@@ -232,7 +238,7 @@ export default function WalletView() {
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-950/30 border border-amber-800/30">
                   <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                   <p className="text-xs text-amber-200/80">
-                    A 2% processing fee will be charged on credit card deposits. For fee-free deposits, use Bank Transfer or UPI.
+                    {demoMode ? demoModeCopy.paymentNotice : 'A 2% processing fee will be charged on credit card deposits. For fee-free deposits, use Bank Transfer or UPI.'}
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -267,9 +273,9 @@ export default function WalletView() {
                     className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10 font-mono"
                   />
                 </div>
-                <Button className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg h-10 flex items-center justify-center gap-2">
+                <Button disabled={demoMode} className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg h-10 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
                   <CreditCard className="h-4 w-4" />
-                  Pay with Credit Card
+                  {demoMode ? 'Demo only - card disabled' : 'Pay with Credit Card'}
                 </Button>
               </CardContent>
             </Card>
@@ -281,7 +287,7 @@ export default function WalletView() {
             <div>
               <p className="text-xs text-amber-200/90 font-medium">Payment Processing Time</p>
               <p className="text-xs text-amber-200/70 mt-0.5">
-                Please wait 30 min – 2 hrs for payments to reflect in your wallet. If your payment is not reflected after 2 hours, please contact support.
+                {demoMode ? 'Demo mode does not process deposits or change real wallet balance.' : 'Please wait 30 min - 2 hrs for payments to reflect in your wallet. If your payment is not reflected after 2 hours, please contact support.'}
               </p>
             </div>
           </div>
@@ -309,8 +315,8 @@ export default function WalletView() {
                   HDFC Bank · ••••3456 (Registered)
                 </p>
               </div>
-              <Button className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg h-10">
-                Request Withdrawal
+              <Button disabled={demoMode} className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg h-10 disabled:opacity-60 disabled:cursor-not-allowed">
+                {demoMode ? 'Demo only - withdrawals disabled' : 'Request Withdrawal'}
               </Button>
             </CardContent>
           </Card>

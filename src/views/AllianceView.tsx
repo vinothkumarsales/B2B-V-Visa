@@ -38,7 +38,6 @@ export default function AllianceView() {
           <h1 className="text-2xl font-bold text-foreground">Alliance</h1>
           <p className="text-sm text-vvisa-text-muted mt-1">View and filter alliance links created for your clients</p>
         </div>
-        <span className="text-xs text-vvisa-border-active font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
       </div>
 
       {/* Filters */}

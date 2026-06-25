@@ -48,7 +48,6 @@ export default function ChangePasswordView() {
               <Lock className="h-4 w-4 text-vvisa-text-secondary" />
               Change Password
             </div>
-            <span className="text-xs text-vvisa-text-muted font-mono font-normal">enKOdaUD6df8RHXgzoP723VOvHA2</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">

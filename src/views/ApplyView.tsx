@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { mockVisaTypes } from '@/lib/mock-data';
+import { demoModeCopy } from '@/lib/demo-data';
+import { isDemoMode } from '@/lib/app-mode';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,8 +25,6 @@ const pageVariants = {
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -8 },
 };
-
-const CLIENT_ID = 'enKOdaUD6df8RHXgzoP723VOvHA2';
 
 function formatINR(amount: number): string {
   return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
@@ -362,7 +362,6 @@ function TravelerCard({
                   <Scan className="h-4 w-4 text-primary" />
                   Passport Upload & OCR Scan
                 </h4>
-                <span className="text-[9px] text-vvisa-border-active font-mono">{CLIENT_ID}</span>
               </div>
 
               {/* Warning Banner */}
@@ -370,6 +369,7 @@ function TravelerCard({
                 <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-200/80">
                   VVisa uses <span className="text-primary font-medium">ocr.z.ai</span> for 99.9% accurate passport scanning. Upload a clear passport image and details will be filled automatically. However, it is mandatory to review the information before submitting.
+                  {isDemoMode() ? ` ${demoModeCopy.documentNotice}` : ''}
                 </p>
               </div>
 
@@ -650,7 +650,6 @@ function ProgressStepper({ currentStep }: { currentStep: number }) {
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-4">
           <p className="text-xs text-vvisa-text-muted font-medium">APPLICATION PROGRESS</p>
-          <span className="text-[9px] text-vvisa-border-active font-mono">{CLIENT_ID}</span>
         </div>
         <div className="space-y-0">
           {steps.map((step, i) => {
@@ -695,6 +694,7 @@ export default function ApplyView() {
   const router = useRouter();
   const { selectedVisaType, setSelectedVisaType, walletBalance, submitApplication, navigate } = useAppStore();
   const activeVisaType = selectedVisaType ?? readStoredVisaType() ?? mockVisaTypes[0];
+  const demoMode = isDemoMode();
   const [appType, setAppType] = useState<'individual' | 'group'>('individual');
   const [internalId, setInternalId] = useState('');
   const [groupName, setGroupName] = useState('');
@@ -805,7 +805,6 @@ export default function ApplyView() {
             <div className="flex-1">
               <div className="flex items-center justify-between">
                 <Label className="text-xs text-vvisa-text-secondary mb-1.5 block font-medium">Are You Applying For</Label>
-                <span className="text-[9px] text-vvisa-border-active font-mono">{CLIENT_ID}</span>
               </div>
               <ToggleGroup
                 type="single"
@@ -918,7 +917,7 @@ export default function ApplyView() {
               className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-11 flex items-center justify-center gap-2"
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              {submitting ? 'Submitting...' : 'Review and Save'} <ArrowRight className="h-4 w-4" />
+              {submitting ? 'Submitting...' : demoMode ? 'Review Demo Application' : 'Review and Save'} <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -930,7 +929,6 @@ export default function ApplyView() {
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-semibold text-foreground">Price Summary</h3>
-                  <span className="text-[9px] text-vvisa-border-active font-mono">{CLIENT_ID}</span>
                 </div>
 
                 <div className="space-y-3 mb-4 max-h-48 overflow-y-auto">
@@ -955,12 +953,12 @@ export default function ApplyView() {
                 <Separator className="bg-vvisa-border my-3" />
 
                 <div className="flex justify-between items-center mb-5">
-                  <span className="text-xs text-vvisa-text-muted">Current Wallet Balance</span>
+                  <span className="text-xs text-vvisa-text-muted">{demoMode ? 'Demo Wallet Balance' : 'Current Wallet Balance'}</span>
                   <span className="text-sm font-mono text-primary">{formatINR(walletBalance)}</span>
                 </div>
 
                 <div className="flex justify-between items-center mb-5">
-                  <span className="text-xs text-vvisa-text-muted">After Payment</span>
+                  <span className="text-xs text-vvisa-text-muted">{demoMode ? 'Demo balance after preview' : 'After Payment'}</span>
                   <span className={`text-sm font-mono ${walletBalance - total >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {formatINR(walletBalance - total)}
                   </span>
@@ -972,7 +970,7 @@ export default function ApplyView() {
                   className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-10 flex items-center justify-center gap-2 text-sm"
                 >
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  {submitting ? 'Submitting...' : 'Review and Save'} <ArrowRight className="h-4 w-4" />
+                  {submitting ? 'Submitting...' : demoMode ? 'Review Demo Application' : 'Review and Save'} <ArrowRight className="h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>
@@ -1017,8 +1015,12 @@ export default function ApplyView() {
                       <CheckCircle2 className="h-7 w-7 text-emerald-400" />
                     </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-foreground text-center mb-1">Application Submitted</h3>
-                  <p className="text-xs text-vvisa-text-muted text-center mb-5">Your wallet has been debited. Track status in Applications.</p>
+                  <h3 className="text-lg font-semibold text-foreground text-center mb-1">
+                    {demoMode ? 'Demo Application Saved' : 'Application Submitted'}
+                  </h3>
+                  <p className="text-xs text-vvisa-text-muted text-center mb-5">
+                    {demoMode ? `${demoModeCopy.applicationNotice} ${demoModeCopy.paymentNotice}` : 'Your wallet has been debited. Track status in Applications.'}
+                  </p>
 
                   {/* Transaction ID */}
                   <div className="bg-vvisa-bg border border-vvisa-border rounded-xl p-4 mb-4">
@@ -1040,7 +1042,6 @@ export default function ApplyView() {
                         )}
                       </button>
                     </div>
-                    <p className="text-[10px] text-vvisa-border-active font-mono mt-2">Derived from Client ID: {CLIENT_ID}</p>
                   </div>
 
                   {/* Summary */}
@@ -1050,7 +1051,7 @@ export default function ApplyView() {
                       <p className="text-foreground font-medium mt-0.5">{activeVisaType?.destination}</p>
                     </div>
                     <div className="bg-vvisa-bg rounded-lg p-3">
-                      <p className="text-vvisa-text-muted">Amount Debited</p>
+                      <p className="text-vvisa-text-muted">{demoMode ? 'Amount Preview' : 'Amount Debited'}</p>
                       <p className="text-foreground font-mono font-medium mt-0.5">{formatINR(total)}</p>
                     </div>
                     <div className="bg-vvisa-bg rounded-lg p-3">
@@ -1058,7 +1059,7 @@ export default function ApplyView() {
                       <p className="text-foreground font-medium mt-0.5">{travelers.length}</p>
                     </div>
                     <div className="bg-vvisa-bg rounded-lg p-3">
-                      <p className="text-vvisa-text-muted">Remaining Balance</p>
+                      <p className="text-vvisa-text-muted">{demoMode ? 'Demo Balance Preview' : 'Remaining Balance'}</p>
                       <p className="text-emerald-400 font-mono font-medium mt-0.5">{formatINR(walletBalance - total)}</p>
                     </div>
                   </div>

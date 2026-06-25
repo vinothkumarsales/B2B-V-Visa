@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
-import { mockAgency } from '@/lib/mock-data';
+import { demoAgency } from '@/lib/demo-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,8 +17,6 @@ const pageVariants = {
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -8 },
 };
-
-const CLIENT_ID = 'enKOdaUD6df8RHXgzoP723VOvHA2';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat',
@@ -120,7 +118,7 @@ function DocUploadZone({ title, helper, docType, value, onUpload }: DocUploadZon
 export default function ProfileView() {
   const { navigate } = useAppStore();
   const [country, setCountry] = useState('India');
-  const [state, setState] = useState(mockAgency.state || 'Karnataka');
+  const [state, setState] = useState(demoAgency.state || 'Karnataka');
   const [logoFile, setLogoFile] = useState<string | null>(null);
   const [logoUploading, setLogoUploading] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -171,7 +169,6 @@ export default function ProfileView() {
               <Building2 className="h-4 w-4 text-vvisa-text-secondary" />
               Agency Logo
             </div>
-            <span className="text-xs text-vvisa-text-muted font-mono font-normal">{CLIENT_ID}</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -235,7 +232,6 @@ export default function ProfileView() {
               <User className="h-4 w-4 text-vvisa-text-secondary" />
               Agency Information
             </div>
-            <span className="text-xs text-vvisa-text-muted font-mono font-normal">{CLIENT_ID}</span>
           </CardTitle>
           <p className="text-xs text-vvisa-text-muted">Update your GST, PAN, and address details</p>
         </CardHeader>
@@ -266,7 +262,7 @@ export default function ProfileView() {
               <div>
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Contact Number</Label>
                 <Input
-                  defaultValue={mockAgency.phone}
+                  defaultValue={demoAgency.phone}
                   className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                 />
               </div>
@@ -282,14 +278,14 @@ export default function ProfileView() {
               <div>
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">GST Number</Label>
                 <Input
-                  defaultValue={mockAgency.gstNumber}
+                  defaultValue={demoAgency.gstNumber}
                   className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10 font-mono"
                 />
               </div>
               <div>
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">PAN Card</Label>
                 <Input
-                  defaultValue={mockAgency.panCard}
+                  defaultValue={demoAgency.panCard}
                   className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10 font-mono"
                 />
               </div>
@@ -332,14 +328,14 @@ export default function ProfileView() {
               <div>
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Address Line 1</Label>
                 <Input
-                  defaultValue={mockAgency.addressLine1}
+                  defaultValue={demoAgency.addressLine1}
                   className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                 />
               </div>
               <div>
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Address Line 2</Label>
                 <Input
-                  defaultValue={mockAgency.addressLine2}
+                  defaultValue={demoAgency.addressLine2}
                   className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                 />
               </div>
@@ -347,7 +343,7 @@ export default function ProfileView() {
                 <div>
                   <Label className="text-xs text-vvisa-text-muted mb-1.5 block">City</Label>
                   <Input
-                    defaultValue={mockAgency.city}
+                    defaultValue={demoAgency.city}
                     className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                   />
                 </div>
@@ -367,7 +363,7 @@ export default function ProfileView() {
                 <div className="col-span-2 sm:col-span-1">
                   <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Zip Code</Label>
                   <Input
-                    defaultValue={mockAgency.zipCode}
+                    defaultValue={demoAgency.zipCode}
                     className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                   />
                 </div>
@@ -389,7 +385,6 @@ export default function ProfileView() {
               <Lock className="h-4 w-4 text-vvisa-text-secondary" />
               Aadhar Details
             </div>
-            <span className="text-xs text-vvisa-text-muted font-mono font-normal">{CLIENT_ID}</span>
           </CardTitle>
           <p className="text-xs text-vvisa-text-muted">Identity verification information</p>
         </CardHeader>

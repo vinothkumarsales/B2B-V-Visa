@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
-import { mockAgency } from '@/lib/mock-data';
+import { demoAgency } from '@/lib/demo-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -61,7 +61,7 @@ export default function LoginView() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: mockAgency.email,
+      email: demoAgency.email,
       password: 'password123',
     },
   });
@@ -80,7 +80,7 @@ export default function LoginView() {
         setServerError(data?.error?.message ?? data?.error ?? 'Login failed');
         return;
       }
-      login(data.user ?? mockAgency);
+      login(data.user ?? demoAgency);
       router.push('/dashboard');
     } catch {
       setServerError('Unable to reach the login service');

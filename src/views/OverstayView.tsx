@@ -32,7 +32,6 @@ export default function OverstayView() {
           <h1 className="text-2xl font-bold text-foreground">Overstay</h1>
           <p className="text-sm text-vvisa-text-muted mt-1">Manage UAE overstay cases and history</p>
         </div>
-        <span className="text-xs text-vvisa-border-active font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
       </div>
 
       {/* Tabs */}

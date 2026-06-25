@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,8 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { isDemoMode } from '@/lib/app-mode';
+import { demoModeCopy } from '@/lib/demo-data';
 import type { ViewRoute } from '@/types';
 
 interface NavItem {
@@ -157,11 +159,11 @@ function SidebarContent({
   const initials = agency ? getInitials(agency.name) : 'AG';
 
   const navItems: NavItem[] = [
-    { label: 'Profile', icon: User, route: 'profile' },
-    { label: 'Alliance Dashboard', icon: LayoutDashboard, route: 'alliance' },
     { label: 'Dashboard', icon: LayoutDashboard, route: 'dashboard' as ViewRoute },
     { label: 'Applications', icon: Archive, route: 'applications' as ViewRoute },
-    { label: 'Wallet', icon: Wallet, route: 'wallet', badge: `₹${walletBalance.toLocaleString('en-IN')}` },
+    { label: 'Wallet', icon: Wallet, route: 'wallet', badge: isDemoMode() ? 'Demo' : `INR ${walletBalance.toLocaleString('en-IN')}` },
+    { label: 'Profile', icon: User, route: 'profile' },
+    { label: 'Alliance', icon: LayoutDashboard, route: 'alliance' },
     { label: 'Overstay', icon: FileText, route: 'overstay' },
     { label: 'Change Password', icon: Lock, route: 'change-password' },
     { label: 'Sign Out', icon: LogOut, route: 'landing' as ViewRoute, danger: true },
@@ -185,6 +187,11 @@ function SidebarContent({
               <p className="text-xs text-vvisa-text-muted truncate">
                 {agency?.email ?? 'email@agency.com'}
               </p>
+              {isDemoMode() && (
+                <p className="mt-1 text-[10px] uppercase tracking-wide text-primary">
+                  {demoModeCopy.accountLabel}
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -246,12 +253,14 @@ const routeToPath: Record<string, string> = {
 
 export default function DashboardShell({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const currentView = useAppStore((s) => s.currentView);
+  const pathname = usePathname();
   const agency = useAppStore((s) => s.agency);
   const walletBalance = useAppStore((s) => s.walletBalance);
   const navigate = useAppStore((s) => s.navigate);
   const logout = useAppStore((s) => s.logout);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const routeFromPath = (pathname.split('/')[1] || 'dashboard') as ViewRoute;
+  const activeRoute = routeToPath[routeFromPath] ? routeFromPath : 'dashboard';
 
   const handleNavigate = (route: ViewRoute) => {
     if (route === 'landing') {
@@ -285,7 +294,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
     'change-password': 'Change Password',
   };
 
-  const title = pageTitle[currentView] ?? 'Dashboard';
+  const title = pageTitle[activeRoute] ?? 'Dashboard';
 
   return (
     <div className="min-h-screen flex bg-vvisa-bg">
@@ -293,7 +302,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
       <aside className="hidden md:flex flex-col w-60 lg:w-60 bg-sidebar border-r border-sidebar-border shrink-0">
         <SidebarContent
           onNavigate={handleNavigate}
-          activeRoute={currentView}
+          activeRoute={activeRoute}
           collapsed={false}
           onLogout={handleLogout}
         />
@@ -323,7 +332,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <SidebarContent
                   onNavigate={handleNavigate}
-                  activeRoute={currentView}
+                  activeRoute={activeRoute}
                   collapsed={false}
                   onLogout={handleLogout}
                 />
@@ -346,7 +355,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
             <div className="hidden sm:flex items-center gap-1.5 bg-vvisa-surface-2 rounded-full px-3 py-1.5 border border-vvisa-border">
               <Wallet className="size-3.5 text-vvisa-text-muted" />
               <span className="text-xs font-medium text-foreground">
-                {formatCurrency(walletBalance)}
+                {isDemoMode() ? `${demoModeCopy.walletLabel}: ${formatCurrency(walletBalance)}` : formatCurrency(walletBalance)}
               </span>
             </div>
 
@@ -376,7 +385,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                 className="w-48 bg-vvisa-surface border-vvisa-border"
               >
                 <DropdownMenuLabel className="text-xs text-vvisa-text-muted font-normal">
-                  {agency?.email ?? 'email@agency.com'}
+                  {isDemoMode() ? `${demoModeCopy.badge} - ${agency?.email ?? 'demo@vvisa.in'}` : agency?.email ?? 'email@agency.com'}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-vvisa-border" />
                 <DropdownMenuItem
@@ -416,7 +425,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto">
           <motion.div
-            key={currentView}
+            key={activeRoute}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}

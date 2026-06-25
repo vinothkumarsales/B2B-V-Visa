@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
-import { mockAgency } from '@/lib/mock-data';
+import { demoAgency } from '@/lib/demo-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -95,7 +95,7 @@ export default function SignupView() {
 
   const onSubmit = () => {
     // Auto-login after successful signup
-    login(mockAgency);
+    login(demoAgency);
     router.push('/dashboard');
   };
 

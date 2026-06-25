@@ -12,9 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, ArrowRight, Download, Eye, Check, Plane, Calendar, FileText, User } from 'lucide-react';
-
-const CLIENT_ID = 'enKOdaUD6df8RHXgzoP723VOvHA2';
+import { Search, ArrowRight, Download, Eye, Check, Plane, Calendar, FileText } from 'lucide-react';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -124,7 +122,6 @@ export default function ApplicationsView() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Applications</h1>
         <p className="text-sm text-vvisa-text-muted mt-1">Track and manage visa applications</p>
-        <p className="text-xs text-vvisa-text-muted font-mono mt-1">{CLIENT_ID}</p>
       </div>
 
       {/* Filters Row */}
@@ -320,7 +317,7 @@ function GroupCard({ app, onViewGroup }: { app: VisaApplication; onViewGroup: ()
 
         {/* Bottom: Client ID + View Group */}
         <div className="flex items-center justify-between pt-3 border-t border-vvisa-border">
-          <span className="text-[10px] text-vvisa-text-muted font-mono">{CLIENT_ID}</span>
+          <span className="text-[10px] text-vvisa-text-muted">{app.status}</span>
           <Button
             variant="ghost"
             className="text-primary hover:text-primary/80 hover:bg-primary/10 text-xs p-0 h-auto"
@@ -414,9 +411,6 @@ function IndividualApprovedCard({ app }: { app: VisaApplication }) {
           </div>
         </div>
 
-        {/* Client ID */}
-        <p className="text-[10px] text-vvisa-text-muted font-mono mb-3">{CLIENT_ID}</p>
-
         {/* Actions */}
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" className="border-vvisa-border text-vvisa-text-secondary hover:bg-vvisa-surface-2 hover:text-foreground rounded-lg text-xs h-8">
@@ -471,9 +465,6 @@ function IndividualDefaultCard({ app, onView }: { app: VisaApplication; onView: 
           <span className="text-xs text-vvisa-text-muted">Status: </span>
           <StatusBadge status={app.status} />
         </div>
-
-        {/* Client ID */}
-        <p className="text-[10px] text-vvisa-text-muted font-mono mb-3">{CLIENT_ID}</p>
 
         {/* Actions */}
         <div className="flex flex-wrap gap-2">

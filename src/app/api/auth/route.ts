@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { apiError, isApiResponse } from '@/lib/api-response';
 import { isDemoMode } from '@/lib/env';
-import { mockAgency } from '@/lib/mock-data';
+import { demoAgency } from '@/lib/demo-data';
 import { createSession, getSession } from '@/server/auth/session';
 import { verifyPassword } from '@/server/auth/password';
 import { auditLog } from '@/server/audit/audit-log';
@@ -15,7 +15,7 @@ const loginSchema = z.object({
 
 export async function GET() {
   if (isDemoMode) {
-    return NextResponse.json({ user: mockAgency, agency: mockAgency, mode: 'demo' });
+    return NextResponse.json({ user: demoAgency, agency: demoAgency, mode: 'demo' });
   }
 
   const session = await getSession();
@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
 
     if (isDemoMode) {
       return NextResponse.json({
-        user: mockAgency,
-        agency: mockAgency,
+        user: demoAgency,
+        agency: demoAgency,
         mode: 'demo',
         message: 'Demo login successful',
       });
