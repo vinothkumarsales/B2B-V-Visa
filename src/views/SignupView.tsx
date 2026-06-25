@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -61,6 +62,7 @@ const features = [
 ];
 
 export default function SignupView() {
+  const router = useRouter();
   const navigate = useAppStore((s) => s.navigate);
   const login = useAppStore((s) => s.login);
   const [showPassword, setShowPassword] = useState(false);
@@ -94,6 +96,7 @@ export default function SignupView() {
   const onSubmit = () => {
     // Auto-login after successful signup
     login(mockAgency);
+    router.push('/dashboard');
   };
 
   return (
@@ -111,7 +114,10 @@ export default function SignupView() {
 
         {/* Back button */}
         <button
-          onClick={() => navigate('landing')}
+          onClick={() => {
+            navigate('landing');
+            router.push('/');
+          }}
           className="relative z-10 flex items-center gap-2 text-white/80 hover:text-white transition-colors w-fit"
         >
           <ArrowLeft className="size-4" />
@@ -400,7 +406,10 @@ export default function SignupView() {
           <p className="mt-8 text-center text-sm text-vvisa-text-muted">
             Already have an account?{' '}
             <button
-              onClick={() => navigate('login')}
+              onClick={() => {
+                navigate('login');
+                router.push('/login');
+              }}
               className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors cursor-pointer"
             >
               Sign in

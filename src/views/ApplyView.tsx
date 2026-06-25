@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
+import { mockVisaTypes } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -147,6 +149,17 @@ function createEmptyTraveler(index: number, requiredDocKeys: string[]): Traveler
   };
 }
 
+function readStoredVisaType() {
+  if (typeof window === 'undefined') return null;
+  const raw = sessionStorage.getItem('vvisa:selectedVisaType');
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 function formatDateForInput(dateStr: string): string {
   if (!dateStr) return '';
   // Handle DD/MM/YYYY format from OCR
@@ -171,7 +184,7 @@ function TravelerCard({
 }: {
   traveler: TravelerData;
   index: number;
-  onUpdate: (id: string, field: keyof TravelerData, value: string) => void;
+  onUpdate: (id: string, field: keyof TravelerData, value: TravelerData[keyof TravelerData]) => void;
   onRemove: (id: string) => void;
   canRemove: boolean;
   requiredDocs: { key: string; title: string; helper: string }[];
@@ -251,7 +264,7 @@ function TravelerCard({
         });
         const data = await res.json();
         if (data.success) {
-          onUpdate(traveler.id, 'additionalDocs' as any, JSON.stringify({ ...traveler.additionalDocs, [docKey]: file.name }));
+          onUpdate(traveler.id, 'additionalDocs', { ...traveler.additionalDocs, [docKey]: file.name });
         }
       } catch {
         // Silently fail for additional docs
@@ -263,7 +276,7 @@ function TravelerCard({
   );
 
   const toggleExpand = () => {
-    onUpdate(traveler.id, 'expanded', traveler.expanded ? 'false' : 'true');
+    onUpdate(traveler.id, 'expanded', !traveler.expanded);
   };
 
   return (
@@ -679,8 +692,10 @@ function ProgressStepper({ currentStep }: { currentStep: number }) {
 
 /* ─── Main ApplyView ─── */
 export default function ApplyView() {
-  const { selectedVisaType, walletBalance, submitApplication, navigate } = useAppStore();
-  const [appType, setAppType] = useState<'individual' | 'group'>('group');
+  const router = useRouter();
+  const { selectedVisaType, setSelectedVisaType, walletBalance, submitApplication, navigate } = useAppStore();
+  const activeVisaType = selectedVisaType ?? readStoredVisaType() ?? mockVisaTypes[0];
+  const [appType, setAppType] = useState<'individual' | 'group'>('individual');
   const [internalId, setInternalId] = useState('');
   const [groupName, setGroupName] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -689,19 +704,25 @@ export default function ApplyView() {
 
   // Compute required additional docs from the selected visa type
   const requiredDocs = useMemo(() => {
-    if (!selectedVisaType?.documents) return [];
-    return getRequiredAdditionalDocs(selectedVisaType.documents);
-  }, [selectedVisaType]);
+    if (!activeVisaType?.documents) return [];
+    return getRequiredAdditionalDocs(activeVisaType.documents);
+  }, [activeVisaType]);
 
   const requiredDocKeys = useMemo(() => requiredDocs.map((d) => d.key), [requiredDocs]);
 
   const [travelers, setTravelers] = useState<TravelerData[]>(() => [createEmptyTraveler(0, requiredDocKeys)]);
 
-  const pricePerTraveler = selectedVisaType?.price || 13499;
+  useEffect(() => {
+    if (!selectedVisaType && activeVisaType) {
+      setSelectedVisaType(activeVisaType);
+    }
+  }, [activeVisaType, selectedVisaType, setSelectedVisaType]);
+
+  const pricePerTraveler = activeVisaType?.price || 13499;
   const total = pricePerTraveler * travelers.length;
 
   const handleUpdateTraveler = useCallback(
-    (id: string, field: string, value: string) => {
+    (id: string, field: keyof TravelerData, value: TravelerData[keyof TravelerData]) => {
       setTravelers((prev) =>
         prev.map((t) => (t.id === id ? { ...t, [field]: value } : t))
       );
@@ -718,7 +739,7 @@ export default function ApplyView() {
   };
 
   const handleSubmit = useCallback(() => {
-    if (!selectedVisaType || submitting) return;
+    if (!activeVisaType || submitting) return;
     setSubmitting(true);
 
     // Build travelers array for submission
@@ -742,9 +763,9 @@ export default function ApplyView() {
     const result = submitApplication({
       internalId,
       groupName: appType === 'group' ? groupName : '',
-      destination: selectedVisaType.destination,
-      visaType: selectedVisaType.name,
-      visaCategory: selectedVisaType.category,
+      destination: activeVisaType.destination,
+      visaType: activeVisaType.name,
+      visaCategory: activeVisaType.category,
       totalPrice: total,
       travelers: travelersPayload,
     });
@@ -756,7 +777,7 @@ export default function ApplyView() {
     } else {
       setSubmitResult({ txnId: '', appId: '', error: result.error });
     }
-  }, [selectedVisaType, submitting, travelers, internalId, groupName, appType, total, submitApplication]);
+  }, [activeVisaType, submitting, travelers, internalId, groupName, appType, total, submitApplication]);
 
   const copyTxnId = useCallback(() => {
     if (submitResult?.txnId) {
@@ -829,14 +850,14 @@ export default function ApplyView() {
           </div>
 
           {/* Visa Type Display */}
-          {selectedVisaType && (
+          {activeVisaType && (
             <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/20 flex items-center justify-between">
               <div>
                 <p className="text-xs text-vvisa-text-muted">Selected Visa Type</p>
-                <p className="text-sm font-medium text-foreground">{selectedVisaType.name}</p>
+                <p className="text-sm font-medium text-foreground">{activeVisaType.name}</p>
               </div>
               <span className="text-sm font-bold font-mono text-primary">
-                {formatINR(selectedVisaType.price)}
+                {formatINR(activeVisaType.price)}
               </span>
             </div>
           )}
@@ -893,7 +914,7 @@ export default function ApplyView() {
           <div className="lg:hidden">
             <Button
               onClick={handleSubmit}
-              disabled={submitting || !selectedVisaType}
+              disabled={submitting || !activeVisaType}
               className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-11 flex items-center justify-center gap-2"
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
@@ -947,7 +968,7 @@ export default function ApplyView() {
 
                 <Button
                   onClick={handleSubmit}
-                  disabled={submitting || !selectedVisaType || walletBalance < total}
+                  disabled={submitting || !activeVisaType || walletBalance < total}
                   className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-10 flex items-center justify-center gap-2 text-sm"
                 >
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
@@ -1026,7 +1047,7 @@ export default function ApplyView() {
                   <div className="grid grid-cols-2 gap-3 mb-5 text-xs">
                     <div className="bg-vvisa-bg rounded-lg p-3">
                       <p className="text-vvisa-text-muted">Destination</p>
-                      <p className="text-foreground font-medium mt-0.5">{selectedVisaType?.destination}</p>
+                      <p className="text-foreground font-medium mt-0.5">{activeVisaType?.destination}</p>
                     </div>
                     <div className="bg-vvisa-bg rounded-lg p-3">
                       <p className="text-vvisa-text-muted">Amount Debited</p>
@@ -1044,7 +1065,11 @@ export default function ApplyView() {
 
                   <div className="flex gap-3">
                     <Button
-                      onClick={() => { setSubmitResult(null); navigate('applications'); }}
+                      onClick={() => {
+                        setSubmitResult(null);
+                        navigate('applications');
+                        router.push('/applications');
+                      }}
                       className="flex-1 bg-primary hover:bg-primary/90 text-white rounded-lg h-10 text-sm"
                     >
                       View Applications

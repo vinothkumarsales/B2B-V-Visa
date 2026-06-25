@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -46,9 +47,12 @@ const features = [
 ];
 
 export default function LoginView() {
+  const router = useRouter();
   const navigate = useAppStore((s) => s.navigate);
   const login = useAppStore((s) => s.login);
   const [showPassword, setShowPassword] = useState(false);
+  const [serverError, setServerError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const {
     register,
@@ -62,8 +66,27 @@ export default function LoginView() {
     },
   });
 
-  const onSubmit = () => {
-    login(mockAgency);
+  const onSubmit = async (values: LoginFormData) => {
+    setSubmitting(true);
+    setServerError('');
+    try {
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setServerError(data?.error?.message ?? data?.error ?? 'Login failed');
+        return;
+      }
+      login(data.user ?? mockAgency);
+      router.push('/dashboard');
+    } catch {
+      setServerError('Unable to reach the login service');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -223,11 +246,15 @@ export default function LoginView() {
             </div>
 
             {/* Sign In Button */}
+            {serverError && (
+              <p className="text-xs text-red-400">{serverError}</p>
+            )}
             <Button
               type="submit"
+              disabled={submitting}
               className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-foreground font-medium transition-colors cursor-pointer"
             >
-              Sign In
+              {submitting ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
 
@@ -268,7 +295,10 @@ export default function LoginView() {
           <p className="mt-8 text-center text-sm text-vvisa-text-muted">
             Don&apos;t have an account?{' '}
             <button
-              onClick={() => navigate('signup')}
+              onClick={() => {
+                navigate('signup');
+                router.push('/register');
+              }}
               className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors cursor-pointer"
             >
               Sign up

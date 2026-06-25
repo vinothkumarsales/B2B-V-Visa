@@ -16,7 +16,7 @@ export type VisaCategory = 'LIGHTNING_FAST' | 'STANDARD' | 'MULTI_ENTRY';
 
 export type WalletTransactionType = 'DEPOSIT' | 'WITHDRAWAL' | 'PAYMENT' | 'REFUND';
 
-export type PaymentMethod = 'BANK_TRANSFER' | 'UPI' | 'CREDIT_CARD';
+export type PaymentMethod = 'BANK_TRANSFER' | 'UPI' | 'CREDIT_CARD' | 'WALLET';
 
 export type ViewRoute =
   | 'landing'

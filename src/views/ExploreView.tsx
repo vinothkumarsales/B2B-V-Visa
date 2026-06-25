@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { mockVisaTypes, popularDestinations, statusConfig } from '@/lib/mock-data';
@@ -53,6 +54,7 @@ function getEstimatedArrival(processingTime: string): string {
 }
 
 export default function ExploreView() {
+  const router = useRouter();
   const { navigate, setSelectedVisaType } = useAppStore();
   const [goingTo, setGoingTo] = useState('');
   const [travelDate, setTravelDate] = useState('');
@@ -84,7 +86,9 @@ export default function ExploreView() {
 
   const handleSelectVisa = (visa: VisaType) => {
     setSelectedVisaType(visa);
+    sessionStorage.setItem('vvisa:selectedVisaType', JSON.stringify(visa));
     navigate('apply');
+    router.push('/apply');
   };
 
   const handleViewDocs = (visa: VisaType) => {

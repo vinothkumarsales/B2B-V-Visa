@@ -1,64 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { db } from '@/lib/db';
+import { apiError } from '@/lib/api-response';
+import { isDemoMode } from '@/lib/env';
 import { mockTransactions } from '@/lib/mock-data';
-import { generateTransactionId } from '@/lib/transaction-id';
+import { requireAgencyMembership } from '@/server/auth/session';
+import { getWalletBalanceMinor } from '@/server/wallet/wallet-ledger';
+
+const listSchema = z.object({
+  type: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const type = searchParams.get('type') || '';
-  const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '20');
+  const parsed = listSchema.safeParse(Object.fromEntries(new URL(request.url).searchParams));
+  if (!parsed.success) return apiError('INVALID_INPUT', 'Invalid wallet parameters', 400);
 
-  let filtered = [...mockTransactions];
+  const { type = '', page, limit } = parsed.data;
 
-  if (type) {
-    filtered = filtered.filter((txn) => txn.type === type);
+  if (isDemoMode) {
+    const filtered = type ? mockTransactions.filter((txn) => txn.type === type) : mockTransactions;
+    const start = (page - 1) * limit;
+    return NextResponse.json({
+      transactions: filtered.slice(start, start + limit),
+      total: filtered.length,
+      page,
+      limit,
+      balance: mockTransactions.reduce((sum, txn) => sum + txn.amount, 0),
+      mode: 'demo',
+    });
   }
 
-  const total = filtered.length;
-  const start = (page - 1) * limit;
-  const paginated = filtered.slice(start, start + limit);
+  const session = await requireAgencyMembership();
+  const wallet = await db.wallet.findUnique({
+    where: { agencyId_currency: { agencyId: session.agencyId, currency: 'INR' } },
+  });
 
-  const balance = mockTransactions.reduce((sum, txn) => sum + txn.amount, 0);
+  const entries = wallet
+    ? await db.walletLedgerEntry.findMany({
+        where: {
+          walletId: wallet.id,
+          ...(type ? { type: type as never } : {}),
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      })
+    : [];
+
+  const balanceMinor = await getWalletBalanceMinor(session.agencyId);
 
   return NextResponse.json({
-    transactions: paginated,
-    total,
+    transactions: entries,
+    total: entries.length,
     page,
     limit,
-    balance,
+    balanceMinor,
+    balance: balanceMinor / 100,
   });
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { type, amount, method } = body;
-
-    if (!type || !amount) {
-      return NextResponse.json(
-        { error: 'Type and amount are required' },
-        { status: 400 }
-      );
-    }
-
-    const newTransaction = {
-      id: generateTransactionId(),
-      type,
-      amount,
-      method: method || null,
-      status: type === 'DEPOSIT' ? 'PENDING' : 'COMPLETED',
-      description: body.description || `${type} - ${method || 'Wallet'}`,
-      createdAt: new Date().toISOString(),
-    };
-
-    return NextResponse.json(
-      { transaction: newTransaction, message: 'Transaction initiated successfully' },
-      { status: 201 }
-    );
-  } catch {
-    return NextResponse.json(
-      { error: 'Invalid request body' },
-      { status: 400 }
-    );
-  }
+export async function POST() {
+  return apiError(
+    'PAYMENT_NOT_CONFIRMED',
+    'Wallet credits must be created through a verified payment order and signed webhook',
+    405
+  );
 }

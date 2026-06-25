@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { mockApplications, statusConfig } from '@/lib/mock-data';
@@ -32,7 +33,7 @@ const listVariants = {
 const cardVariants = {
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' } },
-};
+} as const;
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -65,6 +66,7 @@ const approvedSteps = [
 ];
 
 export default function ApplicationsView() {
+  const router = useRouter();
   const { navigate, setSelectedApplicationId } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [travelDate, setTravelDate] = useState('');
@@ -115,7 +117,7 @@ export default function ApplicationsView() {
       variants={pageVariants}
       initial="initial"
       animate="animate"
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+      transition={{ duration: 0.3, ease: 'easeOut' as const }}
       className="space-y-6"
     >
       {/* Header */}
@@ -210,6 +212,7 @@ export default function ApplicationsView() {
                   onViewGroup={() => {
                     setSelectedApplicationId(app.id);
                     navigate('application-detail');
+                    router.push('/application-detail');
                   }}
                 />
               </motion.div>
@@ -228,6 +231,7 @@ export default function ApplicationsView() {
                   onView={() => {
                     setSelectedApplicationId(app.id);
                     navigate('application-detail');
+                    router.push('/application-detail');
                   }}
                 />
               </motion.div>

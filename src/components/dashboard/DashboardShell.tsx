@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { Button } from '@/components/ui/button';
@@ -230,8 +231,6 @@ function SidebarContent({
   );
 }
 
-const CLIENT_ID = 'enKOdaUD6df8RHXgzoP723VOvHA2';
-
 const routeToPath: Record<string, string> = {
   dashboard: '/dashboard',
   explore: '/explore',
@@ -246,6 +245,7 @@ const routeToPath: Record<string, string> = {
 };
 
 export default function DashboardShell({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const currentView = useAppStore((s) => s.currentView);
   const agency = useAppStore((s) => s.agency);
   const walletBalance = useAppStore((s) => s.walletBalance);
@@ -253,23 +253,20 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
   const logout = useAppStore((s) => s.logout);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Update browser URL with view path + client ID
-  useEffect(() => {
-    const basePath = routeToPath[currentView] || '/dashboard';
-    window.history.replaceState(null, '', `${basePath}/${CLIENT_ID}`);
-  }, [currentView]);
-
   const handleNavigate = (route: ViewRoute) => {
     if (route === 'landing') {
       logout();
+      router.push('/');
     } else {
       navigate(route);
+      router.push(routeToPath[route] ?? '/dashboard');
     }
     setMobileOpen(false);
   };
 
   const handleLogout = () => {
     logout();
+    router.push('/');
     setMobileOpen(false);
   };
 

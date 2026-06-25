@@ -39,20 +39,20 @@ const fadeInUp = {
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: '-50px' },
   transition: { duration: 0.5, ease: 'easeOut' },
-};
+} as const;
 
 const staggerContainer = {
   initial: {},
   whileInView: { transition: { staggerChildren: 0.12 } },
   viewport: { once: true, margin: '-50px' },
-};
+} as const;
 
 const scaleIn = {
   initial: { opacity: 0, scale: 0.92 },
   whileInView: { opacity: 1, scale: 1 },
   viewport: { once: true, margin: '-50px' },
   transition: { duration: 0.6, ease: 'easeOut' },
-};
+} as const;
 
 export default function LandingView() {
   const navigate = useAppStore((s) => s.navigate);
@@ -178,7 +178,7 @@ export default function LandingView() {
               <motion.div
                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
                 animate={{ opacity: 1, y: [0, -8, 0], scale: 1 }}
-                transition={{ duration: 0.7, delay: 0.4, y: { duration: 3.5, repeat: Infinity, ease: 'easeInOut' } }}
+                transition={{ duration: 0.7, delay: 0.4, y: { duration: 3.5, repeat: Infinity, ease: 'easeInOut' as const } }}
                 className="relative z-10 w-72 bg-vvisa-surface border border-vvisa-border rounded-2xl p-5 shadow-2xl"
               >
                 <div className="flex items-center gap-3 mb-4">
@@ -213,7 +213,7 @@ export default function LandingView() {
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0, y: [0, -12, 0] }}
-                transition={{ duration: 0.6, delay: 0.7, y: { duration: 4, repeat: Infinity, ease: 'easeInOut' } }}
+                transition={{ duration: 0.6, delay: 0.7, y: { duration: 4, repeat: Infinity, ease: 'easeInOut' as const } }}
                 className="absolute top-4 left-0 z-20 bg-vvisa-surface border border-vvisa-border rounded-xl px-4 py-3 shadow-lg"
               >
                 <div className="flex items-center gap-2">
@@ -231,7 +231,7 @@ export default function LandingView() {
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0, y: [0, 10, 0] }}
-                transition={{ duration: 0.6, delay: 0.9, y: { duration: 5, repeat: Infinity, ease: 'easeInOut' } }}
+                transition={{ duration: 0.6, delay: 0.9, y: { duration: 5, repeat: Infinity, ease: 'easeInOut' as const } }}
                 className="absolute bottom-8 right-0 z-20 bg-vvisa-surface border border-vvisa-border rounded-xl px-4 py-3 shadow-lg"
               >
                 <div className="flex items-center gap-2">
@@ -396,7 +396,7 @@ export default function LandingView() {
                 initial={{ opacity: 0, x: 40 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: '-50px' }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
+                transition={{ duration: 0.6, ease: 'easeOut' as const }}
                 className="relative"
               >
                 <div className="rounded-2xl border border-vvisa-border bg-vvisa-surface p-6 shadow-2xl">

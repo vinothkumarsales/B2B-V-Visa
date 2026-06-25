@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { mockApplications, mockVisaTypes, popularDestinations, statusConfig } from '@/lib/mock-data';
@@ -25,6 +26,7 @@ function formatDate(dateStr: string): string {
 }
 
 export default function DashboardView() {
+  const router = useRouter();
   const { navigate, setSelectedVisaType, stats } = useAppStore();
   const [goingTo, setGoingTo] = useState('');
   const [travelDate, setTravelDate] = useState('');
@@ -46,6 +48,7 @@ export default function DashboardView() {
     );
     if (matchingVisas.length > 0) {
       navigate('explore');
+      router.push('/explore');
     }
   };
 
@@ -216,7 +219,10 @@ export default function DashboardView() {
               <h2 className="text-lg font-semibold text-foreground">Recent Applications</h2>
               <span className="text-xs text-vvisa-border-active font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
               <button
-                onClick={() => navigate('applications')}
+                onClick={() => {
+                  navigate('applications');
+                  router.push('/applications');
+                }}
                 className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
               >
                 View All Applications <ArrowRight className="h-3.5 w-3.5" />
@@ -232,6 +238,7 @@ export default function DashboardView() {
                     onClick={() => {
                       useAppStore.getState().setSelectedApplicationId(app.id);
                       navigate('application-detail');
+                      router.push('/application-detail');
                     }}
                   >
                     <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -303,7 +310,10 @@ export default function DashboardView() {
                     </li>
                   </ul>
                   <Button
-                    onClick={() => navigate('alliance')}
+                    onClick={() => {
+                      navigate('alliance');
+                      router.push('/alliance');
+                    }}
                     className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg text-sm h-9"
                   >
                     Learn More
