@@ -1,0 +1,111 @@
+{
+  "metadata": {
+    "generatedAt": "2026-06-25T12:04:10.235Z",
+    "supplierId": "stampmyvisa",
+    "destination": "United Arab Emirates",
+    "requestedLimit": 5,
+    "sourceMode": "sample",
+    "sourceFile": "C:\\Business.Vvisa.in\\v-visa B2B\\data\\supplier-imports\\samples\\stampmyvisa.sample.json"
+  },
+  "summary": {
+    "read": 6,
+    "destinationMatched": 3,
+    "exported": 2,
+    "duplicateCount": 1,
+    "errorCount": 0,
+    "warningCount": 0
+  },
+  "products": [
+    {
+      "catalogueKey": "stampmyvisa:united-arab-emirates:tourist:30:single",
+      "supplierId": "stampmyvisa",
+      "supplierName": "StampMyVisa",
+      "supplierProductId": "smv-dubai-tourist-30",
+      "destinationCountry": "United Arab Emirates",
+      "destinationSlug": "united-arab-emirates",
+      "visaType": "Tourist",
+      "visaTypeSlug": "tourist",
+      "title": "Dubai Tourist Visa - 30 Days",
+      "entryType": "single",
+      "validityDays": 60,
+      "stayDays": 30,
+      "processingTime": "3-5 working days",
+      "currency": "INR",
+      "netPrice": 6400,
+      "documents": [
+        "Passport front and back",
+        "Photo",
+        "PAN card"
+      ],
+      "sourceUrl": "https://stampmyvisa.com/home/create-visa",
+      "sourceCapturedAt": "2026-06-25T00:00:00.000Z",
+      "sourceMode": "sample",
+      "importStatus": "ready_for_review",
+      "reviewNotes": []
+    },
+    {
+      "catalogueKey": "stampmyvisa:united-arab-emirates:tourist:60:single",
+      "supplierId": "stampmyvisa",
+      "supplierName": "StampMyVisa",
+      "supplierProductId": "smv-dubai-tourist-60",
+      "destinationCountry": "United Arab Emirates",
+      "destinationSlug": "united-arab-emirates",
+      "visaType": "Tourist",
+      "visaTypeSlug": "tourist",
+      "title": "Dubai Tourist Visa - 60 Days",
+      "entryType": "single",
+      "validityDays": 60,
+      "stayDays": 60,
+      "processingTime": "3-5 working days",
+      "currency": "INR",
+      "netPrice": 11200,
+      "documents": [
+        "Passport front and back",
+        "Photo",
+        "PAN card"
+      ],
+      "sourceUrl": "https://stampmyvisa.com/home/create-visa",
+      "sourceCapturedAt": "2026-06-25T00:00:00.000Z",
+      "sourceMode": "sample",
+      "importStatus": "ready_for_review",
+      "reviewNotes": []
+    }
+  ],
+  "validation": [],
+  "duplicates": [
+    {
+      "duplicate": {
+        "product": {
+          "catalogueKey": "stampmyvisa:united-arab-emirates:tourist:30:single",
+          "supplierId": "stampmyvisa",
+          "supplierName": "StampMyVisa",
+          "supplierProductId": "smv-dubai-tourist-30-duplicate",
+          "destinationCountry": "United Arab Emirates",
+          "destinationSlug": "united-arab-emirates",
+          "visaType": "Tourist",
+          "visaTypeSlug": "tourist",
+          "title": "Dubai Tourist Visa 30 Days",
+          "entryType": "single",
+          "validityDays": 60,
+          "stayDays": 30,
+          "processingTime": "3-5 working days",
+          "currency": "INR",
+          "netPrice": 6400,
+          "documents": [
+            "Passport front and back",
+            "Photo",
+            "PAN card"
+          ],
+          "sourceUrl": "https://stampmyvisa.com/home/create-visa",
+          "sourceCapturedAt": "2026-06-25T00:00:00.000Z",
+          "sourceMode": "sample",
+          "importStatus": "ready_for_review",
+          "reviewNotes": []
+        },
+        "issues": []
+      },
+      "keptCatalogueKey": "stampmyvisa:united-arab-emirates:tourist:30:single",
+      "reason": "same supplier, destination, visa type, stay duration, and entry type"
+    }
+  ]
+}

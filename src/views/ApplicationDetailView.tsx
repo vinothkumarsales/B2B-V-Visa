@@ -4,11 +4,12 @@ import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { mockApplications, statusConfig } from '@/lib/mock-data';
+import { evaluatePassportValidity, isMinorOnDate } from '@/lib/date/calculate-age';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Download, MoreVertical, Check, Plane, Calendar, Baby, Loader2, Lock } from 'lucide-react';
+import { ArrowLeft, Download, MoreVertical, Check, Plane, Calendar, Baby, Loader2, Lock, AlertTriangle } from 'lucide-react';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -130,6 +131,12 @@ export default function ApplicationDetailView() {
       <div className="space-y-3">
         {app.travelers.map((traveler) => {
           const isApproved = traveler.status === 'APPROVED';
+          const isMinor = isMinorOnDate(traveler.dateOfBirth, app.travelDate || app.createdAt);
+          const passportValidity = evaluatePassportValidity({
+            passportExpiryDate: traveler.dateOfExpiry,
+            travelDate: app.travelDate,
+            rule: 'UNKNOWN',
+          });
           return (
             <Card
               key={traveler.id}
@@ -143,10 +150,16 @@ export default function ApplicationDetailView() {
                       ✅ VISA APPROVED
                     </Badge>
                   )}
-                  {traveler.isChild && (
+                  {(traveler.isChild || isMinor) && (
                     <Badge variant="secondary" className="bg-amber-950/30 text-amber-400 text-xs border-0">
                       <Baby className="h-3 w-3 mr-1" />
                       Child
+                    </Badge>
+                  )}
+                  {passportValidity.message && (
+                    <Badge variant="secondary" className="bg-amber-950/30 text-amber-300 text-xs border-0">
+                      <AlertTriangle className="h-3 w-3 mr-1" />
+                      Passport validity check
                     </Badge>
                   )}
                 </div>
@@ -172,6 +185,13 @@ export default function ApplicationDetailView() {
                   <p className="text-xs text-vvisa-text-muted flex items-center gap-1.5 mb-3">
                     <Calendar className="h-3 w-3" />
                     Travel: {formatDate(app.travelDate)} → {formatDate(app.returnDate)}
+                  </p>
+                )}
+
+                {passportValidity.message && (
+                  <p className="text-xs text-amber-200 flex items-start gap-1.5 mb-3">
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-400" />
+                    {passportValidity.message}
                   </p>
                 )}
 

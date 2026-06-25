@@ -42,6 +42,7 @@ agent-ctx/
 verify-landing.png
 worklog.md
 .zscripts/
+.runtime/browser-sessions/
 *.pid
 *.tar
 *.tar.gz

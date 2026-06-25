@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { PriceBreakdownPopover } from '@/components/pricing/PriceBreakdownPopover';
 import { Search, ArrowRight, MapPin, Plane, Calendar, Zap, Clock, FileText } from 'lucide-react';
 
 const pageVariants = {
@@ -391,9 +392,12 @@ export default function ExploreView() {
 
                   {/* Footer: Price + Select */}
                   <div className="flex items-center justify-between pt-3 border-t border-vvisa-border">
-                    <span className="text-xl font-bold font-mono text-foreground">
-                      {formatINR(visa.price)}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xl font-bold font-mono text-foreground">
+                        {formatINR(visa.price)}
+                      </span>
+                      <PriceBreakdownPopover amount={visa.price} currency={visa.currency} />
+                    </div>
                     <Button
                       onClick={() => handleSelectVisa(visa)}
                       variant="outline"

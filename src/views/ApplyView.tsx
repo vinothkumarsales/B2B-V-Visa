@@ -13,6 +13,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Separator } from '@/components/ui/separator';
+import { PriceBreakdownPopover } from '@/components/pricing/PriceBreakdownPopover';
+import { calculateAge, evaluatePassportValidity } from '@/lib/date/calculate-age';
 import {
   Upload, AlertTriangle, Plus, ArrowRight, Check, Circle, Scan,
   Loader2, X, FileCheck, ChevronDown, ChevronUp, Image as ImageIcon,
@@ -41,6 +43,8 @@ interface TravelerData {
   placeOfBirth: string;
   placeOfIssue: string;
   maritalStatus: string;
+  guardianApplicantId: string;
+  guardianRelationship: 'FATHER' | 'MOTHER' | 'LEGAL_GUARDIAN' | 'OTHER_GUARDIAN' | '';
   dateOfIssue: string;
   dateOfExpiry: string;
   passportFileName: string;
@@ -139,6 +143,8 @@ function createEmptyTraveler(index: number, requiredDocKeys: string[]): Traveler
     placeOfBirth: '',
     placeOfIssue: '',
     maritalStatus: '',
+    guardianApplicantId: '',
+    guardianRelationship: '',
     dateOfIssue: '',
     dateOfExpiry: '',
     passportFileName: '',
@@ -181,6 +187,8 @@ function TravelerCard({
   onRemove,
   canRemove,
   requiredDocs,
+  travelers,
+  travelDate,
 }: {
   traveler: TravelerData;
   index: number;
@@ -188,6 +196,8 @@ function TravelerCard({
   onRemove: (id: string) => void;
   canRemove: boolean;
   requiredDocs: { key: string; title: string; helper: string }[];
+  travelers: TravelerData[];
+  travelDate: string;
 }) {
   const passportInputRef = useRef<HTMLInputElement>(null);
   const [showAddDocs, setShowAddDocs] = useState(false);
@@ -278,6 +288,19 @@ function TravelerCard({
   const toggleExpand = () => {
     onUpdate(traveler.id, 'expanded', !traveler.expanded);
   };
+  const ageReferenceDate = travelDate || new Date().toISOString().slice(0, 10);
+  const age = calculateAge(traveler.dateOfBirth, ageReferenceDate);
+  const isMinor = age !== null && age < 18;
+  const adultTravelers = travelers.filter((candidate) => {
+    if (candidate.id === traveler.id) return false;
+    const candidateAge = calculateAge(candidate.dateOfBirth, ageReferenceDate);
+    return candidateAge !== null && candidateAge >= 18;
+  });
+  const passportValidity = evaluatePassportValidity({
+    passportExpiryDate: traveler.dateOfExpiry,
+    travelDate: travelDate || undefined,
+    rule: 'UNKNOWN',
+  });
 
   return (
     <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl overflow-hidden">
@@ -520,6 +543,40 @@ function TravelerCard({
                         className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1"
                       />
                     </div>
+                    {isMinor && (
+                      <>
+                        <div>
+                          <Label className="text-xs text-vvisa-text-muted">Travelling Parent / Guardian *</Label>
+                          <select
+                            value={traveler.guardianApplicantId}
+                            onChange={(e) => onUpdate(traveler.id, 'guardianApplicantId', e.target.value)}
+                            className="w-full bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1 px-3"
+                          >
+                            <option value="">Link Parent / Guardian</option>
+                            {adultTravelers.map((adult) => (
+                              <option key={adult.id} value={adult.id}>
+                                {`${adult.firstName || `Traveler ${travelers.indexOf(adult) + 1}`} ${adult.lastName || ''}`.trim()}
+                                {adult.passportNumber ? ` - Passport ending ${adult.passportNumber.slice(-4)}` : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-vvisa-text-muted">Relationship *</Label>
+                          <select
+                            value={traveler.guardianRelationship}
+                            onChange={(e) => onUpdate(traveler.id, 'guardianRelationship', e.target.value as TravelerData['guardianRelationship'])}
+                            className="w-full bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1 px-3"
+                          >
+                            <option value="">Select relationship</option>
+                            <option value="FATHER">Father</option>
+                            <option value="MOTHER">Mother</option>
+                            <option value="LEGAL_GUARDIAN">Legal guardian</option>
+                            <option value="OTHER_GUARDIAN">Other guardian</option>
+                          </select>
+                        </div>
+                      </>
+                    )}
                     <div>
                       <Label className="text-xs text-vvisa-text-muted">Date of Issue</Label>
                       <Input
@@ -537,8 +594,20 @@ function TravelerCard({
                         onChange={(e) => onUpdate(traveler.id, 'dateOfExpiry', e.target.value)}
                         className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1"
                       />
+                      {passportValidity.message && (
+                        <div className="mt-2 flex items-start gap-2 rounded-lg border border-amber-700/40 bg-amber-950/30 p-2 text-[11px] leading-4 text-amber-100">
+                          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
+                          <span>{passportValidity.message}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
+                  {isMinor && (!traveler.guardianApplicantId || !traveler.guardianRelationship) && (
+                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-xs leading-5 text-amber-100">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                      <span>This traveller will be under 18 on the travel date. Link a parent or legal guardian travelling in the same application.</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -698,6 +767,8 @@ export default function ApplyView() {
   const [appType, setAppType] = useState<'individual' | 'group'>('individual');
   const [internalId, setInternalId] = useState('');
   const [groupName, setGroupName] = useState('');
+  const [travelDate, setTravelDate] = useState('');
+  const [returnDate, setReturnDate] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<{ txnId: string; appId: string; error?: string } | null>(null);
   const [copiedTxn, setCopiedTxn] = useState(false);
@@ -756,7 +827,9 @@ export default function ApplyView() {
       maritalStatus: t.maritalStatus || undefined,
       dateOfIssue: t.dateOfIssue || undefined,
       dateOfExpiry: t.dateOfExpiry || undefined,
-      isChild: false,
+      isChild: calculateAge(t.dateOfBirth, travelDate || new Date().toISOString().slice(0, 10)) !== null
+        ? (calculateAge(t.dateOfBirth, travelDate || new Date().toISOString().slice(0, 10)) as number) < 18
+        : false,
       status: 'PAYMENT_PENDING' as const,
     }));
 
@@ -766,6 +839,8 @@ export default function ApplyView() {
       destination: activeVisaType.destination,
       visaType: activeVisaType.name,
       visaCategory: activeVisaType.category,
+      travelDate,
+      returnDate,
       totalPrice: total,
       travelers: travelersPayload,
     });
@@ -777,7 +852,7 @@ export default function ApplyView() {
     } else {
       setSubmitResult({ txnId: '', appId: '', error: result.error });
     }
-  }, [activeVisaType, submitting, travelers, internalId, groupName, appType, total, submitApplication]);
+  }, [activeVisaType, submitting, travelers, internalId, groupName, appType, total, travelDate, returnDate, submitApplication]);
 
   const copyTxnId = useCallback(() => {
     if (submitResult?.txnId) {
@@ -846,6 +921,24 @@ export default function ApplyView() {
                 />
               </div>
             )}
+            <div className="flex-1">
+              <Label className="text-xs text-vvisa-text-secondary mb-1.5 block font-medium">Travel Date</Label>
+              <Input
+                type="date"
+                value={travelDate}
+                onChange={(e) => setTravelDate(e.target.value)}
+                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
+              />
+            </div>
+            <div className="flex-1">
+              <Label className="text-xs text-vvisa-text-secondary mb-1.5 block font-medium">Return Date</Label>
+              <Input
+                type="date"
+                value={returnDate}
+                onChange={(e) => setReturnDate(e.target.value)}
+                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
+              />
+            </div>
           </div>
 
           {/* Visa Type Display */}
@@ -855,9 +948,12 @@ export default function ApplyView() {
                 <p className="text-xs text-vvisa-text-muted">Selected Visa Type</p>
                 <p className="text-sm font-medium text-foreground">{activeVisaType.name}</p>
               </div>
-              <span className="text-sm font-bold font-mono text-primary">
-                {formatINR(activeVisaType.price)}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-bold font-mono text-primary">
+                  {formatINR(activeVisaType.price)}
+                </span>
+                <PriceBreakdownPopover amount={activeVisaType.price} currency={activeVisaType.currency} />
+              </div>
             </div>
           )}
         </CardContent>
@@ -891,6 +987,8 @@ export default function ApplyView() {
                   onRemove={handleRemoveTraveler}
                   canRemove={travelers.length > 1}
                   requiredDocs={requiredDocs}
+                  travelers={travelers}
+                  travelDate={travelDate}
                 />
               </motion.div>
             ))}
@@ -938,7 +1036,10 @@ export default function ApplyView() {
                         Traveler {i + 1}
                         {t.firstName ? ` — ${t.firstName} ${t.lastName}` : ''}
                       </span>
-                      <span className="text-sm font-mono text-foreground">{formatINR(pricePerTraveler)}</span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-sm font-mono text-foreground">{formatINR(pricePerTraveler)}</span>
+                        <PriceBreakdownPopover amount={pricePerTraveler} currency={activeVisaType?.currency} />
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -947,7 +1048,10 @@ export default function ApplyView() {
 
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-sm font-semibold text-foreground">Total ({travelers.length} traveler{travelers.length > 1 ? 's' : ''})</span>
-                  <span className="text-lg font-bold font-mono text-foreground">{formatINR(total)}</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="text-lg font-bold font-mono text-foreground">{formatINR(total)}</span>
+                    <PriceBreakdownPopover amount={total} currency={activeVisaType?.currency} quantity={travelers.length} />
+                  </span>
                 </div>
 
                 <Separator className="bg-vvisa-border my-3" />
@@ -1052,7 +1156,10 @@ export default function ApplyView() {
                     </div>
                     <div className="bg-vvisa-bg rounded-lg p-3">
                       <p className="text-vvisa-text-muted">{demoMode ? 'Amount Preview' : 'Amount Debited'}</p>
-                      <p className="text-foreground font-mono font-medium mt-0.5">{formatINR(total)}</p>
+                      <div className="mt-0.5 flex items-center gap-1.5">
+                        <p className="text-foreground font-mono font-medium">{formatINR(total)}</p>
+                        <PriceBreakdownPopover amount={total} currency={activeVisaType?.currency} quantity={travelers.length} />
+                      </div>
                     </div>
                     <div className="bg-vvisa-bg rounded-lg p-3">
                       <p className="text-vvisa-text-muted">Travelers</p>

@@ -1,0 +1,94 @@
+{
+  "supplier": {
+    "id": "stampmyvisa",
+    "name": "StampMyVisa",
+    "source": "local-sample"
+  },
+  "capturedAt": "2026-06-25T00:00:00.000Z",
+  "products": [
+    {
+      "supplierProductId": "smv-dubai-tourist-30",
+      "destinationCountry": "United Arab Emirates",
+      "visaType": "Tourist",
+      "title": "Dubai Tourist Visa - 30 Days",
+      "entryType": "single",
+      "validityDays": 60,
+      "stayDays": 30,
+      "processingTime": "3-5 working days",
+      "currency": "INR",
+      "netPrice": 6400,
+      "documents": ["Passport front and back", "Photo", "PAN card"],
+      "sourceUrl": "https://stampmyvisa.com/home/create-visa"
+    },
+    {
+      "supplierProductId": "smv-dubai-tourist-60",
+      "destinationCountry": "United Arab Emirates",
+      "visaType": "Tourist",
+      "title": "Dubai Tourist Visa - 60 Days",
+      "entryType": "single",
+      "validityDays": 60,
+      "stayDays": 60,
+      "processingTime": "3-5 working days",
+      "currency": "INR",
+      "netPrice": 11200,
+      "documents": ["Passport front and back", "Photo", "PAN card"],
+      "sourceUrl": "https://stampmyvisa.com/home/create-visa"
+    },
+    {
+      "supplierProductId": "smv-vietnam-evisa-30",
+      "destinationCountry": "Vietnam",
+      "visaType": "E-Visa",
+      "title": "Vietnam E-Visa - 30 Days",
+      "entryType": "single",
+      "validityDays": 30,
+      "stayDays": 30,
+      "processingTime": "4-6 working days",
+      "currency": "INR",
+      "netPrice": 2800,
+      "documents": ["Passport bio page", "Photo"],
+      "sourceUrl": "https://stampmyvisa.com/home/create-visa"
+    },
+    {
+      "supplierProductId": "smv-thailand-tourist-60",
+      "destinationCountry": "Thailand",
+      "visaType": "Tourist",
+      "title": "Thailand Tourist Visa - 60 Days",
+      "entryType": "single",
+      "validityDays": 90,
+      "stayDays": 60,
+      "processingTime": "5-7 working days",
+      "currency": "INR",
+      "netPrice": 4200,
+      "documents": ["Passport", "Photo", "Bank statement"],
+      "sourceUrl": "https://stampmyvisa.com/home/create-visa"
+    },
+    {
+      "supplierProductId": "smv-malaysia-entri-30",
+      "destinationCountry": "Malaysia",
+      "visaType": "eNTRI",
+      "title": "Malaysia eNTRI - 30 Days",
+      "entryType": "single",
+      "validityDays": 90,
+      "stayDays": 30,
+      "processingTime": "2-3 working days",
+      "currency": "INR",
+      "netPrice": 3600,
+      "documents": ["Passport", "Photo", "Flight tickets"],
+      "sourceUrl": "https://stampmyvisa.com/home/create-visa"
+    },
+    {
+      "supplierProductId": "smv-dubai-tourist-30-duplicate",
+      "destinationCountry": "UAE",
+      "visaType": "Tourist",
+      "title": "Dubai Tourist Visa 30 Days",
+      "entryType": "single",
+      "validityDays": 60,
+      "stayDays": 30,
+      "processingTime": "3-5 working days",
+      "currency": "INR",
+      "netPrice": 6400,
+      "documents": ["Passport front and back", "Photo", "PAN card"],
+      "sourceUrl": "https://stampmyvisa.com/home/create-visa"
+    }
+  ]
+}

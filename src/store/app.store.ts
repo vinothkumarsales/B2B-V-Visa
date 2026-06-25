@@ -31,6 +31,8 @@ interface SubmitApplicationPayload {
   destination: string;
   visaType: string;
   visaCategory: string;
+  travelDate?: string;
+  returnDate?: string;
   totalPrice: number;
   travelers: Traveler[];
 }
@@ -146,11 +148,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       destination: payload.destination,
       visaType: payload.visaType,
       visaCategory: payload.visaCategory as any,
+      travelDate: payload.travelDate || undefined,
+      returnDate: payload.returnDate || undefined,
       status: 'PAYMENT_PENDING',
       totalPrice: payload.totalPrice,
       travelers: payload.travelers.map((t) => ({
         ...t,
-        isChild: false,
         status: 'PAYMENT_PENDING' as const,
       })),
       createdAt: now,
