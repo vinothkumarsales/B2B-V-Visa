@@ -131,7 +131,7 @@ function lineAmountMinor(line: VisaPricingLineItem): number {
 }
 
 function buildLineItemPrice(lines: VisaPricingLineItem[], currency: string, quantity: number): VisaPrice {
-  const expandedLines = lines.map((line) => {
+  const expandedLines = lines.filter((line) => line.type !== 'COURIER_FEE').map((line) => {
     const amountMinor = lineAmountMinor(line) * (line.quantity ?? quantity);
     return {
       ...line,
@@ -164,6 +164,21 @@ function buildLineItemPrice(lines: VisaPricingLineItem[], currency: string, quan
   };
 }
 
+function removeCourierFromPrice(price: VisaPrice): VisaPrice {
+  const courierLineTotalMinor = price.lines
+    .filter((line) => line.type === 'COURIER_FEE')
+    .reduce((total, line) => total + lineAmountMinor(line), 0);
+  const declaredCourierMinor = price.courierFeeMinor ?? 0;
+  const courierMinor = Math.max(courierLineTotalMinor, declaredCourierMinor);
+
+  return {
+    ...price,
+    courierFeeMinor: 0,
+    totalAmountMinor: Math.max(0, price.totalAmountMinor - courierMinor),
+    lines: price.lines.filter((line) => line.type !== 'COURIER_FEE'),
+  };
+}
+
 function resolveStickerRoute(visa: VisaType, routeKey?: VisaStickerRouteKey) {
   if (visa.visaKind !== 'STICKER_VISA') {
     return { route: undefined, manual: false };
@@ -191,24 +206,11 @@ export function resolveVisaPricing(visa: VisaType, options: { quantity?: number;
       ? buildLineItemPrice(visa.pricingLineItems, currency, quantity)
       : breakdownToVisaPrice(buildVisaPriceBreakdown(rupeesToMinor(visa.price) * quantity, currency, GST_RATE_BPS, quantity)));
 
-  const routeCourierFeeMinor = routeResolution.route?.courierFeeMinor ?? 0;
   const routeServiceFeeMinor = routeResolution.route?.serviceFeeAdjustmentMinor ?? 0;
   const routeGstMinor = routeServiceFeeMinor
     ? calculateGstMinor([{ amountMinor: routeServiceFeeMinor, taxable: true }])
     : 0;
   const routeLines: VisaPricingLineItem[] = [
-    routeCourierFeeMinor
-      ? {
-          id: `route-courier-${routeResolution.route?.id}`,
-          label: routeResolution.route?.deliveryInstructions || 'Sticker visa courier',
-          type: 'COURIER_FEE',
-          amount: minorToRupees(routeCourierFeeMinor),
-          amountMinor: routeCourierFeeMinor,
-          currency,
-          taxable: false,
-          quantity: 1,
-        }
-      : null,
     routeServiceFeeMinor
       ? {
           id: `route-service-${routeResolution.route?.id}`,
@@ -235,14 +237,15 @@ export function resolveVisaPricing(visa: VisaType, options: { quantity?: number;
       : null,
   ].filter(Boolean) as VisaPricingLineItem[];
 
-  const visibleTotalMinor = basePrice.totalAmountMinor + routeCourierFeeMinor + routeServiceFeeMinor + routeGstMinor;
+  const sanitizedBasePrice = removeCourierFromPrice(basePrice);
+  const visibleTotalMinor = sanitizedBasePrice.totalAmountMinor + routeServiceFeeMinor + routeGstMinor;
   const price = {
-    ...basePrice,
-    courierFeeMinor: (basePrice.courierFeeMinor ?? 0) + routeCourierFeeMinor,
-    vvisaServiceFeeMinor: basePrice.vvisaServiceFeeMinor + routeServiceFeeMinor,
-    gstMinor: basePrice.gstMinor + routeGstMinor,
+    ...sanitizedBasePrice,
+    courierFeeMinor: 0,
+    vvisaServiceFeeMinor: sanitizedBasePrice.vvisaServiceFeeMinor + routeServiceFeeMinor,
+    gstMinor: sanitizedBasePrice.gstMinor + routeGstMinor,
     totalAmountMinor: visibleTotalMinor,
-    lines: [...basePrice.lines, ...routeLines],
+    lines: [...sanitizedBasePrice.lines, ...routeLines],
   };
 
   return {
@@ -256,6 +259,6 @@ export function resolveVisaPricing(visa: VisaType, options: { quantity?: number;
     manualQuotationReason: routeResolution.manual ? 'Sticker visa route needs manual quotation' : undefined,
     price,
     visibleTotalMinor,
-    popoverLines: price.lines.filter((line) => lineAmountMinor(line) !== 0),
+    popoverLines: price.lines.filter((line) => line.type !== 'COURIER_FEE' && lineAmountMinor(line) !== 0),
   };
 }

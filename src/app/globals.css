@@ -61,7 +61,7 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #f6f8fb;
+  --background: #edf3f8;
   --foreground: #0f172a;
   --card: #ffffff;
   --card-foreground: #0f172a;
@@ -93,15 +93,15 @@
   --sidebar-border: #dbe3ee;
   --sidebar-ring: #2563eb;
 
-  --vvisa-bg: #f6f8fb;
+  --vvisa-bg: #edf3f8;
   --vvisa-surface: #ffffff;
-  --vvisa-surface-2: #eef4fb;
+  --vvisa-surface-2: #f3f7fc;
   --vvisa-surface-elevated: #ffffff;
   --vvisa-surface-interactive: #f8fbff;
   --vvisa-surface-muted: #edf3f9;
-  --vvisa-border-color: #dbe3ee;
-  --vvisa-border-subtle: #e8eef6;
-  --vvisa-border-active: #adc4e5;
+  --vvisa-border-color: #cbd8e8;
+  --vvisa-border-subtle: #dce6f2;
+  --vvisa-border-active: #8fb1df;
   --vvisa-text-secondary: #475569;
   --vvisa-text-muted: #718096;
   --vvisa-primary-hover: #1d4ed8;
@@ -110,11 +110,11 @@
   --vvisa-warning: #d97706;
   --vvisa-danger: #dc2626;
   --vvisa-info: #0284c7;
-  --vvisa-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --vvisa-shadow-md: 0 12px 30px rgba(15, 23, 42, 0.08);
-  --vvisa-shadow-lg: 0 24px 70px rgba(15, 23, 42, 0.12);
+  --vvisa-shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.07);
+  --vvisa-shadow-md: 0 14px 34px rgba(15, 23, 42, 0.11);
+  --vvisa-shadow-lg: 0 26px 76px rgba(15, 23, 42, 0.16);
   --vvisa-overlay: rgba(15, 23, 42, 0.45);
-  --vvisa-backdrop: rgba(246, 248, 251, 0.84);
+  --vvisa-backdrop: rgba(237, 243, 248, 0.86);
   --motion-fast: 140ms;
   --motion-normal: 220ms;
   --motion-slow: 420ms;

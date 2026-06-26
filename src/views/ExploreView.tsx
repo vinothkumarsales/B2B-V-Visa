@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PriceBreakdownPopover } from '@/components/pricing/PriceBreakdownPopover';
+import { VisaAttributeBadges } from '@/components/visa/VisaAttributeBadges';
 import { Search, ArrowRight, MapPin, Plane, Calendar, Zap, Clock, FileText } from 'lucide-react';
 import type { VisaStickerRoute } from '@/types';
 
@@ -108,6 +109,12 @@ export default function ExploreView() {
   const visibleVisas = filteredVisas.slice(0, visibleCount);
   const hasActiveFilters =
     goingTo.trim() || countryFilter !== 'all' || categoryFilter !== 'all' || processingFilter !== 'all';
+
+  useEffect(() => {
+    const hasDestinationContext = Boolean(goingTo.trim()) || countryFilter !== 'all';
+    sessionStorage.setItem('vvisa:workflowDetailActive', hasDestinationContext ? 'true' : 'false');
+    window.dispatchEvent(new CustomEvent('vvisa:workflow-detail-change', { detail: hasDestinationContext }));
+  }, [countryFilter, goingTo]);
 
   const handleSearch = () => {
     setVisibleCount(PAGE_SIZE);
@@ -365,7 +372,10 @@ export default function ExploreView() {
                 {/* Card Body */}
                 <CardContent className="p-5">
                   {/* Visa Name */}
-                  <h3 className="text-base font-semibold text-foreground mb-4">{visa.name}</h3>
+                  <div className="mb-4 space-y-3">
+                    <h3 className="text-base font-semibold text-foreground">{visa.name}</h3>
+                    <VisaAttributeBadges visa={visa} />
+                  </div>
 
                   {/* Detail Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-y-3 gap-x-4 mb-4">

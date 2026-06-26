@@ -16,6 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Separator } from '@/components/ui/separator';
 import { PriceBreakdownPopover } from '@/components/pricing/PriceBreakdownPopover';
+import { VisaAttributeBadges } from '@/components/visa/VisaAttributeBadges';
 import { calculateAge, evaluatePassportValidity } from '@/lib/date/calculate-age';
 import {
   Upload, AlertTriangle, Plus, ArrowRight, Check, Circle, Scan,
@@ -1128,6 +1129,7 @@ export default function ApplyView() {
               <div>
                 <p className="text-xs text-vvisa-text-muted">Selected Visa Type</p>
                 <p className="text-sm font-medium text-foreground">{activeVisaType.name}</p>
+                <VisaAttributeBadges visa={activeVisaType} className="mt-2" includeProcessing={false} />
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="vv-tabular text-sm font-bold text-primary">
