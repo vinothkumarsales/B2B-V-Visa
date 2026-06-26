@@ -20,7 +20,7 @@ export interface SupplierCatalogueProvider {
 }
 
 export function assertNoLiveLogin(mode: ImportMode): void {
-  if (mode === "live") {
+  if (mode === "live" || mode === "live-authorized") {
     throw new Error("Live supplier login is intentionally unsupported for this provider");
   }
 }

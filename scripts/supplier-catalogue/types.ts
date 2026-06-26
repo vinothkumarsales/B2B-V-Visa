@@ -1,4 +1,4 @@
-export type SupplierId = "stampmyvisa" | "stamp-my-visa" | "atlys-b2b" | (string & {});
+export type SupplierId = "stampmyvisa" | "stamp-my-visa" | "visa2fly" | "atlys-b2b" | (string & {});
 export type VisaKind =
   | "STICKER_VISA"
   | "E_VISA"
@@ -14,7 +14,7 @@ export type VisaKind =
   | "evisa"
   | "unknown";
 export type EntryType = "SINGLE" | "MULTIPLE" | "DOUBLE" | "NOT_SPECIFIED" | "single" | "multiple" | "double" | "unknown";
-export type ImportMode = "saved-html" | "live";
+export type ImportMode = "saved-html" | "public-web" | "live" | "live-authorized";
 export type DocumentStatus =
   | "MANDATORY"
   | "CONDITIONAL"

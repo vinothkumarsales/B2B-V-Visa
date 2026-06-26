@@ -8,6 +8,7 @@ import { mockVisaTypes } from '@/lib/mock-data';
 import { demoModeCopy } from '@/lib/demo-data';
 import { isDemoMode } from '@/lib/app-mode';
 import { getRequiredAdditionalDocs as resolveRequiredAdditionalDocs } from '@/lib/checklist';
+import { resolveVisaJurisdiction } from '@/lib/jurisdiction';
 import { formatMoneyMinor, resolveVisaPricing } from '@/lib/pricing';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -871,6 +872,9 @@ export default function ApplyView() {
   const [submitResult, setSubmitResult] = useState<{ txnId: string; appId: string; error?: string } | null>(null);
   const [copiedTxn, setCopiedTxn] = useState(false);
   const [passportOriginCity, setPassportOriginCity] = useState('');
+  const [residenceState, setResidenceState] = useState('');
+  const [residenceCity, setResidenceCity] = useState('');
+  const [postalCode, setPostalCode] = useState('');
 
   const requiredDocs = useMemo(() => {
     if (!activeVisaType) return [];
@@ -880,6 +884,17 @@ export default function ApplyView() {
   const requiredDocKeys = useMemo(() => requiredDocs.map((d) => d.key), [requiredDocs]);
   const stickerRoutes = useMemo(() => activeVisaType ? getStickerRoutes(activeVisaType) : [], [activeVisaType]);
   const isStickerVisa = activeVisaType?.visaKind === 'STICKER_VISA';
+  const jurisdictionRequired = Boolean(activeVisaType?.jurisdictions?.length);
+  const jurisdictionResolution = useMemo(
+    () => resolveVisaJurisdiction(activeVisaType, {
+      residenceCountry: 'India',
+      residenceState,
+      residenceCity,
+      postalCode,
+    }),
+    [activeVisaType, postalCode, residenceCity, residenceState]
+  );
+  const jurisdictionBlocksSubmit = jurisdictionResolution.status === 'MANUAL_REVIEW';
   const selectedPassportOriginCity = passportOriginCity;
 
   const [travelers, setTravelers] = useState<TravelerData[]>(() => [createEmptyTraveler(0, requiredDocKeys)]);
@@ -906,7 +921,7 @@ export default function ApplyView() {
     () => validationIssues.filter((issue) => issue.blocksSubmit),
     [validationIssues]
   );
-  const canSubmit = Boolean(activeVisaType) && walletBalance >= total && blockingValidationIssues.length === 0 && !pricingResult.manualQuotationRequired;
+  const canSubmit = Boolean(activeVisaType) && walletBalance >= total && blockingValidationIssues.length === 0 && !pricingResult.manualQuotationRequired && !jurisdictionBlocksSubmit;
 
   const handleTravelDateChange = useCallback((nextTravelDate: string) => {
     setTravelDate(nextTravelDate);
@@ -1140,6 +1155,59 @@ export default function ApplyView() {
                   currency={activeVisaType.currency}
                   pricingResult={singleTravelerPricingResult}
                 />
+              </div>
+            </div>
+          )}
+
+          {activeVisaType && jurisdictionRequired && (
+            <div className="mt-4 rounded-lg border border-blue-500/25 bg-blue-500/10 p-3">
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1fr_0.8fr]">
+                <div>
+                  <Label className="mb-1.5 block text-xs font-semibold text-blue-700 dark:text-blue-200">Residence State</Label>
+                  <Input
+                    value={residenceState}
+                    onChange={(event) => setResidenceState(event.target.value)}
+                    placeholder="e.g. Maharashtra"
+                    className="bg-vvisa-surface"
+                  />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block text-xs font-semibold text-blue-700 dark:text-blue-200">Residence City</Label>
+                  <Input
+                    value={residenceCity}
+                    onChange={(event) => setResidenceCity(event.target.value)}
+                    placeholder="e.g. Mumbai"
+                    className="bg-vvisa-surface"
+                  />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block text-xs font-semibold text-blue-700 dark:text-blue-200">PIN Code</Label>
+                  <Input
+                    value={postalCode}
+                    onChange={(event) => setPostalCode(event.target.value)}
+                    placeholder="Optional"
+                    className="bg-vvisa-surface"
+                  />
+                </div>
+              </div>
+              <div className="mt-3 rounded-lg border border-vvisa-border-subtle bg-vvisa-surface p-3 text-xs leading-5">
+                {jurisdictionResolution.status === 'RESOLVED' && jurisdictionResolution.rule ? (
+                  <div>
+                    <p className="font-semibold text-foreground">Your application jurisdiction: {jurisdictionResolution.rule.jurisdictionLabel}</p>
+                    <p className="text-vvisa-text-secondary">Submission centre: {jurisdictionResolution.rule.submissionCentreName ?? 'Manual review'}</p>
+                    {jurisdictionResolution.rule.processingCentreCity && (
+                      <p className="text-vvisa-text-secondary">Processing mission: {jurisdictionResolution.rule.processingCentreCity}</p>
+                    )}
+                    {jurisdictionResolution.rule.biometricCentreCity && (
+                      <p className="text-vvisa-text-secondary">Biometric centre: {jurisdictionResolution.rule.biometricCentreCity}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <p className="font-semibold text-amber-700 dark:text-amber-200">Jurisdiction verification required</p>
+                    <p className="text-vvisa-text-secondary">Save the draft, but final submission is blocked until the assigned centre is confirmed.</p>
+                  </div>
+                )}
               </div>
             </div>
           )}

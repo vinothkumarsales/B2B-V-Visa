@@ -40,13 +40,17 @@ export function buildCatalogueFromApprovedProducts(
         pricing: product.pricing?.lines?.length ? product.pricing : undefined,
         stickerRoutes: product.stickerRoutes,
         courierRules: product.courierRules,
+        jurisdictions: product.jurisdictions,
+        jurisdictionOverrides: product.jurisdictionOverrides,
         passportValidityRule: product.passportValidityRule,
         cutoffTime: product.cutoffTime,
+        publicationVersion: product.publicationVersion,
+        publicationHash: product.publicationHash,
+        publishedAt: product.publishedAt,
       };
     });
 
   if (approved.length === 0) return fallbackCatalogue;
 
-  const approvedIds = new Set(approved.map((product) => product.id));
-  return [...approved, ...fallbackCatalogue.filter((visa) => !approvedIds.has(visa.id))];
+  return approved;
 }

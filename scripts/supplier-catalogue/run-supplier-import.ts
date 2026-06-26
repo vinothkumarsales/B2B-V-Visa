@@ -93,8 +93,8 @@ function parseArgs(args: string[]): CliOptions {
     throw new Error("--limit must be between 1 and 5");
   }
 
-  if (!["saved-html", "live"].includes(mode)) {
-    throw new Error("--mode must be saved-html or live");
+  if (!["saved-html", "public-web", "live", "live-authorized"].includes(mode)) {
+    throw new Error("--mode must be saved-html, public-web, live, or live-authorized");
   }
 
   return {

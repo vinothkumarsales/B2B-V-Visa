@@ -13,6 +13,7 @@ import type {
 import { buildCatalogueFromApprovedProducts } from '@/lib/catalogue';
 import { buildVisaPriceBreakdown, rupeesToMinor } from '@/lib/pricing';
 import { stampMyVisaApprovedProducts } from '@/lib/stampmyvisa-approved-products';
+import { productionApprovedProducts } from '@/lib/production-approved-products';
 
 export const mockAgency = {
   id: 'agency-001',
@@ -1724,7 +1725,7 @@ const mockVisaTypesRaw: VisaType[] = [
 ];
 
 export const mockVisaTypes: VisaType[] = buildCatalogueFromApprovedProducts(
-  stampMyVisaApprovedProducts,
+  [...stampMyVisaApprovedProducts, ...productionApprovedProducts],
   mockVisaTypesRaw.map(enrichVisaTypeCatalogue),
 );
 

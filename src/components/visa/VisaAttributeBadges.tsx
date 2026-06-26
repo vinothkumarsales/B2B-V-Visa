@@ -1,10 +1,10 @@
 'use client';
 
-import { CalendarDays, Clock, Files, Plane, ShieldCheck } from 'lucide-react';
+import { CalendarDays, Clock, Files, MapPin, Plane, ShieldCheck } from 'lucide-react';
 import type { VisaKind, VisaType } from '@/types';
 import { cn } from '@/lib/utils';
 
-type BadgeTone = 'entry' | 'validity' | 'stay' | 'format' | 'processing' | 'express';
+type BadgeTone = 'entry' | 'validity' | 'stay' | 'format' | 'processing' | 'express' | 'jurisdiction';
 
 type VisaAttributeBadge = {
   key: string;
@@ -20,6 +20,7 @@ const toneClasses: Record<BadgeTone, string> = {
   format: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200',
   processing: 'border-slate-400/25 bg-slate-500/10 text-slate-700 dark:text-slate-200',
   express: 'border-amber-400/40 bg-amber-500/10 text-amber-700 dark:text-amber-200',
+  jurisdiction: 'border-blue-400/30 bg-blue-500/10 text-blue-700 dark:text-blue-200',
 };
 
 function titleCase(value: string): string {
@@ -99,6 +100,7 @@ export function getVisaAttributeBadges(visa: VisaType): VisaAttributeBadge[] {
     stayLabel ? { key: 'stay', label: stayLabel, tone: 'stay', icon: Clock } : null,
     formatLabel ? { key: 'format', label: formatLabel, tone: 'format', icon: ShieldCheck } : null,
     normalizeProcessing(visa.processingTime),
+    visa.jurisdictions?.length ? { key: 'jurisdiction', label: 'Jurisdiction Required', tone: 'jurisdiction', icon: MapPin } : null,
   ];
 
   return badges.filter(Boolean) as VisaAttributeBadge[];

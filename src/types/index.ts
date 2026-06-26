@@ -74,7 +74,9 @@ export interface VisaDocumentRequirement {
   appliesToEVisa?: boolean;
   uploadRequired?: boolean;
   physicalOriginalRequired?: boolean;
+  carryToAppointment?: boolean;
   courierRequired?: boolean;
+  biometricRelated?: boolean;
   sampleAvailable?: boolean;
   requirementStatus?: RequirementStatus;
   notes?: string;
@@ -117,6 +119,54 @@ export interface VisaStickerRoute {
   carrier?: string;
   estimatedDays?: number;
   notes?: string;
+}
+
+export type VisaJurisdictionCentreType =
+  | 'EMBASSY'
+  | 'CONSULATE'
+  | 'VFS'
+  | 'BLS'
+  | 'VISA_APPLICATION_CENTRE'
+  | 'PROCESSING_HUB'
+  | 'ONLINE'
+  | 'OTHER';
+
+export type VerificationStatus = 'OFFICIAL_VERIFIED' | 'SUPPLIER_ONLY' | 'CONFLICT' | 'REVIEW_REQUIRED';
+
+export interface VisaJurisdictionRule {
+  id: string;
+  visaProductId: string;
+  jurisdictionCode: string;
+  jurisdictionLabel: string;
+  destinationCountry: string;
+  applicantResidenceCountries?: string[];
+  applicantResidenceStates?: string[];
+  applicantResidenceUnionTerritories?: string[];
+  applicantResidenceCities?: string[];
+  applicantPostalCodePrefixes?: string[];
+  passportIssueStates?: string[];
+  passportIssueCities?: string[];
+  submissionCentreName?: string;
+  submissionCentreType?: VisaJurisdictionCentreType;
+  submissionCentreCity?: string;
+  submissionCentreAddress?: string;
+  biometricCentreCity?: string;
+  processingCentreCity?: string;
+  courierAvailable: boolean;
+  physicalAppearanceRequired: boolean;
+  priority: number;
+  isFallback: boolean;
+  isActive: boolean;
+  sourceText: string;
+  verificationStatus: VerificationStatus;
+}
+
+export interface JurisdictionOverride {
+  jurisdictionRuleId: string;
+  documentRequirementIds?: string[];
+  pricingAdjustmentMinor?: number;
+  processingTimeOverride?: string;
+  submissionInstructions?: string[];
 }
 
 export interface VisaChecklistSection {
@@ -211,8 +261,13 @@ export interface ApprovedVisaProduct {
   pricing?: VisaPrice;
   stickerRoutes?: VisaStickerRoute[];
   courierRules?: VisaCourierRules;
+  jurisdictions?: VisaJurisdictionRule[];
+  jurisdictionOverrides?: JurisdictionOverride[];
   passportValidityRule?: VisaPassportValidityRule;
   cutoffTime?: string;
+  publicationVersion?: string;
+  publicationHash?: string;
+  publishedAt?: string;
 }
 
 export interface MinorGuardianLink {
@@ -331,9 +386,14 @@ export interface VisaType {
   pricing?: VisaPrice;
   stickerRoutes?: VisaStickerRoute[];
   courierRules?: VisaCourierRules;
+  jurisdictions?: VisaJurisdictionRule[];
+  jurisdictionOverrides?: JurisdictionOverride[];
   passportValidityRule?: VisaPassportValidityRule;
   minimumPassportValidityMonths?: number;
   cutoffTime?: string;
+  publicationVersion?: string;
+  publicationHash?: string;
+  publishedAt?: string;
 }
 
 export interface WalletTransaction {
