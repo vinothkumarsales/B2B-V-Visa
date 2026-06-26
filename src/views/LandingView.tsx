@@ -68,12 +68,12 @@ export default function LandingView() {
   const testimonial = mockTestimonials[activeTestimonial];
 
   return (
-    <div className="min-h-screen flex flex-col bg-vvisa-bg">
+    <div className="min-h-screen flex flex-col vv-page">
       {/* ────────────────────── 1. HEADER ────────────────────── */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
-            ? 'bg-vvisa-bg/80 backdrop-blur-xl border-b border-vvisa-border'
+            ? 'bg-[var(--vvisa-backdrop)] backdrop-blur-xl border-b border-vvisa-border-subtle'
             : 'bg-transparent'
         }`}
       >
@@ -86,13 +86,13 @@ export default function LandingView() {
 
           {/* Nav */}
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm text-vvisa-text-secondary hover:text-white transition-colors">
+            <a href="#features" className="text-sm text-vvisa-text-secondary hover:text-foreground transition-colors">
               Features
             </a>
-            <a href="#how-it-works" className="text-sm text-vvisa-text-secondary hover:text-white transition-colors">
+            <a href="#how-it-works" className="text-sm text-vvisa-text-secondary hover:text-foreground transition-colors">
               How It Works
             </a>
-            <a href="#pricing" className="text-sm text-vvisa-text-secondary hover:text-white transition-colors">
+            <a href="#pricing" className="text-sm text-vvisa-text-secondary hover:text-foreground transition-colors">
               Pricing
             </a>
           </nav>
@@ -100,7 +100,7 @@ export default function LandingView() {
           {/* CTA */}
           <Button
             variant="outline"
-            className="border-vvisa-border bg-transparent hover:bg-vvisa-surface text-vvisa-text-secondary hover:text-foreground text-sm h-9 px-5"
+            className="border-vvisa-border-subtle bg-vvisa-surface/70 hover:bg-vvisa-surface text-vvisa-text-secondary hover:text-foreground text-sm h-10 px-5"
             onClick={() => navigate('login')}
           >
             Log In
@@ -110,10 +110,7 @@ export default function LandingView() {
 
       <main className="flex-1 pt-16">
         {/* ────────────────────── 2. HERO ────────────────────── */}
-        <section className="relative overflow-hidden px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-20 sm:pb-32">
-          {/* Subtle radial glow */}
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_-10%,rgba(79,70,229,0.08),transparent)]" />
-
+        <section className="relative overflow-hidden px-4 sm:px-6 lg:px-8 pt-14 sm:pt-20 pb-16 sm:pb-24">
           <div className="relative mx-auto max-w-7xl flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
             {/* Left – copy */}
             <div className="flex-1 text-center lg:text-left">
@@ -121,53 +118,54 @@ export default function LandingView() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="inline-flex items-center gap-2 rounded-full border border-vvisa-border bg-vvisa-surface px-4 py-1.5 mb-6"
+                className="inline-flex items-center gap-2 rounded-full border border-vvisa-border-subtle bg-vvisa-surface px-4 py-2 mb-6 shadow-[var(--vvisa-shadow-sm)]"
               >
                 <span className="h-2 w-2 rounded-full bg-emerald-400" />
                 <span className="text-xs sm:text-sm text-vvisa-text-secondary">
-                  Trusted by 5,000+ Travel Agents
+                  Built for high-volume travel agencies
                 </span>
               </motion.div>
 
               <motion.h1
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-[2.75rem] sm:text-5xl lg:text-[3.75rem] font-extrabold leading-[1.1] tracking-[-0.04em] text-white"
+                className="text-[2.75rem] sm:text-5xl lg:text-[3.75rem] font-extrabold leading-[1.05] tracking-normal text-slate-950 dark:text-white"
               >
-                Visas Done Right,
+                VVisa B2B visa operations,
                 <br />
-                Every Time.
+                without the noise.
               </motion.h1>
 
               <motion.p
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.35 }}
-                className="mt-5 text-base sm:text-lg text-vvisa-text-secondary max-w-xl mx-auto lg:mx-0 leading-relaxed"
+                className="mt-5 text-base sm:text-lg text-slate-600 dark:text-vvisa-text-secondary max-w-xl mx-auto lg:mx-0 leading-relaxed"
               >
-                India&rsquo;s most trusted B2B visa platform for travel agencies.
-                Guaranteed processing. Zero errors.
+                A refined visa-commerce console for agents to compare products, manage documents, track prices, and keep applications moving.
               </motion.p>
 
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
                 className="mt-8 flex flex-col sm:flex-row items-center gap-3 justify-center lg:justify-start"
               >
                 <Button
                   size="lg"
-                  className="bg-[#4F46E5] hover:bg-[#4338CA] text-white h-12 px-7 text-base rounded-lg glow-indigo"
+                  className="h-12 px-7 text-base rounded-xl glow-indigo"
+                  onClick={() => navigate('login')}
                 >
-                  Get Started Free <ArrowRight className="ml-1 size-4" />
+                  Start Application <ArrowRight className="ml-1 size-4" />
                 </Button>
                 <Button
                   variant="ghost"
-                  className="text-vvisa-text-secondary hover:text-white h-12 px-6 text-base gap-2"
+                  className="text-vvisa-text-secondary hover:text-foreground h-12 px-6 text-base gap-2"
+                  onClick={() => navigate('login')}
                 >
-                  <Play className="size-4 fill-[#9CA3AF]" />
-                  Watch Demo
+                  <Play className="size-4" />
+                  Agent Login
                 </Button>
               </motion.div>
             </div>
@@ -176,7 +174,7 @@ export default function LandingView() {
             <div className="relative flex-1 hidden md:flex justify-center items-center min-h-[420px]">
               {/* Main card */}
               <motion.div
-                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                initial={{ opacity: 1, y: 0, scale: 1 }}
                 animate={{ opacity: 1, y: [0, -8, 0], scale: 1 }}
                 transition={{ duration: 0.7, delay: 0.4, y: { duration: 3.5, repeat: Infinity, ease: 'easeInOut' as const } }}
                 className="relative z-10 w-72 bg-vvisa-surface border border-vvisa-border rounded-2xl p-5 shadow-2xl"
@@ -186,8 +184,8 @@ export default function LandingView() {
                     <CheckCircle className="size-5 text-emerald-400" />
                   </div>
                   <div>
-                    <p className="text-foreground font-semibold text-sm">Visa Approved</p>
-                    <p className="text-vvisa-text-secondary text-xs">Vietnam e-Visa</p>
+                    <p className="text-foreground font-semibold text-sm">Application Moving</p>
+                    <p className="text-vvisa-text-secondary text-xs">Selected visa workflow</p>
                   </div>
                 </div>
                 <div className="space-y-2 text-xs text-vvisa-text-secondary">
@@ -211,7 +209,7 @@ export default function LandingView() {
 
               {/* Floating stat card – top left */}
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 1, x: 0 }}
                 animate={{ opacity: 1, x: 0, y: [0, -12, 0] }}
                 transition={{ duration: 0.6, delay: 0.7, y: { duration: 4, repeat: Infinity, ease: 'easeInOut' as const } }}
                 className="absolute top-4 left-0 z-20 bg-vvisa-surface border border-vvisa-border rounded-xl px-4 py-3 shadow-lg"
@@ -221,15 +219,15 @@ export default function LandingView() {
                     <TrendingUp className="size-4 text-amber-400" />
                   </div>
                   <div>
-                    <p className="text-foreground font-semibold text-sm leading-tight">₹15,000 Cashback</p>
-                    <p className="text-emerald-400 text-xs">Earned this month</p>
+                    <p className="text-foreground font-semibold text-sm leading-tight">Wallet ready</p>
+                    <p className="text-emerald-500 text-xs">Balance visible upfront</p>
                   </div>
                 </div>
               </motion.div>
 
               {/* Floating stat card – bottom right */}
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 1, x: 0 }}
                 animate={{ opacity: 1, x: 0, y: [0, 10, 0] }}
                 transition={{ duration: 0.6, delay: 0.9, y: { duration: 5, repeat: Infinity, ease: 'easeInOut' as const } }}
                 className="absolute bottom-8 right-0 z-20 bg-vvisa-surface border border-vvisa-border rounded-xl px-4 py-3 shadow-lg"
@@ -239,8 +237,8 @@ export default function LandingView() {
                     <Wallet className="size-4 text-[#4F46E5]" />
                   </div>
                   <div>
-                    <p className="text-foreground font-semibold text-sm leading-tight">Total Earnings ₹12,570</p>
-                    <p className="text-emerald-400 text-xs">↑ 30% vs last month</p>
+                    <p className="text-foreground font-semibold text-sm leading-tight">Price breakdown</p>
+                    <p className="text-vvisa-text-muted text-xs">Fees, tax, total aligned</p>
                   </div>
                 </div>
               </motion.div>
@@ -255,9 +253,9 @@ export default function LandingView() {
               'Best Prices for Travel Agents',
               'Quick & Easy Applications',
               '24/7 Support, Anytime',
-              '99.2% On-Time Delivery',
-              '5,00,000+ Visas Processed',
-              '65 Types of Visas',
+              'Estimated Processing Windows',
+              'Document Checklist Binding',
+              'Supplier Product Catalogue',
               'GST-Compliant Invoices',
             ].map((text, i) => (
               <span
@@ -274,9 +272,9 @@ export default function LandingView() {
               'Best Prices for Travel Agents',
               'Quick & Easy Applications',
               '24/7 Support, Anytime',
-              '99.2% On-Time Delivery',
-              '5,00,000+ Visas Processed',
-              '65 Types of Visas',
+              'Estimated Processing Windows',
+              'Document Checklist Binding',
+              'Supplier Product Catalogue',
               'GST-Compliant Invoices',
             ].map((text, i) => (
               <span
@@ -295,8 +293,7 @@ export default function LandingView() {
         <section className="py-14 px-4 sm:px-6 lg:px-8">
           <motion.div {...fadeInUp} className="mx-auto max-w-5xl text-center">
             <p className="text-sm sm:text-base text-vvisa-text-secondary">
-              <span className="text-[#4F46E5] font-bold text-base sm:text-lg">5,000+</span>{' '}
-              Travel Agents trust VVisa for On Time Visas
+              Built for travel agents who need clear pricing, document rules, and application tracking
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
               {[
@@ -330,7 +327,7 @@ export default function LandingView() {
                 Why Choose VVisa?
               </h2>
               <p className="mt-3 text-vvisa-text-secondary max-w-xl mx-auto">
-                Everything your travel agency needs to process visas faster, cheaper, and with zero errors.
+                Everything your travel agency needs to compare visas, prepare documents, and move applications with fewer manual checks.
               </p>
             </div>
 
@@ -354,7 +351,7 @@ export default function LandingView() {
                     title: 'Quick & Easy Applications',
                     bullets: [
                       'Passport scanner to reduce errors',
-                      'Apply for up to 500 visa applications in one click',
+                      'Prepare individual and group applications from one workflow',
                     ],
                   },
                   {
@@ -413,8 +410,8 @@ export default function LandingView() {
                         <CheckCircle className="size-5 text-emerald-400" />
                       </div>
                       <div>
-                        <p className="text-foreground text-sm font-medium">Guaranteed visa on Mar 15, 2026</p>
-                        <p className="text-emerald-400/80 text-xs mt-0.5">Vietnam e-Visa · 8 travelers approved</p>
+                        <p className="text-foreground text-sm font-medium">Estimated processing visible</p>
+                        <p className="text-emerald-400/80 text-xs mt-0.5">Visa rules and checklist stay aligned</p>
                       </div>
                     </div>
                     {/* Mini progress bars */}
@@ -454,10 +451,10 @@ export default function LandingView() {
             className="mx-auto max-w-7xl grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12"
           >
             {[
-              { value: '99.2%', label: 'Visas Delivered On Time' },
-              { value: '5,00,000+', label: 'Visas Processed' },
-              { value: '65', label: 'Types of Visas' },
-              { value: '5,000+', label: 'Agents Trust Us' },
+              { value: 'Live', label: 'Catalogue-driven visa cards' },
+              { value: 'Bound', label: 'Apply checklist sync' },
+              { value: 'Clear', label: 'Pricing line items' },
+              { value: 'Ready', label: 'Wallet and payment preview' },
             ].map((stat) => (
               <motion.div
                 key={stat.label}
@@ -478,7 +475,7 @@ export default function LandingView() {
           <motion.div {...fadeInUp} className="mx-auto max-w-5xl">
             <div className="text-center mb-14">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white">
-                How to Apply in 30 Seconds
+                How Agents Apply
               </h2>
               <p className="mt-3 text-vvisa-text-secondary">Four simple steps. That&rsquo;s all it takes.</p>
             </div>

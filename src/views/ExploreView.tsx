@@ -30,9 +30,9 @@ const PAGE_SIZE = 12;
 const categoryConfig: Record<string, { icon: React.ReactNode; color: string; bgColor: string; borderColor: string }> = {
   LIGHTNING_FAST: {
     icon: <Zap className="h-4 w-4" />,
-    color: 'text-blue-400',
-    bgColor: 'bg-blue-950/30',
-    borderColor: 'border-blue-800/50',
+    color: 'text-primary',
+    bgColor: 'bg-primary/10',
+    borderColor: 'border-primary/20',
   },
   STANDARD: {
     icon: <Clock className="h-4 w-4" />,
@@ -42,9 +42,9 @@ const categoryConfig: Record<string, { icon: React.ReactNode; color: string; bgC
   },
   MULTI_ENTRY: {
     icon: <Plane className="h-4 w-4" />,
-    color: 'text-emerald-400',
-    bgColor: 'bg-emerald-950/30',
-    borderColor: 'border-emerald-800/50',
+    color: 'text-emerald-500',
+    bgColor: 'bg-emerald-500/10',
+    borderColor: 'border-emerald-500/20',
   },
 };
 
@@ -151,11 +151,11 @@ export default function ExploreView() {
       initial="initial"
       animate="animate"
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="space-y-6"
+      className="space-y-7"
     >
       {/* Sticky Search Bar */}
-      <div className="sticky top-0 z-30 bg-vvisa-bg pt-2 pb-4">
-        <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
+      <div className="sticky top-0 z-30 -mx-4 bg-[var(--vvisa-backdrop)] px-4 pt-2 pb-4 backdrop-blur-xl sm:-mx-5 sm:px-5 lg:-mx-7 lg:px-7">
+        <Card className="vv-surface-elevated rounded-xl border">
           <CardContent className="p-4">
             <div className="flex flex-col lg:flex-row gap-3 items-end">
               <div className="flex-1 w-full lg:w-auto">
@@ -165,7 +165,7 @@ export default function ExploreView() {
                   <Input
                     value="India"
                     disabled
-                    className="bg-vvisa-bg border border-vvisa-border rounded-lg text-foreground pl-9 pr-3 h-10 opacity-60 cursor-not-allowed"
+                    className="pl-9 pr-3 opacity-60 cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -183,7 +183,7 @@ export default function ExploreView() {
                     onFocus={() => setShowDropdown(true)}
                     onKeyDown={handleKeyDown}
                     placeholder="Search destination..."
-                    className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-10"
+                    className="pl-9 pr-3"
                   />
                   <AnimatePresence>
                     {showDropdown && goingTo.length > 0 && filteredDestinations.length > 0 && (
@@ -191,13 +191,13 @@ export default function ExploreView() {
                         initial={{ opacity: 0, y: -4 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -4 }}
-                        className="absolute top-full left-0 right-0 mt-1 bg-vvisa-surface-2 border border-vvisa-border rounded-lg z-50 max-h-48 overflow-y-auto"
+                        className="absolute top-full left-0 right-0 z-50 mt-2 max-h-48 overflow-y-auto rounded-xl border border-vvisa-border-subtle bg-vvisa-surface shadow-[var(--vvisa-shadow-md)]"
                       >
                         {filteredDestinations.map((dest) => (
                           <button
                             key={dest}
                             onClick={() => handleSelectDestination(dest)}
-                            className="w-full px-4 py-2.5 text-left text-sm text-foreground hover:bg-vvisa-surface-2 flex items-center gap-2 transition-colors"
+                            className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-vvisa-surface-2"
                           >
                             <Plane className="h-3.5 w-3.5 text-vvisa-text-muted" />
                             {dest}
@@ -216,7 +216,7 @@ export default function ExploreView() {
                     type="date"
                     value={travelDate}
                     onChange={(e) => setTravelDate(e.target.value)}
-                    className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-10"
+                    className="pl-9 pr-3"
                   />
                 </div>
               </div>
@@ -228,13 +228,13 @@ export default function ExploreView() {
                     type="date"
                     value={returnDate}
                     onChange={(e) => setReturnDate(e.target.value)}
-                    className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-10"
+                    className="pl-9 pr-3"
                   />
                 </div>
               </div>
               <Button
                 onClick={handleSearch}
-                className="bg-primary hover:bg-primary/90 text-white h-10 px-5 rounded-lg flex items-center gap-2 shrink-0 w-full lg:w-auto"
+                className="flex h-10 w-full shrink-0 items-center gap-2 px-5 lg:w-auto"
               >
                 <Search className="h-4 w-4" />
                 Search
@@ -249,7 +249,7 @@ export default function ExploreView() {
                     setCountryFilter(event.target.value);
                     setVisibleCount(PAGE_SIZE);
                   }}
-                  className="w-full h-10 rounded-lg bg-vvisa-bg border border-vvisa-border px-3 text-sm text-foreground"
+                  className="h-10 w-full rounded-lg border border-vvisa-border bg-vvisa-surface px-3 text-sm text-foreground shadow-[var(--vvisa-shadow-sm)]"
                 >
                   <option value="all">All countries</option>
                   {countries.map((country) => (
@@ -265,7 +265,7 @@ export default function ExploreView() {
                     setCategoryFilter(event.target.value);
                     setVisibleCount(PAGE_SIZE);
                   }}
-                  className="w-full h-10 rounded-lg bg-vvisa-bg border border-vvisa-border px-3 text-sm text-foreground"
+                  className="h-10 w-full rounded-lg border border-vvisa-border bg-vvisa-surface px-3 text-sm text-foreground shadow-[var(--vvisa-shadow-sm)]"
                 >
                   <option value="all">All categories</option>
                   <option value="LIGHTNING_FAST">Lightning fast</option>
@@ -281,7 +281,7 @@ export default function ExploreView() {
                     setProcessingFilter(event.target.value);
                     setVisibleCount(PAGE_SIZE);
                   }}
-                  className="w-full h-10 rounded-lg bg-vvisa-bg border border-vvisa-border px-3 text-sm text-foreground"
+                  className="h-10 w-full rounded-lg border border-vvisa-border bg-vvisa-surface px-3 text-sm text-foreground shadow-[var(--vvisa-shadow-sm)]"
                 >
                   <option value="all">All processing</option>
                   <option value="same-day">Same-day / hours</option>
@@ -341,7 +341,7 @@ export default function ExploreView() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className={`bg-vvisa-surface border rounded-xl overflow-hidden ${cat.borderColor}`}>
+              <Card className={`vv-interactive overflow-hidden rounded-xl border ${cat.borderColor}`}>
                 {/* Category Header */}
                 <div className={`${cat.bgColor} px-5 py-3.5 border-b ${cat.borderColor}`}>
                   <div className="flex items-center gap-2">
@@ -397,9 +397,9 @@ export default function ExploreView() {
                   </div>
 
                   {isStickerVisa && (
-                    <div className="mb-4 rounded-lg border border-amber-800/30 bg-amber-950/20 p-3">
-                      <p className="text-xs font-medium text-amber-200">Passport origin city required</p>
-                      <p className="mt-1 text-xs text-amber-200/80">
+                    <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+                      <p className="text-xs font-semibold text-amber-700 dark:text-amber-200">Passport origin city required</p>
+                      <p className="mt-1 text-xs text-amber-700/80 dark:text-amber-200/80">
                         {stickerRoutes.length > 0
                           ? `Available route${stickerRoutes.length !== 1 ? 's' : ''}: ${stickerRoutes
                               .map((route) => route.originCityLabel ?? route.origin)
@@ -411,9 +411,9 @@ export default function ExploreView() {
                   )}
 
                   {/* Footer: Price + Select */}
-                  <div className="flex items-center justify-between pt-3 border-t border-vvisa-border">
+                  <div className="flex items-center justify-between border-t border-vvisa-border-subtle pt-3">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xl font-bold font-mono text-foreground">
+                      <span className="vv-tabular text-xl font-bold text-foreground">
                         {formatMoneyMinor(pricingResult.visibleTotalMinor, pricingResult.currency)}
                       </span>
                       <PriceBreakdownPopover amount={visa.price} currency={visa.currency} pricingResult={pricingResult} />
@@ -421,7 +421,7 @@ export default function ExploreView() {
                     <Button
                       onClick={() => handleSelectVisa(visa)}
                       variant="outline"
-                      className="border-indigo-600 text-primary hover:bg-primary/10 hover:text-primary/80 rounded-lg flex items-center gap-1.5"
+                      className="flex items-center gap-1.5 rounded-lg border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
                     >
                       Select <ArrowRight className="h-3.5 w-3.5" />
                     </Button>
@@ -433,7 +433,7 @@ export default function ExploreView() {
         })}
 
         {filteredVisas.length === 0 && (
-          <div className="text-center py-16 rounded-xl border border-dashed border-vvisa-border bg-vvisa-surface">
+          <div className="rounded-xl border border-dashed border-vvisa-border bg-vvisa-surface py-16 text-center shadow-[var(--vvisa-shadow-sm)]">
             <Search className="h-12 w-12 text-vvisa-border mx-auto mb-3" />
             <p className="text-foreground text-sm font-medium">No visa types found</p>
             <p className="text-vvisa-text-muted text-xs mt-1">Try another destination, category, or processing filter.</p>
@@ -462,7 +462,7 @@ export default function ExploreView() {
 
       {/* Document Dialog */}
       <Dialog open={docDialogOpen} onOpenChange={setDocDialogOpen}>
-        <DialogContent className="bg-vvisa-surface border border-vvisa-border rounded-xl max-w-md">
+        <DialogContent className="max-w-md rounded-xl border border-vvisa-border-subtle bg-vvisa-surface shadow-[var(--vvisa-shadow-lg)]">
           <DialogHeader>
             <DialogTitle className="text-foreground flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
@@ -485,7 +485,7 @@ export default function ExploreView() {
                         {section.items.map((doc) => (
                           <li
                             key={doc.id}
-                            className="flex items-center gap-3 p-2.5 rounded-lg bg-vvisa-bg border border-vvisa-border"
+                            className="flex items-center gap-3 rounded-lg border border-vvisa-border-subtle bg-vvisa-surface-2 p-2.5"
                           >
                             <FileText className="h-4 w-4 text-primary shrink-0" />
                             <span className="text-sm text-foreground">{doc.documentName || doc.label}</span>

@@ -400,7 +400,7 @@ function TravelerCard({
   });
 
   return (
-    <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl overflow-hidden">
+    <Card className="vv-surface overflow-hidden rounded-xl border">
       {/* Traveler Header - Always visible */}
       <div
         className="p-4 sm:p-5 cursor-pointer hover:bg-vvisa-surface-2/50 transition-colors"
@@ -485,9 +485,9 @@ function TravelerCard({
               </div>
 
               {/* Warning Banner */}
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-950/30 border border-amber-800/30 mb-4">
+              <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
                 <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-200/80">
+                <p className="text-xs text-amber-700/80 dark:text-amber-200/80">
                   VVisa uses <span className="text-primary font-medium">ocr.z.ai</span> for 99.9% accurate passport scanning. Upload a clear passport image and details will be filled automatically. However, it is mandatory to review the information before submitting.
                   {isDemoMode() ? ` ${demoModeCopy.documentNotice}` : ''}
                 </p>
@@ -692,7 +692,7 @@ function TravelerCard({
                         className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1"
                       />
                       {passportValidity.message && (
-                        <div className="mt-2 flex items-start gap-2 rounded-lg border border-amber-700/40 bg-amber-950/30 p-2 text-[11px] leading-4 text-amber-100">
+                        <div className="mt-2 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] leading-4 text-amber-700 dark:text-amber-100">
                           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
                           <span>{passportValidity.message}</span>
                         </div>
@@ -700,7 +700,7 @@ function TravelerCard({
                     </div>
                   </div>
                   {isMinor && (!traveler.guardianApplicantId || !traveler.guardianRelationship) && (
-                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-xs leading-5 text-amber-100">
+                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-5 text-amber-700 dark:text-amber-100">
                       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
                       <span>This traveller will be under 18 on the travel date. Link a parent or legal guardian travelling in the same application.</span>
                     </div>
@@ -812,7 +812,7 @@ function ProgressStepper({ currentStep }: { currentStep: number }) {
   const steps = ['Application Type', 'Internal ID', 'Traveler Details', 'Additional Documents', 'Review', 'Submit'];
 
   return (
-    <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
+    <Card className="vv-surface rounded-xl border">
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-4">
           <p className="text-xs text-vvisa-text-muted font-medium">APPLICATION PROGRESS</p>
@@ -1055,7 +1055,7 @@ export default function ApplyView() {
       className="space-y-6"
     >
       {/* Application Setup */}
-      <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
+      <Card className="vv-surface-elevated rounded-xl border">
         <CardContent className="p-5">
           <div className="flex flex-col sm:flex-row sm:items-end gap-4">
             <div className="flex-1">
@@ -1130,7 +1130,7 @@ export default function ApplyView() {
                 <p className="text-sm font-medium text-foreground">{activeVisaType.name}</p>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-sm font-bold font-mono text-primary">
+                <span className="vv-tabular text-sm font-bold text-primary">
                   {formatMoneyMinor(singleTravelerPricingResult.visibleTotalMinor, singleTravelerPricingResult.currency)}
                 </span>
                 <PriceBreakdownPopover
@@ -1143,15 +1143,15 @@ export default function ApplyView() {
           )}
 
           {activeVisaType && isStickerVisa && (
-            <div className="mt-4 rounded-lg border border-amber-800/30 bg-amber-950/20 p-3">
+            <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1.2fr] sm:items-end">
                 <div>
-                  <Label className="text-xs text-amber-200 mb-1.5 block font-medium">Passport Origin City</Label>
+                  <Label className="text-xs text-amber-700 dark:text-amber-200 mb-1.5 block font-semibold">Passport Origin City</Label>
                   <select
                     value={selectedPassportOriginCity}
                     onChange={(event) => setPassportOriginCity(event.target.value)}
                     disabled={stickerRoutes.length === 0}
-                    className="h-10 w-full rounded-lg border border-amber-800/40 bg-vvisa-bg px-3 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+                    className="h-10 w-full rounded-lg border border-amber-500/30 bg-vvisa-surface px-3 text-sm text-foreground shadow-[var(--vvisa-shadow-sm)] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {stickerRoutes.length > 0 ? (
                       <>
@@ -1167,13 +1167,13 @@ export default function ApplyView() {
                     )}
                   </select>
                 </div>
-                <p className="text-xs leading-5 text-amber-200/80">
+                <p className="text-xs leading-5 text-amber-700/80 dark:text-amber-200/80">
                   {stickerRoutes.length > 0
                     ? 'Sticker visas require passport handover. Pricing uses the selected route when mapped, falls back to other India, or needs manual quotation.'
                     : 'No passport route is mapped for this sticker visa yet. Save the application for manual quotation before final confirmation.'}
                 </p>
                 {pricingResult.manualQuotationRequired && (
-                  <p className="mt-2 text-xs font-medium text-amber-200">
+                  <p className="mt-2 text-xs font-semibold text-amber-700 dark:text-amber-200">
                     Manual quotation required before final confirmation.
                   </p>
                 )}
@@ -1232,7 +1232,7 @@ export default function ApplyView() {
           </Button>
 
           {blockingValidationIssues.length > 0 && (
-            <div className="rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-xs leading-5 text-amber-100">
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-5 text-amber-700 dark:text-amber-100">
               <div className="flex items-start gap-2">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
                 <div className="space-y-1">
@@ -1260,7 +1260,7 @@ export default function ApplyView() {
         {/* Right: Price Summary */}
         <div className="hidden lg:block w-72 shrink-0">
           <div className="sticky top-24">
-            <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
+            <Card className="vv-surface-elevated rounded-xl border">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-semibold text-foreground">Price Summary</h3>
@@ -1274,7 +1274,7 @@ export default function ApplyView() {
                         {t.firstName ? ` — ${t.firstName} ${t.lastName}` : ''}
                       </span>
                       <span className="flex items-center gap-1.5">
-                        <span className="text-sm font-mono text-foreground">{formatINR(pricePerTraveler)}</span>
+                        <span className="vv-tabular text-sm text-foreground">{formatINR(pricePerTraveler)}</span>
                         <PriceBreakdownPopover
                           amount={pricePerTraveler}
                           currency={activeVisaType?.currency}
@@ -1290,7 +1290,7 @@ export default function ApplyView() {
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-sm font-semibold text-foreground">Total ({travelers.length} traveler{travelers.length > 1 ? 's' : ''})</span>
                   <span className="flex items-center gap-1.5">
-                    <span className="text-lg font-bold font-mono text-foreground">{formatMoneyMinor(pricingResult.visibleTotalMinor, pricingResult.currency)}</span>
+                    <span className="vv-tabular text-lg font-bold text-foreground">{formatMoneyMinor(pricingResult.visibleTotalMinor, pricingResult.currency)}</span>
                     <PriceBreakdownPopover
                       amount={total}
                       currency={activeVisaType?.currency}
@@ -1303,7 +1303,7 @@ export default function ApplyView() {
                 <Separator className="bg-vvisa-border my-3" />
 
                 {blockingValidationIssues.length > 0 && (
-                  <div className="mb-4 rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-xs leading-5 text-amber-100">
+                  <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-5 text-amber-700 dark:text-amber-100">
                     <div className="flex items-start gap-2">
                       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
                       <div className="space-y-1">
@@ -1317,12 +1317,12 @@ export default function ApplyView() {
 
                 <div className="flex justify-between items-center mb-5">
                   <span className="text-xs text-vvisa-text-muted">{demoMode ? 'Demo Wallet Balance' : 'Current Wallet Balance'}</span>
-                  <span className="text-sm font-mono text-primary">{formatINR(walletBalance)}</span>
+                  <span className="vv-tabular text-sm text-primary">{formatINR(walletBalance)}</span>
                 </div>
 
                 <div className="flex justify-between items-center mb-5">
                   <span className="text-xs text-vvisa-text-muted">{demoMode ? 'Demo balance after preview' : 'After Payment'}</span>
-                  <span className={`text-sm font-mono ${walletBalance - total >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <span className={`vv-tabular text-sm ${walletBalance - total >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                     {formatINR(walletBalance - total)}
                   </span>
                 </div>
@@ -1355,7 +1355,7 @@ export default function ApplyView() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-vvisa-surface border border-vvisa-border rounded-2xl p-6 max-w-md w-full shadow-2xl"
+              className="w-full max-w-md rounded-2xl border border-vvisa-border-subtle bg-vvisa-surface p-6 shadow-[var(--vvisa-shadow-lg)]"
               onClick={(e) => e.stopPropagation()}
             >
               {submitResult.error ? (
@@ -1392,7 +1392,7 @@ export default function ApplyView() {
                       <span className="text-xs text-vvisa-text-secondary font-medium">Unique Transaction ID</span>
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      <code className="text-sm font-mono text-foreground break-all">{submitResult.txnId}</code>
+                      <code className="vv-tabular break-all text-sm text-foreground">{submitResult.txnId}</code>
                       <button
                         onClick={copyTxnId}
                         className="shrink-0 p-1.5 rounded-lg hover:bg-vvisa-surface-2 transition-colors"
@@ -1416,7 +1416,7 @@ export default function ApplyView() {
                     <div className="bg-vvisa-bg rounded-lg p-3">
                       <p className="text-vvisa-text-muted">{demoMode ? 'Amount Preview' : 'Amount Debited'}</p>
                       <div className="mt-0.5 flex items-center gap-1.5">
-                        <p className="text-foreground font-mono font-medium">{formatMoneyMinor(pricingResult.visibleTotalMinor, pricingResult.currency)}</p>
+                        <p className="vv-tabular font-medium text-foreground">{formatMoneyMinor(pricingResult.visibleTotalMinor, pricingResult.currency)}</p>
                         <PriceBreakdownPopover
                           amount={total}
                           currency={activeVisaType?.currency}
@@ -1431,7 +1431,7 @@ export default function ApplyView() {
                     </div>
                     <div className="bg-vvisa-bg rounded-lg p-3">
                       <p className="text-vvisa-text-muted">{demoMode ? 'Demo Balance Preview' : 'Remaining Balance'}</p>
-                      <p className="text-emerald-400 font-mono font-medium mt-0.5">{formatINR(walletBalance - total)}</p>
+                      <p className="vv-tabular mt-0.5 font-medium text-emerald-500">{formatINR(walletBalance - total)}</p>
                     </div>
                   </div>
 

@@ -15,24 +15,20 @@ export function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className={`relative flex items-center justify-center h-9 px-3 rounded-full transition-colors cursor-pointer ${
-        isDark
-          ? 'bg-vvisa-surface-2 border border-vvisa-border hover:bg-vvisa-border'
-          : 'bg-[#1E3A6A] border border-[#2A4F8E] hover:bg-[#2A4F8E]'
-      }`}
-      aria-label={`Switch to ${isDark ? 'bright' : 'dark'} mode`}
-      title={`Switch to ${isDark ? 'bright' : 'dark'} mode`}
+      className="relative flex h-10 w-10 items-center justify-center rounded-full border border-vvisa-border bg-vvisa-surface text-vvisa-text-secondary shadow-[var(--vvisa-shadow-sm)] transition-all duration-200 ease-out hover:bg-vvisa-surface-2 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/35 focus-visible:outline-none"
+      aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+      title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
     >
       {mounted && (
         <>
           <Sun
             className={`size-[16px] absolute transition-all duration-300 ${
-              isDark ? 'opacity-100 rotate-0 scale-100 text-white' : 'opacity-0 rotate-90 scale-0'
+              isDark ? 'opacity-100 rotate-0 scale-100 text-[var(--vvisa-premium)]' : 'opacity-0 rotate-90 scale-0'
             }`}
           />
           <Moon
             className={`size-[16px] absolute transition-all duration-300 ${
-              isDark ? 'opacity-0 -rotate-90 scale-0' : 'opacity-100 rotate-0 scale-100 text-white'
+              isDark ? 'opacity-0 -rotate-90 scale-0' : 'opacity-100 rotate-0 scale-100'
             }`}
           />
         </>
