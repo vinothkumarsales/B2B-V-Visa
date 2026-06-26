@@ -5,6 +5,7 @@ export async function loadSupplierSource(options: {
   supplierId: SupplierId;
   mode: ImportMode;
   sourceFile?: string;
+  fixture?: string;
 }): Promise<{ source: SupplierImportSource; sourceFile: string }> {
   const provider = getSupplierCatalogueProvider(options.supplierId);
   return provider.loadCatalogue(options);

@@ -10,7 +10,9 @@ import type {
   VisaKind,
   VisaPricingLineItem,
 } from '@/types';
+import { buildCatalogueFromApprovedProducts } from '@/lib/catalogue';
 import { buildVisaPriceBreakdown, rupeesToMinor } from '@/lib/pricing';
+import { stampMyVisaApprovedProducts } from '@/lib/stampmyvisa-approved-products';
 
 export const mockAgency = {
   id: 'agency-001',
@@ -1721,7 +1723,10 @@ const mockVisaTypesRaw: VisaType[] = [
   },
 ];
 
-export const mockVisaTypes: VisaType[] = mockVisaTypesRaw.map(enrichVisaTypeCatalogue);
+export const mockVisaTypes: VisaType[] = buildCatalogueFromApprovedProducts(
+  stampMyVisaApprovedProducts,
+  mockVisaTypesRaw.map(enrichVisaTypeCatalogue),
+);
 
 const createTraveler = (overrides: Partial<import('@/types').Traveler> & { id: string; firstName: string; lastName: string; passportNumber: string }): import('@/types').Traveler => ({
   nationality: 'Indian',

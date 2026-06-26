@@ -1,5 +1,5 @@
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { readdir, readFile, stat } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import type { SupplierImportSource, SupplierProductInput } from "../types.ts";
 import {
   type LoadSupplierCatalogueInput,
@@ -7,7 +7,7 @@ import {
   type SupplierCatalogueProvider,
 } from "./provider.ts";
 
-const SAMPLE_SOURCE = "data/supplier-imports/samples/stampmyvisa.sample.json";
+const DEFAULT_FIXTURE = "scripts/supplier-catalogue/providers/fixtures/stamp-my-visa.saved.html";
 const LIVE_CAPTURE_URL = "https://stampmyvisa.com/home/create-visa";
 
 export const stampMyVisaProvider: SupplierCatalogueProvider = {
@@ -16,17 +16,13 @@ export const stampMyVisaProvider: SupplierCatalogueProvider = {
   supportsLiveLogin: true,
   async loadCatalogue(input: LoadSupplierCatalogueInput): Promise<LoadSupplierCatalogueResult> {
     if (input.mode === "saved-html") {
-      if (!input.sourceFile) {
-        throw new Error("StampMyVisa saved-html mode requires --source-file with a saved HTML fixture");
-      }
-      return loadSavedHtmlSupplierSource(input.sourceFile, input.supplierId);
+      return loadSavedHtmlSupplierSource(input.sourceFile ?? input.fixture ?? DEFAULT_FIXTURE, input.supplierId);
     }
 
     if (input.mode === "live") {
       return loadLiveSupplierSource(input);
     }
-
-    return loadLocalSupplierSource(input.sourceFile ?? SAMPLE_SOURCE, input.supplierId);
+    throw new Error("--mode must be saved-html or live for StampMyVisa imports");
   },
 };
 
@@ -35,29 +31,52 @@ export const stampmyvisaProvider: SupplierCatalogueProvider = {
   id: "stampmyvisa",
 };
 
-async function loadLocalSupplierSource(
-  sourcePath: string,
-  requestedSupplierId: string,
-): Promise<LoadSupplierCatalogueResult> {
-  const sourceFile = resolve(sourcePath);
-  const parsed = JSON.parse(await readFile(sourceFile, "utf8")) as SupplierImportSource;
-  assertSupplierSource(parsed, sourceFile, requestedSupplierId);
-  return { source: parsed, sourceFile };
-}
-
 async function loadSavedHtmlSupplierSource(
   sourcePath: string,
   requestedSupplierId: string,
 ): Promise<LoadSupplierCatalogueResult> {
   const sourceFile = resolve(sourcePath);
-  const source = parseSavedHtml(await readFile(sourceFile, "utf8"), sourceFile);
+  const source = await loadSavedHtmlPath(sourceFile);
   assertSupplierSource(source, sourceFile, requestedSupplierId);
   return { source, sourceFile };
+}
+
+async function loadSavedHtmlPath(sourceFile: string): Promise<SupplierImportSource> {
+  const metadata = await stat(sourceFile);
+  if (!metadata.isDirectory()) {
+    return parseSavedHtml(await readFile(sourceFile, "utf8"), sourceFile);
+  }
+
+  const entries = (await readdir(sourceFile))
+    .filter((entry) => /\.(html?|json)$/i.test(entry))
+    .sort();
+  const products: SupplierProductInput[] = [];
+  let supplierSource: SupplierImportSource | null = null;
+
+  for (const entry of entries) {
+    const parsed = parseSavedHtml(await readFile(join(sourceFile, entry), "utf8"), join(sourceFile, entry));
+    supplierSource ??= parsed;
+    products.push(...parsed.products);
+  }
+
+  if (!supplierSource) {
+    throw new Error(`StampMyVisa saved-html fixture directory has no .html or .json files: ${sourceFile}`);
+  }
+
+  return {
+    ...supplierSource,
+    supplier: {
+      ...supplierSource.supplier,
+      source: `saved-html:${sourceFile}`,
+    },
+    products,
+  };
 }
 
 async function loadLiveSupplierSource(
   input: LoadSupplierCatalogueInput,
 ): Promise<LoadSupplierCatalogueResult> {
+  const credentials = await loadStampMyVisaCredentials();
   const playwright = await importOptionalPlaywright();
   if (!playwright) {
     throw new Error("StampMyVisa live mode requires Playwright. Install it before running --mode live.");
@@ -66,13 +85,15 @@ async function loadLiveSupplierSource(
   const browser = await playwright.chromium.launch({ headless: false });
   const page = await browser.newPage();
   await page.goto(LIVE_CAPTURE_URL, { waitUntil: "domcontentloaded" });
+  await attemptCredentialFill(page, credentials);
 
   console.log([
     "stampmyvisa_live_login_ready=true",
     "browser=visible",
+    `credentials_loaded=${Boolean(credentials.username)}`,
     "otp_pause=manual",
     "secrets_printed=false",
-    "next_step=complete_login_then_save_html_and_rerun_saved_html",
+    "next_step=complete_login_or_security_challenge_in_browser",
   ].join(" "));
 
   await page.pause();
@@ -82,6 +103,102 @@ async function loadLiveSupplierSource(
   const source = parseSavedHtml(html, LIVE_CAPTURE_URL);
   assertSupplierSource(source, LIVE_CAPTURE_URL, input.supplierId);
   return { source, sourceFile: LIVE_CAPTURE_URL };
+}
+
+async function attemptCredentialFill(
+  page: LivePage,
+  credentials: { username: string; password: string },
+): Promise<void> {
+  const usernameSelectors = [
+    "input[name='username']",
+    "input[name='mobile']",
+    "input[name='phone']",
+    "input[type='tel']",
+    "input[type='text']",
+  ];
+  const passwordSelectors = [
+    "input[name='password']",
+    "input[type='password']",
+  ];
+
+  const usernameFilled = await fillFirstAvailable(page, usernameSelectors, credentials.username);
+  const passwordFilled = credentials.password
+    ? await fillFirstAvailable(page, passwordSelectors, credentials.password)
+    : true;
+
+  if (usernameFilled && passwordFilled) {
+    await clickFirstAvailable(page, [
+      "button[type='submit']",
+      "button:has-text('Login')",
+      "button:has-text('Sign in')",
+      "button:has-text('Continue')",
+    ]);
+  }
+}
+
+async function fillFirstAvailable(page: LivePage, selectors: string[], value: string): Promise<boolean> {
+  for (const selector of selectors) {
+    try {
+      const locator = page.locator(selector).first();
+      if (await locator.count()) {
+        await locator.fill(value);
+        return true;
+      }
+    } catch {
+      continue;
+    }
+  }
+  return false;
+}
+
+async function clickFirstAvailable(page: LivePage, selectors: string[]): Promise<boolean> {
+  for (const selector of selectors) {
+    try {
+      const locator = page.locator(selector).first();
+      if (await locator.count()) {
+        await locator.click();
+        return true;
+      }
+    } catch {
+      continue;
+    }
+  }
+  return false;
+}
+
+async function loadStampMyVisaCredentials(): Promise<{ username: string; password: string }> {
+  const envLocal = await readEnvLocal();
+  const username = envLocal.STAMP_MY_VISA_USERNAME ?? process.env.STAMP_MY_VISA_USERNAME ?? "";
+  const password = envLocal.STAMP_MY_VISA_PASSWORD ?? process.env.STAMP_MY_VISA_PASSWORD ?? "";
+
+  if (!username) {
+    throw new Error("StampMyVisa live mode requires STAMP_MY_VISA_USERNAME in .env.local");
+  }
+
+  return { username, password };
+}
+
+async function readEnvLocal(): Promise<Record<string, string>> {
+  const envPath = resolve(".env.local");
+  let contents = "";
+  try {
+    contents = await readFile(envPath, "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return {};
+    throw error;
+  }
+
+  const parsed: Record<string, string> = {};
+  for (const line of contents.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const separator = trimmed.indexOf("=");
+    if (separator <= 0) continue;
+    const key = trimmed.slice(0, separator).trim();
+    const rawValue = trimmed.slice(separator + 1).trim();
+    parsed[key] = rawValue.replace(/^['"]|['"]$/g, "");
+  }
+  return parsed;
 }
 
 function parseSavedHtml(raw: string, sourceFile: string): SupplierImportSource {
@@ -189,11 +306,7 @@ async function importOptionalPlaywright(): Promise<
   | {
       chromium: {
         launch(options: { headless: boolean }): Promise<{
-          newPage(): Promise<{
-            goto(url: string, options: { waitUntil: "domcontentloaded" }): Promise<unknown>;
-            pause(): Promise<void>;
-            content(): Promise<string>;
-          }>;
+          newPage(): Promise<LivePage>;
           close(): Promise<void>;
         }>;
       };
@@ -201,8 +314,24 @@ async function importOptionalPlaywright(): Promise<
   | null
 > {
   try {
-    return await import("playwright");
+    const dynamicImport = new Function("specifier", "return import(specifier)") as (
+      specifier: string,
+    ) => Promise<unknown>;
+    return (await dynamicImport("playwright")) as Awaited<ReturnType<typeof importOptionalPlaywright>>;
   } catch {
     return null;
   }
+}
+
+interface LivePage {
+  goto(url: string, options: { waitUntil: "domcontentloaded" }): Promise<unknown>;
+  pause(): Promise<void>;
+  content(): Promise<string>;
+  locator(selector: string): {
+    first(): {
+      count(): Promise<number>;
+      fill(value: string): Promise<void>;
+      click(): Promise<void>;
+    };
+  };
 }

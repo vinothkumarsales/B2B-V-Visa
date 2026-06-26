@@ -102,7 +102,9 @@ function applyChangeDetection(
   const changeDetectionStatus = detectChange(product, previous);
   const reviewStatus = changeDetectionStatus === "NO_CHANGE"
     ? product.reviewStatus
-    : "needs_review";
+    : product.reviewStatus === "REJECTED" || product.reviewStatus === "CONFLICT_REVIEW_REQUIRED"
+      ? product.reviewStatus
+      : "REVIEW_REQUIRED";
 
   return {
     ...product,
@@ -116,37 +118,30 @@ function detectChange(
   current: NormalizedSupplierProduct,
   previous?: NormalizedSupplierProduct,
 ): ChangeDetectionStatus {
+  if (current.available === false) return "PRODUCT_UNAVAILABLE";
   if (!previous) return "NEW_PRODUCT";
 
-  if (
-    current.netPrice !== previous.netPrice ||
-    current.currency !== previous.currency ||
-    JSON.stringify(current.priceLines ?? []) !== JSON.stringify(previous.priceLines ?? [])
-  ) {
+  if (current.commercialHash !== previous.commercialHash) {
     return "PRICE_CHANGED";
   }
 
-  const contentFields: Array<keyof NormalizedSupplierProduct> = [
-    "title",
-    "visaType",
-    "visaKind",
-    "entryType",
-    "validityDays",
-    "stayDays",
-    "processingTime",
-    "documents",
-    "stickerRequired",
-    "courierRequired",
-    "submissionCity",
-    "collectionCity",
-    "routeCities",
-  ];
+  if (current.documentsHash !== previous.documentsHash) {
+    return "DOCUMENTS_CHANGED";
+  }
 
-  const changed = contentFields.some((field) =>
-    JSON.stringify(current[field]) !== JSON.stringify(previous[field]),
-  );
+  if (current.processingHash !== previous.processingHash) {
+    return "PROCESSING_CHANGED";
+  }
 
-  return changed ? "CONTENT_CHANGED" : "NO_CHANGE";
+  if (current.routingHash !== previous.routingHash) {
+    return "ROUTING_CHANGED";
+  }
+
+  if (current.contentHash !== previous.contentHash) {
+    return "REVIEW_REQUIRED";
+  }
+
+  return "NO_CHANGE";
 }
 
 export async function writeReviewExport(

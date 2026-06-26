@@ -5,13 +5,14 @@ import { Info } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { buildVisaPriceBreakdown, formatMoneyMinor, getNonZeroPriceRows, rupeesToMinor } from '@/lib/pricing';
 import { cn } from '@/lib/utils';
-import type { VisaPricingLineItem } from '@/types';
+import type { VisaPricingLineItem, VisaPricingResult } from '@/types';
 
 interface PriceBreakdownPopoverProps {
   amount: number;
   currency?: string;
   quantity?: number;
   lineItems?: VisaPricingLineItem[];
+  pricingResult?: VisaPricingResult;
   className?: string;
 }
 
@@ -20,11 +21,19 @@ export function PriceBreakdownPopover({
   currency = 'INR',
   quantity = 1,
   lineItems,
+  pricingResult,
   className,
 }: PriceBreakdownPopoverProps) {
   const [open, setOpen] = useState(false);
-  const totalMinor = rupeesToMinor(amount);
-  const explicitRows = lineItems
+  const totalMinor = pricingResult?.visibleTotalMinor ?? rupeesToMinor(amount);
+  const currencyCode = pricingResult?.currency ?? currency;
+  const explicitRows = pricingResult?.popoverLines?.length
+    ? pricingResult.popoverLines.map((line) => ({
+        label: line.label,
+        amountMinor: line.amountMinor ?? rupeesToMinor(line.amount * (line.quantity ?? 1)),
+        emphasis: false,
+      }))
+    : lineItems
     ?.map((line) => ({
       label: line.label,
       amountMinor: line.amountMinor ?? rupeesToMinor(line.amount * (line.quantity ?? 1)),
@@ -36,7 +45,7 @@ export function PriceBreakdownPopover({
         ...explicitRows,
         { label: 'Total', amountMinor: totalMinor, emphasis: true },
       ]
-    : getNonZeroPriceRows(buildVisaPriceBreakdown(totalMinor, currency, undefined, quantity));
+    : getNonZeroPriceRows(buildVisaPriceBreakdown(totalMinor, currencyCode, undefined, quantity));
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -83,7 +92,7 @@ export function PriceBreakdownPopover({
                 )}
               >
                 <span>{row.label}</span>
-                <span className="font-mono">{formatMoneyMinor(row.amountMinor, currency)}</span>
+                <span className="font-mono">{formatMoneyMinor(row.amountMinor, currencyCode)}</span>
               </div>
             ))}
           </div>

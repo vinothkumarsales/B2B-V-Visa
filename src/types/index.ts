@@ -56,6 +56,8 @@ export type VisaPricingLineType =
   | 'OTHER';
 
 export type VisaStickerRouteType = 'SUBMISSION' | 'COLLECTION' | 'ROUND_TRIP';
+export type VisaStickerRouteKey = string | 'OTHER_INDIA';
+export type VisaPricingResolutionStatus = 'PRICED' | 'MANUAL_QUOTATION';
 
 export interface VisaDocumentRequirement {
   id: string;
@@ -79,6 +81,8 @@ export interface VisaDocumentRequirement {
   acceptedFormats?: string[];
   maxFileSizeMb?: number;
   appliesTo?: 'TRAVELER' | 'AGENCY' | 'SPONSOR' | 'GROUP';
+  conditionLabel?: string;
+  sortOrder?: number;
 }
 
 export interface VisaPricingLineItem {
@@ -98,6 +102,7 @@ export interface VisaStickerRoute {
   type: VisaStickerRouteType;
   origin: string;
   destination: string;
+  routeKey?: VisaStickerRouteKey;
   visaProductId?: string;
   originCityCode?: string;
   originCityLabel?: string;
@@ -112,6 +117,32 @@ export interface VisaStickerRoute {
   carrier?: string;
   estimatedDays?: number;
   notes?: string;
+}
+
+export interface VisaChecklistSection {
+  type: VisaDocumentRequirementType;
+  label: string;
+  items: VisaDocumentRequirement[];
+}
+
+export interface VisaChecklistResolution {
+  visaProductId: string;
+  uploadItems: VisaDocumentRequirement[];
+  sections: VisaChecklistSection[];
+}
+
+export interface VisaPricingResult {
+  status: VisaPricingResolutionStatus;
+  visaProductId: string;
+  currency: string;
+  quantity: number;
+  routeKey?: VisaStickerRouteKey;
+  matchedRouteId?: string;
+  manualQuotationRequired: boolean;
+  manualQuotationReason?: string;
+  price: VisaPrice;
+  visibleTotalMinor: number;
+  popoverLines: VisaPricingLineItem[];
 }
 
 export interface VisaCourierRules {
@@ -155,6 +186,33 @@ export interface VisaPrice {
   totalAmountMinor: number;
   currency: string;
   lines: VisaPricingLineItem[];
+}
+
+export interface ApprovedVisaProduct {
+  id: string;
+  status: 'APPROVED' | 'DRAFT' | 'ARCHIVED';
+  destination: string;
+  destinationCode?: string;
+  name: string;
+  category?: VisaCategory;
+  entry?: string;
+  entryType?: VisaEntryType;
+  visaKind?: VisaKind;
+  purpose?: string;
+  validity?: string;
+  duration?: string;
+  processingTime?: string;
+  price?: number;
+  priceMinor?: number;
+  currency?: string;
+  documents?: string[];
+  documentRequirements?: VisaType['documentRequirements'];
+  pricingLineItems?: VisaPricingLineItem[];
+  pricing?: VisaPrice;
+  stickerRoutes?: VisaStickerRoute[];
+  courierRules?: VisaCourierRules;
+  passportValidityRule?: VisaPassportValidityRule;
+  cutoffTime?: string;
 }
 
 export interface MinorGuardianLink {
@@ -264,7 +322,10 @@ export interface VisaType {
   documents: string[];
   documentRequirements?: {
     mandatory: VisaDocumentRequirement[];
+    conditional?: VisaDocumentRequirement[];
     optional: VisaDocumentRequirement[];
+    informational?: VisaDocumentRequirement[];
+    instructions?: VisaDocumentRequirement[];
   };
   pricingLineItems?: VisaPricingLineItem[];
   pricing?: VisaPrice;

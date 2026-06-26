@@ -7,6 +7,8 @@ import { useAppStore } from '@/store/app.store';
 import { mockVisaTypes } from '@/lib/mock-data';
 import { demoModeCopy } from '@/lib/demo-data';
 import { isDemoMode } from '@/lib/app-mode';
+import { resolveVisaChecklist } from '@/lib/checklist';
+import { formatMoneyMinor, resolveVisaPricing } from '@/lib/pricing';
 import type { VisaType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +17,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PriceBreakdownPopover } from '@/components/pricing/PriceBreakdownPopover';
 import { Search, ArrowRight, MapPin, Plane, Calendar, Zap, Clock, FileText } from 'lucide-react';
-import type { VisaDocumentRequirement, VisaStickerRoute } from '@/types';
+import type { VisaStickerRoute } from '@/types';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -24,10 +26,6 @@ const pageVariants = {
 };
 
 const PAGE_SIZE = 12;
-
-function formatINR(amount: number): string {
-  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
-}
 
 const categoryConfig: Record<string, { icon: React.ReactNode; color: string; bgColor: string; borderColor: string }> = {
   LIGHTNING_FAST: {
@@ -57,24 +55,6 @@ function getEstimatedArrival(processingTime: string): string {
   const date = new Date();
   date.setDate(date.getDate() + days + 2);
   return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
-function getDocumentGroups(visa: VisaType): { mandatory: VisaDocumentRequirement[]; optional: VisaDocumentRequirement[] } {
-  if (visa.documentRequirements) {
-    return {
-      mandatory: visa.documentRequirements.mandatory ?? [],
-      optional: visa.documentRequirements.optional ?? [],
-    };
-  }
-
-  return {
-    mandatory: visa.documents.map((doc, index) => ({
-      id: `${visa.id}-doc-${index}`,
-      label: doc,
-      requirement: 'MANDATORY',
-    })),
-    optional: [],
-  };
 }
 
 function getStickerRoutes(visa: VisaType): VisaStickerRoute[] {
@@ -352,6 +332,7 @@ export default function ExploreView() {
           const estArrival = getEstimatedArrival(visa.processingTime);
           const stickerRoutes = getStickerRoutes(visa);
           const isStickerVisa = visa.visaKind === 'STICKER_VISA';
+          const pricingResult = resolveVisaPricing(visa);
 
           return (
             <motion.div
@@ -433,9 +414,9 @@ export default function ExploreView() {
                   <div className="flex items-center justify-between pt-3 border-t border-vvisa-border">
                     <div className="flex items-center gap-1.5">
                       <span className="text-xl font-bold font-mono text-foreground">
-                        {formatINR(visa.price)}
+                        {formatMoneyMinor(pricingResult.visibleTotalMinor, pricingResult.currency)}
                       </span>
-                      <PriceBreakdownPopover amount={visa.price} currency={visa.currency} lineItems={visa.pricingLineItems} />
+                      <PriceBreakdownPopover amount={visa.price} currency={visa.currency} pricingResult={pricingResult} />
                     </div>
                     <Button
                       onClick={() => handleSelectVisa(visa)}
@@ -494,43 +475,25 @@ export default function ExploreView() {
                 Documents required for {selectedDocVisa.name}:
               </p>
               {(() => {
-                const groups = getDocumentGroups(selectedDocVisa);
+                const checklist = resolveVisaChecklist(selectedDocVisa);
                 return (
                   <div className="space-y-4">
-                    <div>
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-vvisa-text-muted">Mandatory (*)</p>
+                    {checklist.sections.map((section) => (
+                    <div key={section.type}>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-vvisa-text-muted">{section.label}</p>
                       <ul className="space-y-2">
-                        {groups.mandatory.map((doc) => (
+                        {section.items.map((doc) => (
                           <li
                             key={doc.id}
                             className="flex items-center gap-3 p-2.5 rounded-lg bg-vvisa-bg border border-vvisa-border"
                           >
                             <FileText className="h-4 w-4 text-primary shrink-0" />
-                            <span className="text-sm text-foreground">{doc.label} *</span>
+                            <span className="text-sm text-foreground">{doc.documentName || doc.label}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
-                    <div>
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-vvisa-text-muted">Optional</p>
-                      {groups.optional.length > 0 ? (
-                        <ul className="space-y-2">
-                          {groups.optional.map((doc) => (
-                            <li
-                              key={doc.id}
-                              className="flex items-center gap-3 p-2.5 rounded-lg bg-vvisa-bg border border-vvisa-border"
-                            >
-                              <FileText className="h-4 w-4 text-vvisa-text-muted shrink-0" />
-                              <span className="text-sm text-foreground">{doc.label}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="rounded-lg border border-vvisa-border bg-vvisa-bg p-2.5 text-sm text-vvisa-text-muted">
-                          No optional documents listed.
-                        </p>
-                      )}
-                    </div>
+                    ))}
                   </div>
                 );
               })()}

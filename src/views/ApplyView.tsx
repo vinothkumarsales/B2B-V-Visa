@@ -7,6 +7,8 @@ import { useAppStore } from '@/store/app.store';
 import { mockVisaTypes } from '@/lib/mock-data';
 import { demoModeCopy } from '@/lib/demo-data';
 import { isDemoMode } from '@/lib/app-mode';
+import { getRequiredAdditionalDocs as resolveRequiredAdditionalDocs } from '@/lib/checklist';
+import { formatMoneyMinor, resolveVisaPricing } from '@/lib/pricing';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -871,18 +873,22 @@ export default function ApplyView() {
 
   const requiredDocs = useMemo(() => {
     if (!activeVisaType) return [];
-    return getRequiredAdditionalDocs(activeVisaType);
+    return resolveRequiredAdditionalDocs(activeVisaType);
   }, [activeVisaType]);
 
   const requiredDocKeys = useMemo(() => requiredDocs.map((d) => d.key), [requiredDocs]);
   const stickerRoutes = useMemo(() => activeVisaType ? getStickerRoutes(activeVisaType) : [], [activeVisaType]);
   const isStickerVisa = activeVisaType?.visaKind === 'STICKER_VISA';
-  const selectedPassportOriginCity = passportOriginCity || stickerRoutes[0]?.id || '';
+  const selectedPassportOriginCity = passportOriginCity;
 
   const [travelers, setTravelers] = useState<TravelerData[]>(() => [createEmptyTraveler(0, requiredDocKeys)]);
-  const totalPricingLineItems = useMemo(
-    () => scalePricingLineItems(activeVisaType?.pricingLineItems, travelers.length),
-    [activeVisaType?.pricingLineItems, travelers.length]
+  const pricingResult = useMemo(
+    () => resolveVisaPricing(activeVisaType, { quantity: travelers.length, routeKey: selectedPassportOriginCity || undefined }),
+    [activeVisaType, selectedPassportOriginCity, travelers.length]
+  );
+  const singleTravelerPricingResult = useMemo(
+    () => resolveVisaPricing(activeVisaType, { quantity: 1, routeKey: selectedPassportOriginCity || undefined }),
+    [activeVisaType, selectedPassportOriginCity]
   );
 
   useEffect(() => {
@@ -891,15 +897,15 @@ export default function ApplyView() {
     }
   }, [activeVisaType, selectedVisaType, setSelectedVisaType]);
 
-  const pricePerTraveler = activeVisaType?.price || 13499;
-  const total = pricePerTraveler * travelers.length;
+  const pricePerTraveler = Math.round(singleTravelerPricingResult.visibleTotalMinor / 100);
+  const total = Math.round(pricingResult.visibleTotalMinor / 100);
 
   const validationIssues = useMemo(() => validateApplicants(travelers, travelDate), [travelers, travelDate]);
   const blockingValidationIssues = useMemo(
     () => validationIssues.filter((issue) => issue.blocksSubmit),
     [validationIssues]
   );
-  const canSubmit = Boolean(activeVisaType) && walletBalance >= total && blockingValidationIssues.length === 0;
+  const canSubmit = Boolean(activeVisaType) && walletBalance >= total && blockingValidationIssues.length === 0 && !pricingResult.manualQuotationRequired;
 
   const handleTravelDateChange = useCallback((nextTravelDate: string) => {
     setTravelDate(nextTravelDate);
@@ -1125,12 +1131,12 @@ export default function ApplyView() {
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-bold font-mono text-primary">
-                  {formatINR(activeVisaType.price)}
+                  {formatMoneyMinor(singleTravelerPricingResult.visibleTotalMinor, singleTravelerPricingResult.currency)}
                 </span>
                 <PriceBreakdownPopover
                   amount={activeVisaType.price}
                   currency={activeVisaType.currency}
-                  lineItems={activeVisaType.pricingLineItems}
+                  pricingResult={singleTravelerPricingResult}
                 />
               </div>
             </div>
@@ -1148,11 +1154,14 @@ export default function ApplyView() {
                     className="h-10 w-full rounded-lg border border-amber-800/40 bg-vvisa-bg px-3 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {stickerRoutes.length > 0 ? (
-                      stickerRoutes.map((route) => (
-                        <option key={route.id} value={route.id}>
-                          {route.originCityLabel ?? route.origin}
-                        </option>
-                      ))
+                      <>
+                        <option value="">Other India / choose city</option>
+                        {stickerRoutes.map((route) => (
+                          <option key={route.id} value={route.id}>
+                            {route.originCityLabel ?? route.origin}
+                          </option>
+                        ))}
+                      </>
                     ) : (
                       <option value="">Manual quotation required</option>
                     )}
@@ -1160,9 +1169,14 @@ export default function ApplyView() {
                 </div>
                 <p className="text-xs leading-5 text-amber-200/80">
                   {stickerRoutes.length > 0
-                    ? 'Sticker visas require passport handover. Pricing can include route-specific courier or centre handling when provided.'
+                    ? 'Sticker visas require passport handover. Pricing uses the selected route when mapped, falls back to other India, or needs manual quotation.'
                     : 'No passport route is mapped for this sticker visa yet. Save the application for manual quotation before final confirmation.'}
                 </p>
+                {pricingResult.manualQuotationRequired && (
+                  <p className="mt-2 text-xs font-medium text-amber-200">
+                    Manual quotation required before final confirmation.
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -1264,7 +1278,7 @@ export default function ApplyView() {
                         <PriceBreakdownPopover
                           amount={pricePerTraveler}
                           currency={activeVisaType?.currency}
-                          lineItems={activeVisaType?.pricingLineItems}
+                          pricingResult={singleTravelerPricingResult}
                         />
                       </span>
                     </div>
@@ -1276,12 +1290,12 @@ export default function ApplyView() {
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-sm font-semibold text-foreground">Total ({travelers.length} traveler{travelers.length > 1 ? 's' : ''})</span>
                   <span className="flex items-center gap-1.5">
-                    <span className="text-lg font-bold font-mono text-foreground">{formatINR(total)}</span>
+                    <span className="text-lg font-bold font-mono text-foreground">{formatMoneyMinor(pricingResult.visibleTotalMinor, pricingResult.currency)}</span>
                     <PriceBreakdownPopover
                       amount={total}
                       currency={activeVisaType?.currency}
                       quantity={travelers.length}
-                      lineItems={totalPricingLineItems}
+                      pricingResult={pricingResult}
                     />
                   </span>
                 </div>
@@ -1402,12 +1416,12 @@ export default function ApplyView() {
                     <div className="bg-vvisa-bg rounded-lg p-3">
                       <p className="text-vvisa-text-muted">{demoMode ? 'Amount Preview' : 'Amount Debited'}</p>
                       <div className="mt-0.5 flex items-center gap-1.5">
-                        <p className="text-foreground font-mono font-medium">{formatINR(total)}</p>
+                        <p className="text-foreground font-mono font-medium">{formatMoneyMinor(pricingResult.visibleTotalMinor, pricingResult.currency)}</p>
                         <PriceBreakdownPopover
                           amount={total}
                           currency={activeVisaType?.currency}
                           quantity={travelers.length}
-                          lineItems={totalPricingLineItems}
+                          pricingResult={pricingResult}
                         />
                       </div>
                     </div>

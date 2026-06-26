@@ -4,6 +4,7 @@ export interface LoadSupplierCatalogueInput {
   supplierId: SupplierId;
   mode: ImportMode;
   sourceFile?: string;
+  fixture?: string;
 }
 
 export interface LoadSupplierCatalogueResult {
@@ -19,7 +20,7 @@ export interface SupplierCatalogueProvider {
 }
 
 export function assertNoLiveLogin(mode: ImportMode): void {
-  if (mode !== "sample" && mode !== "local") {
-    throw new Error("Live supplier login is intentionally unsupported for supplier catalogue import");
+  if (mode === "live") {
+    throw new Error("Live supplier login is intentionally unsupported for this provider");
   }
 }

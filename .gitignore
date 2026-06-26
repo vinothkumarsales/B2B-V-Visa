@@ -46,6 +46,8 @@ worklog.md
 *.tar
 *.tar.gz
 *.zip
+.runtime/browser-sessions/
+data/supplier-imports/raw/live-session/
 
 # vercel
 .vercel

@@ -12,6 +12,7 @@ interface CliOptions {
   limit: number;
   mode: ImportMode;
   sourceFile?: string;
+  fixture?: string;
   output?: string;
 }
 
@@ -21,6 +22,7 @@ async function main(): Promise<void> {
     supplierId: options.supplier,
     mode: options.mode,
     sourceFile: options.sourceFile,
+    fixture: options.fixture,
   });
 
   const normalizedDestination = normalizeCountry(options.destination);
@@ -33,7 +35,7 @@ async function main(): Promise<void> {
   const dedupe = dedupeProducts(validated);
   const output = options.output ?? defaultOutputPath(options.supplier, normalizedDestination);
   const previousProducts = await loadLatestReviewProducts({
-    reviewDir: resolve("data", "supplier-imports", "reviews"),
+    reviewDir: resolve("data", "supplier-imports", "review"),
     supplierId: options.supplier,
     destinationSlug: slugify(normalizedDestination),
   });
@@ -85,14 +87,14 @@ function parseArgs(args: string[]): CliOptions {
   const supplier = values.get("supplier") ?? "stampmyvisa";
   const destination = values.get("destination") ?? "United Arab Emirates";
   const limit = Math.min(Number(values.get("limit") ?? 5), 5);
-  const mode = (values.get("mode") ?? "sample") as ImportMode;
+  const mode = (values.get("mode") ?? "saved-html") as ImportMode;
 
   if (!Number.isFinite(limit) || limit < 1) {
     throw new Error("--limit must be between 1 and 5");
   }
 
-  if (mode !== "sample" && mode !== "local") {
-    throw new Error("--mode must be sample or local; live supplier login is intentionally unsupported here");
+  if (!["saved-html", "live"].includes(mode)) {
+    throw new Error("--mode must be saved-html or live");
   }
 
   return {
@@ -101,6 +103,7 @@ function parseArgs(args: string[]): CliOptions {
     limit,
     mode,
     sourceFile: values.get("source-file"),
+    fixture: values.get("fixture"),
     output: values.get("output"),
   };
 }
@@ -110,7 +113,7 @@ function defaultOutputPath(supplier: SupplierId, destination: string): string {
   return resolve(
     "data",
     "supplier-imports",
-    "reviews",
+    "review",
     `${date}-${supplier}-${slugify(destination)}.review.json`,
   );
 }
