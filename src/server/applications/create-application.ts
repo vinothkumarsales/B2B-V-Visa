@@ -110,8 +110,11 @@ export async function createIndividualApplication(input: {
 
   await queueZohoCrmEvent({
     agencyId: input.agencyId,
-    eventType: 'APPLICATION_CREATED',
+    eventType: 'APPLICATION_SYNC',
     idempotencyKey: `zoho-crm:application-created:${application.id}`,
+    entityType: 'VisaApplication',
+    entityId: application.id,
+    aggregateId: application.id,
     payload: { applicationId: application.id, agencyId: input.agencyId },
   });
 

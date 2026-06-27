@@ -68,8 +68,11 @@ export async function POST(request: NextRequest) {
 
     await queueZohoCrmEvent({
       agencyId: paymentOrder.agencyId,
-      eventType: 'PAYMENT_CONFIRMED',
+      eventType: 'TRANSACTION_CREATE',
       idempotencyKey: `zoho-crm:payment-confirmed:${paymentOrder.id}`,
+      entityType: 'PaymentOrder',
+      entityId: paymentOrder.id,
+      aggregateId: paymentOrder.applicationId ?? paymentOrder.id,
       payload: { paymentOrderId: paymentOrder.id, applicationId: paymentOrder.applicationId },
     });
   }

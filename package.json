@@ -14,7 +14,18 @@
     "db:reset": "prisma migrate reset",
     "supplier:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/supplier-catalogue/run-supplier-import.ts",
     "catalogue:review": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/supplier-catalogue/catalogue-review.ts",
-    "catalogue:publish": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/supplier-catalogue/catalogue-publish.ts"
+    "catalogue:publish": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/supplier-catalogue/catalogue-publish.ts",
+    "probe:zoho-auth": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/zoho-auth.ts",
+    "probe:zoho-modules": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/zoho-modules.ts",
+    "probe:travel-agent-read": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/travel-agent-read.ts",
+    "probe:travel-agent-upsert": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/write-probe-disabled.ts travel-agent-upsert",
+    "probe:visa-lead": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/write-probe-disabled.ts visa-lead",
+    "probe:lead-conversion": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/write-probe-disabled.ts lead-conversion",
+    "probe:crm-attachment": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/write-probe-disabled.ts crm-attachment",
+    "probe:storage": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/storage.ts",
+    "probe:digio": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/digio.ts",
+    "probe:zoho-payments": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/zoho-payments.ts",
+    "probe:integrations": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/integrations.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
