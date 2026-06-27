@@ -4,6 +4,14 @@ function requirementLabel(requirement: VisaDocumentRequirement): string {
   return requirement.documentName || requirement.label;
 }
 
+function normalizeDestinationName(destination: string): string {
+  const normalized = destination.trim().toLowerCase();
+  if (normalized === 'uae' || normalized === 'u.a.e.') return 'United Arab Emirates';
+  if (normalized === 'uk' || normalized === 'u.k.') return 'United Kingdom';
+  if (normalized === 'usa' || normalized === 'u.s.a.') return 'United States';
+  return destination;
+}
+
 export function buildCatalogueFromApprovedProducts(
   products: ApprovedVisaProduct[],
   fallbackCatalogue: VisaType[] = []
@@ -21,7 +29,7 @@ export function buildCatalogueFromApprovedProducts(
 
       return {
         id: product.id,
-        destination: product.destination,
+        destination: normalizeDestinationName(product.destination),
         destinationCode: product.destinationCode,
         name: product.name,
         category: product.category ?? 'STANDARD',
@@ -52,5 +60,16 @@ export function buildCatalogueFromApprovedProducts(
 
   if (approved.length === 0) return fallbackCatalogue;
 
-  return approved;
+  const approvedKeys = new Set(
+    approved.map((visa) => `${visa.destination.toLowerCase()}::${visa.name.toLowerCase()}`),
+  );
+  const approvedIds = new Set(approved.map((visa) => visa.id));
+  const fallback = fallbackCatalogue
+    .map((visa) => ({ ...visa, destination: normalizeDestinationName(visa.destination) }))
+    .filter((visa) => {
+      const key = `${visa.destination.toLowerCase()}::${visa.name.toLowerCase()}`;
+      return !approvedIds.has(visa.id) && !approvedKeys.has(key);
+    });
+
+  return [...approved, ...fallback];
 }

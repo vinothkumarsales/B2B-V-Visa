@@ -17,7 +17,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PriceBreakdownPopover } from '@/components/pricing/PriceBreakdownPopover';
 import { VisaAttributeBadges } from '@/components/visa/VisaAttributeBadges';
-import { Search, ArrowRight, MapPin, Plane, Calendar, Zap, Clock, FileText } from 'lucide-react';
+import { Search, ArrowRight, MapPin, Plane, Calendar, Zap, Clock, FileText, ChevronDown } from 'lucide-react';
 import type { VisaStickerRoute } from '@/types';
 
 const pageVariants = {
@@ -27,6 +27,7 @@ const pageVariants = {
 };
 
 const PAGE_SIZE = 12;
+const purposeOptions = ['Tourist', 'Business', 'Transit'] as const;
 
 const categoryConfig: Record<string, { icon: React.ReactNode; color: string; bgColor: string; borderColor: string }> = {
   LIGHTNING_FAST: {
@@ -66,11 +67,9 @@ export default function ExploreView() {
   const router = useRouter();
   const { navigate, setSelectedVisaType } = useAppStore();
   const [goingTo, setGoingTo] = useState('');
+  const [purposeFilter, setPurposeFilter] = useState<(typeof purposeOptions)[number]>('Tourist');
   const [travelDate, setTravelDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
-  const [countryFilter, setCountryFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [processingFilter, setProcessingFilter] = useState('all');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [showDropdown, setShowDropdown] = useState(false);
   const [docDialogOpen, setDocDialogOpen] = useState(false);
@@ -93,28 +92,23 @@ export default function ExploreView() {
         !query ||
         visa.destination.toLowerCase().includes(query) ||
         visa.name.toLowerCase().includes(query);
-      const matchesCountry = countryFilter === 'all' || visa.destination === countryFilter;
-      const matchesCategory = categoryFilter === 'all' || visa.category === categoryFilter;
-      const processingDays = parseInt(visa.processingTime) || 0;
-      const matchesProcessing =
-        processingFilter === 'all' ||
-        (processingFilter === 'same-day' && visa.processingTime.toLowerCase().includes('hour')) ||
-        (processingFilter === 'fast' && !visa.processingTime.toLowerCase().includes('hour') && processingDays <= 5) ||
-        (processingFilter === 'standard' && processingDays > 5);
+      const purposeText = `${visa.purpose ?? ''} ${visa.name}`.toLowerCase();
+      const matchesPurpose =
+        purposeText.includes(purposeFilter.toLowerCase()) ||
+        (purposeFilter === 'Tourist' && !purposeText.includes('business') && !purposeText.includes('transit'));
 
-      return matchesQuery && matchesCountry && matchesCategory && matchesProcessing;
+      return matchesQuery && matchesPurpose;
     });
-  }, [categoryFilter, countryFilter, goingTo, processingFilter]);
+  }, [goingTo, purposeFilter]);
 
   const visibleVisas = filteredVisas.slice(0, visibleCount);
-  const hasActiveFilters =
-    goingTo.trim() || countryFilter !== 'all' || categoryFilter !== 'all' || processingFilter !== 'all';
+  const hasActiveFilters = Boolean(goingTo.trim()) || purposeFilter !== 'Tourist';
 
   useEffect(() => {
-    const hasDestinationContext = Boolean(goingTo.trim()) || countryFilter !== 'all';
+    const hasDestinationContext = Boolean(goingTo.trim());
     sessionStorage.setItem('vvisa:workflowDetailActive', hasDestinationContext ? 'true' : 'false');
     window.dispatchEvent(new CustomEvent('vvisa:workflow-detail-change', { detail: hasDestinationContext }));
-  }, [countryFilter, goingTo]);
+  }, [goingTo]);
 
   const handleSearch = () => {
     setVisibleCount(PAGE_SIZE);
@@ -123,16 +117,13 @@ export default function ExploreView() {
 
   const handleSelectDestination = (dest: string) => {
     setGoingTo(dest);
-    setCountryFilter(dest);
     setVisibleCount(PAGE_SIZE);
     setShowDropdown(false);
   };
 
   const clearFilters = () => {
     setGoingTo('');
-    setCountryFilter('all');
-    setCategoryFilter('all');
-    setProcessingFilter('all');
+    setPurposeFilter('Tourist');
     setVisibleCount(PAGE_SIZE);
   };
 
@@ -164,6 +155,31 @@ export default function ExploreView() {
       <div className="sticky top-0 z-30 -mx-4 bg-[var(--vvisa-backdrop)] px-4 pt-2 pb-4 backdrop-blur-xl sm:-mx-5 sm:px-5 lg:-mx-7 lg:px-7">
         <Card className="vv-surface-elevated rounded-xl border">
           <CardContent className="p-4">
+            <div className="mb-4">
+              <label className="block text-xs text-vvisa-text-secondary mb-2 font-semibold">Select Travel Purpose</label>
+              <div className="grid max-w-[520px] grid-cols-3 rounded-full border border-vvisa-border-subtle bg-white p-1 shadow-[var(--vvisa-shadow-sm)] dark:bg-vvisa-surface-2">
+                {purposeOptions.map((purpose) => {
+                  const selected = purposeFilter === purpose;
+                  return (
+                    <button
+                      key={purpose}
+                      type="button"
+                      onClick={() => {
+                        setPurposeFilter(purpose);
+                        setVisibleCount(PAGE_SIZE);
+                      }}
+                      className={`h-10 rounded-full text-sm font-semibold transition-all duration-200 ${
+                        selected
+                          ? 'bg-neutral-950 text-white shadow-[var(--vvisa-shadow-sm)] dark:bg-white dark:text-neutral-950'
+                          : 'text-vvisa-text-secondary hover:bg-vvisa-surface-2 hover:text-foreground'
+                      }`}
+                    >
+                      {purpose}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <div className="flex flex-col lg:flex-row gap-3 items-end">
               <div className="flex-1 w-full lg:w-auto">
                 <label className="block text-xs text-vvisa-text-secondary mb-1.5 font-medium">From</label>
@@ -189,25 +205,38 @@ export default function ExploreView() {
                     }}
                     onFocus={() => setShowDropdown(true)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Search destination..."
-                    className="pl-9 pr-3"
+                    placeholder="Search or select destination"
+                    className="pl-9 pr-10"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowDropdown((value) => !value)}
+                    className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-vvisa-text-muted transition-colors hover:bg-vvisa-surface-2 hover:text-foreground"
+                    aria-label="Open country list"
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
                   <AnimatePresence>
-                    {showDropdown && goingTo.length > 0 && filteredDestinations.length > 0 && (
+                    {showDropdown && filteredDestinations.length > 0 && (
                       <motion.div
                         initial={{ opacity: 0, y: -4 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -4 }}
-                        className="absolute top-full left-0 right-0 z-50 mt-2 max-h-48 overflow-y-auto rounded-xl border border-vvisa-border-subtle bg-vvisa-surface shadow-[var(--vvisa-shadow-md)]"
+                        className="absolute top-full left-0 right-0 z-50 mt-2 max-h-72 overflow-y-auto rounded-2xl border border-vvisa-border-subtle bg-white p-1.5 shadow-[var(--vvisa-shadow-lg)] dark:bg-vvisa-surface"
                       >
                         {filteredDestinations.map((dest) => (
                           <button
                             key={dest}
                             onClick={() => handleSelectDestination(dest)}
-                            className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-vvisa-surface-2"
+                            className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm text-foreground transition-colors hover:bg-vvisa-surface-2"
                           >
-                            <Plane className="h-3.5 w-3.5 text-vvisa-text-muted" />
-                            {dest}
+                            <span className="flex items-center gap-2">
+                              <Plane className="h-3.5 w-3.5 text-primary" />
+                              {dest}
+                            </span>
+                            <span className="text-xs text-vvisa-text-muted">
+                              {mockVisaTypes.filter((visa) => visa.destination === dest).length} options
+                            </span>
                           </button>
                         ))}
                       </motion.div>
@@ -246,56 +275,6 @@ export default function ExploreView() {
                 <Search className="h-4 w-4" />
                 Search
               </Button>
-            </div>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs text-vvisa-text-secondary mb-1.5 font-medium">Country</label>
-                <select
-                  value={countryFilter}
-                  onChange={(event) => {
-                    setCountryFilter(event.target.value);
-                    setVisibleCount(PAGE_SIZE);
-                  }}
-                  className="h-10 w-full rounded-lg border border-vvisa-border bg-vvisa-surface px-3 text-sm text-foreground shadow-[var(--vvisa-shadow-sm)]"
-                >
-                  <option value="all">All countries</option>
-                  {countries.map((country) => (
-                    <option key={country} value={country}>{country}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-vvisa-text-secondary mb-1.5 font-medium">Visa category</label>
-                <select
-                  value={categoryFilter}
-                  onChange={(event) => {
-                    setCategoryFilter(event.target.value);
-                    setVisibleCount(PAGE_SIZE);
-                  }}
-                  className="h-10 w-full rounded-lg border border-vvisa-border bg-vvisa-surface px-3 text-sm text-foreground shadow-[var(--vvisa-shadow-sm)]"
-                >
-                  <option value="all">All categories</option>
-                  <option value="LIGHTNING_FAST">Lightning fast</option>
-                  <option value="STANDARD">Standard</option>
-                  <option value="MULTI_ENTRY">Multiple entry</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-vvisa-text-secondary mb-1.5 font-medium">Processing type</label>
-                <select
-                  value={processingFilter}
-                  onChange={(event) => {
-                    setProcessingFilter(event.target.value);
-                    setVisibleCount(PAGE_SIZE);
-                  }}
-                  className="h-10 w-full rounded-lg border border-vvisa-border bg-vvisa-surface px-3 text-sm text-foreground shadow-[var(--vvisa-shadow-sm)]"
-                >
-                  <option value="all">All processing</option>
-                  <option value="same-day">Same-day / hours</option>
-                  <option value="fast">Fast, 5 days or less</option>
-                  <option value="standard">Standard, over 5 days</option>
-                </select>
-              </div>
             </div>
           </CardContent>
         </Card>
