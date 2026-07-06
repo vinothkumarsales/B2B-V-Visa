@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
+import { loginSchema, type LoginPayload } from '@/lib/auth/login-schema';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,13 +19,6 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
-
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
 
 const features = [
   {
@@ -45,6 +38,22 @@ const features = [
   },
 ];
 
+function loginErrorMessage(code?: string) {
+  switch (code) {
+    case 'INVALID_JSON':
+    case 'INVALID_REQUEST_BODY':
+      return 'Please enter a valid email and password.';
+    case 'BOOTSTRAP_LOGIN_DISABLED':
+      return 'Admin bootstrap login is currently disabled.';
+    case 'INVALID_CREDENTIALS':
+      return 'The email or password is incorrect.';
+    case 'ACCOUNT_LOCKED':
+      return 'Too many failed attempts. Try again later.';
+    default:
+      return 'Login failed. Please try again.';
+  }
+}
+
 export default function LoginView() {
   const router = useRouter();
   const navigate = useAppStore((s) => s.navigate);
@@ -57,7 +66,7 @@ export default function LoginView() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormData>({
+  } = useForm<LoginPayload>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
@@ -65,18 +74,21 @@ export default function LoginView() {
     },
   });
 
-  const onSubmit = async (values: LoginFormData) => {
+  const onSubmit = async (values: LoginPayload) => {
     setSubmitting(true);
     setServerError('');
     try {
       const response = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          email: values.email.trim().toLowerCase(),
+          password: values.password,
+        }),
       });
       const data = await response.json();
       if (!response.ok) {
-        setServerError(data?.error?.message ?? data?.error ?? 'Login failed');
+        setServerError(loginErrorMessage(data?.error?.code));
         return;
       }
       if (data.agency) {

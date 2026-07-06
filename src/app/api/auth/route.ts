@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 import { db } from '@/lib/db';
 import { apiError, isApiResponse } from '@/lib/api-response';
+import { loginSchema } from '@/lib/auth/login-schema';
 import { createSession, getSession } from '@/server/auth/session';
 import { hashPassword, verifyPassword } from '@/server/auth/password';
 import { auditLog } from '@/server/audit/audit-log';
 import { isBootstrapAdminEmail } from '@/server/admin/permissions';
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
 
 const BOOTSTRAP_LOCKOUT_MS = 15 * 60 * 1000;
 const BOOTSTRAP_MAX_FAILURES = 5;
@@ -27,15 +22,19 @@ function getBootstrapAttemptStore() {
 }
 
 function isBootstrapEnabled() {
-  return process.env.ADMIN_BOOTSTRAP_LOGIN_ENABLED === 'true';
+  return process.env.ADMIN_BOOTSTRAP_LOGIN_ENABLED?.trim().toLowerCase() === 'true';
 }
 
 function verifyBootstrapSecret(password: string) {
-  const configuredHash = process.env.ADMIN_BOOTSTRAP_PASSWORD_HASH;
+  const configuredHash = process.env.ADMIN_BOOTSTRAP_PASSWORD_HASH?.trim();
   if (configuredHash) return verifyPassword(password, configuredHash);
 
   const configuredPassword = process.env.ADMIN_BOOTSTRAP_PASSWORD;
   return Boolean(configuredPassword) && password === configuredPassword;
+}
+
+function loginError(code: string, message: string, status: number, fields?: unknown) {
+  return NextResponse.json({ error: { code, message, fields } }, { status });
 }
 
 async function recordBootstrapFailure(input: { email: string; userId?: string | null; reason: string }) {
@@ -84,9 +83,21 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const parsed = loginSchema.safeParse(await request.json());
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return loginError('INVALID_JSON', 'The request body must be valid JSON.', 400);
+    }
+
+    const parsed = loginSchema.safeParse(body);
     if (!parsed.success) {
-      return apiError('INVALID_INPUT', 'Email and password are required', 400);
+      return loginError(
+        'INVALID_REQUEST_BODY',
+        'Please enter a valid email and password.',
+        400,
+        parsed.error.flatten().fieldErrors,
+      );
     }
 
     const email = parsed.data.email.trim().toLowerCase();
@@ -101,15 +112,15 @@ export async function POST(request: NextRequest) {
     if (isAdminBootstrapCandidate && !user) {
       if (!isBootstrapEnabled()) {
         await recordBootstrapFailure({ email, reason: 'bootstrap_disabled' });
-        return apiError('AUTH_REQUIRED', 'Invalid credentials', 401);
+        return loginError('BOOTSTRAP_LOGIN_DISABLED', 'Admin bootstrap login is currently unavailable.', 403);
       }
       if (isBootstrapLocked(email)) {
         await recordBootstrapFailure({ email, reason: 'bootstrap_locked' });
-        return apiError('AUTH_REQUIRED', 'Invalid credentials', 401);
+        return loginError('ACCOUNT_LOCKED', 'Too many failed attempts. Try again later.', 423);
       }
       if (!verifyBootstrapSecret(parsed.data.password)) {
         await recordBootstrapFailure({ email, reason: 'invalid_bootstrap_secret' });
-        return apiError('AUTH_REQUIRED', 'Invalid credentials', 401);
+        return loginError('INVALID_CREDENTIALS', 'The email or password is incorrect.', 401);
       }
 
       isAdminBootstrapLogin = true;
@@ -127,8 +138,10 @@ export async function POST(request: NextRequest) {
     if (user && isAdminBootstrapCandidate && !passwordAccepted && !isAdminBootstrapLogin) {
       if (!isBootstrapEnabled()) {
         await recordBootstrapFailure({ email, userId: user.id, reason: 'bootstrap_disabled' });
+        return loginError('BOOTSTRAP_LOGIN_DISABLED', 'Admin bootstrap login is currently unavailable.', 403);
       } else if (isBootstrapLocked(email)) {
         await recordBootstrapFailure({ email, userId: user.id, reason: 'bootstrap_locked' });
+        return loginError('ACCOUNT_LOCKED', 'Too many failed attempts. Try again later.', 423);
       } else if (verifyBootstrapSecret(parsed.data.password)) {
         isAdminBootstrapLogin = true;
       } else {
@@ -137,7 +150,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user || (!passwordAccepted && !isAdminBootstrapLogin)) {
-      return apiError('AUTH_REQUIRED', 'Invalid credentials', 401);
+      return loginError('INVALID_CREDENTIALS', 'The email or password is incorrect.', 401);
     }
     if (isAdminBootstrapLogin) clearBootstrapFailures(email);
 
@@ -165,6 +178,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     if (isApiResponse(error)) return error;
-    return apiError('INVALID_INPUT', 'Invalid request body', 400);
+    return loginError('LOGIN_FAILED', 'Login failed. Please try again.', 500);
   }
 }
