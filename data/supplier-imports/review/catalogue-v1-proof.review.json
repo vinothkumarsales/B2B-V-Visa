@@ -1,0 +1,235 @@
+{
+  "metadata": {
+    "generatedAt": "2026-06-26T16:53:22.574Z",
+    "version": "catalogue-v1-proof",
+    "status": "REVIEW_REQUIRED",
+    "activeSuppliers": [
+      "stampmyvisa",
+      "visa2fly"
+    ],
+    "officialVerification": "required-before-final-filing"
+  },
+  "summary": {
+    "totalProducts": 7,
+    "destinations": [
+      "Portugal",
+      "South Korea",
+      "Turkey",
+      "United Arab Emirates",
+      "United Kingdom"
+    ],
+    "stickerProducts": 4,
+    "eVisaProducts": 3,
+    "mandatoryDocuments": 22,
+    "conditionalDocuments": 7,
+    "optionalDocuments": 7,
+    "informationalRules": 7,
+    "jurisdictionRules": 6
+  },
+  "sourceReferences": [
+    "StampMyVisa approved demo catalogue seed",
+    "Visa2Fly public reference: https://visa2fly.com/",
+    "Visa2Fly UK public reference: https://visa2fly.com/visa/united-kingdom/180-days-multiple-entry"
+  ],
+  "newProducts": [
+    {
+      "id": "stampmyvisa-ae-evisa-30",
+      "destination": "United Arab Emirates",
+      "name": "Dubai Tourist Visa - 30 Days",
+      "visaKind": "E_VISA",
+      "entryType": "SINGLE",
+      "status": "APPROVED"
+    },
+    {
+      "id": "stampmyvisa-ae-sticker-90",
+      "destination": "United Arab Emirates",
+      "name": "UAE E-Visa - 90 Days",
+      "visaKind": "E_VISA",
+      "entryType": "SINGLE",
+      "status": "APPROVED"
+    },
+    {
+      "id": "prod-uk-standard-visitor-180-multiple",
+      "destination": "United Kingdom",
+      "name": "UK Standard Visitor Visa - 180 Days",
+      "visaKind": "STICKER_VISA",
+      "entryType": "MULTIPLE",
+      "status": "APPROVED"
+    },
+    {
+      "id": "prod-portugal-schengen-tourist-90",
+      "destination": "Portugal",
+      "name": "Portugal Schengen Tourist Visa - 90 Days",
+      "visaKind": "STICKER_VISA",
+      "entryType": "MULTIPLE",
+      "status": "APPROVED"
+    },
+    {
+      "id": "prod-south-korea-tourist-90",
+      "destination": "South Korea",
+      "name": "South Korea Tourist Visa - 90 Days",
+      "visaKind": "STICKER_VISA",
+      "entryType": "SINGLE",
+      "status": "APPROVED"
+    },
+    {
+      "id": "prod-turkey-evisa-30",
+      "destination": "Turkey",
+      "name": "Turkey E-Visa - 30 Days",
+      "visaKind": "E_VISA",
+      "entryType": "SINGLE",
+      "status": "APPROVED"
+    },
+    {
+      "id": "prod-turkey-sticker-90",
+      "destination": "Turkey",
+      "name": "Turkey Sticker Visa - 90 Days",
+      "visaKind": "STICKER_VISA",
+      "entryType": "SINGLE",
+      "status": "APPROVED"
+    }
+  ],
+  "changedProducts": [],
+  "removedOrUnavailableProducts": [],
+  "visaTypeChanges": [],
+  "priceChanges": [],
+  "documentChanges": [
+    {
+      "id": "stampmyvisa-ae-evisa-30",
+      "mandatory": 2,
+      "conditional": 1,
+      "optional": 1,
+      "informational": 1
+    },
+    {
+      "id": "stampmyvisa-ae-sticker-90",
+      "mandatory": 2,
+      "conditional": 1,
+      "optional": 1,
+      "informational": 1
+    },
+    {
+      "id": "prod-uk-standard-visitor-180-multiple",
+      "mandatory": 5,
+      "conditional": 2,
+      "optional": 1,
+      "informational": 1
+    },
+    {
+      "id": "prod-portugal-schengen-tourist-90",
+      "mandatory": 5,
+      "conditional": 1,
+      "optional": 1,
+      "informational": 1
+    },
+    {
+      "id": "prod-south-korea-tourist-90",
+      "mandatory": 3,
+      "conditional": 1,
+      "optional": 1,
+      "informational": 1
+    },
+    {
+      "id": "prod-turkey-evisa-30",
+      "mandatory": 2,
+      "conditional": 1,
+      "optional": 1,
+      "informational": 1
+    },
+    {
+      "id": "prod-turkey-sticker-90",
+      "mandatory": 3,
+      "conditional": 0,
+      "optional": 1,
+      "informational": 1
+    }
+  ],
+  "courierAndRouteChanges": [
+    {
+      "id": "stampmyvisa-ae-sticker-90",
+      "stickerRoutes": 0,
+      "jurisdictions": 0,
+      "verificationRequired": false
+    },
+    {
+      "id": "prod-uk-standard-visitor-180-multiple",
+      "stickerRoutes": 0,
+      "jurisdictions": 1,
+      "verificationRequired": true
+    },
+    {
+      "id": "prod-portugal-schengen-tourist-90",
+      "stickerRoutes": 0,
+      "jurisdictions": 2,
+      "verificationRequired": true
+    },
+    {
+      "id": "prod-south-korea-tourist-90",
+      "stickerRoutes": 0,
+      "jurisdictions": 1,
+      "verificationRequired": true
+    },
+    {
+      "id": "prod-turkey-evisa-30",
+      "stickerRoutes": 0,
+      "jurisdictions": 1,
+      "verificationRequired": true
+    },
+    {
+      "id": "prod-turkey-sticker-90",
+      "stickerRoutes": 0,
+      "jurisdictions": 1,
+      "verificationRequired": true
+    }
+  ],
+  "uncertainFields": [
+    {
+      "productId": "prod-uk-standard-visitor-180-multiple",
+      "field": "jurisdiction",
+      "ruleId": "uk-india-countrywide-vac",
+      "status": "REVIEW_REQUIRED",
+      "note": "UK visitor applications from India require online form and biometric appointment through visa application centre."
+    },
+    {
+      "productId": "prod-portugal-schengen-tourist-90",
+      "field": "jurisdiction",
+      "ruleId": "pt-west-india-mumbai",
+      "status": "REVIEW_REQUIRED",
+      "note": "Portugal Schengen jurisdiction should be verified against official VFS/mission rules before final filing."
+    },
+    {
+      "productId": "prod-portugal-schengen-tourist-90",
+      "field": "jurisdiction",
+      "ruleId": "pt-india-manual",
+      "status": "REVIEW_REQUIRED",
+      "note": "Fallback when state/city does not match a verified Portugal jurisdiction rule."
+    },
+    {
+      "productId": "prod-south-korea-tourist-90",
+      "field": "jurisdiction",
+      "ruleId": "kr-south-india-chennai",
+      "status": "REVIEW_REQUIRED",
+      "note": "South Korea city and jurisdiction variations require official confirmation before final filing."
+    },
+    {
+      "productId": "prod-turkey-evisa-30",
+      "field": "jurisdiction",
+      "ruleId": "tr-online",
+      "status": "REVIEW_REQUIRED",
+      "note": "Turkey eVisa handled online when eligibility criteria are met."
+    },
+    {
+      "productId": "prod-turkey-sticker-90",
+      "field": "jurisdiction",
+      "ruleId": "tr-sticker-india-manual",
+      "status": "REVIEW_REQUIRED",
+      "note": "Turkey sticker visa jurisdiction and centre rules require official confirmation before final filing."
+    }
+  ],
+  "supplierConflicts": [],
+  "approvalGate": {
+    "extractedDataPublishesDirectly": false,
+    "approvedOnlyVisibleInCatalogue": true,
+    "status": "REVIEW_REQUIRED"
+  }
+}

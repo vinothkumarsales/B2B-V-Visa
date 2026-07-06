@@ -22,7 +22,7 @@ const pageVariants = {
 function formatINR(amount: number): string {
   const abs = Math.abs(amount);
   const formatted = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(abs);
-  return amount < 0 ? `−${formatted}` : formatted;
+  return amount < 0 ? `-${formatted}` : formatted;
 }
 
 function formatDate(dateStr: string): string {
@@ -30,10 +30,10 @@ function formatDate(dateStr: string): string {
 }
 
 const typeConfig: Record<string, { label: string; bg: string; text: string }> = {
-  DEPOSIT: { label: 'Deposit', bg: 'bg-emerald-950/50', text: 'text-emerald-400' },
-  WITHDRAWAL: { label: 'Withdrawal', bg: 'bg-red-950/50', text: 'text-red-400' },
-  PAYMENT: { label: 'Payment', bg: 'bg-amber-950/50', text: 'text-amber-400' },
-  REFUND: { label: 'Refund', bg: 'bg-blue-950/50', text: 'text-blue-400' },
+  DEPOSIT: { label: 'Deposit', bg: 'bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400' },
+  WITHDRAWAL: { label: 'Withdrawal', bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400' },
+  PAYMENT: { label: 'Payment', bg: 'bg-amber-500/10', text: 'text-amber-700 dark:text-amber-400' },
+  REFUND: { label: 'Refund', bg: 'bg-blue-500/10', text: 'text-blue-700 dark:text-blue-400' },
 };
 
 export default function WalletView() {
@@ -57,16 +57,16 @@ export default function WalletView() {
           </div>
           <span className="text-xs text-vvisa-border-active font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
         </div>
-        <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl shrink-0">
+        <Card className="vv-surface-elevated shrink-0 rounded-xl border">
           <CardContent className="px-5 py-3 text-right">
             <p className="text-xs text-vvisa-text-muted">Current Balance</p>
-            <p className="text-2xl font-bold font-mono text-foreground">{formatINR(walletBalance)}</p>
+            <p className="vv-tabular text-2xl font-bold text-foreground">{formatINR(walletBalance)}</p>
           </CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="deposit">
-        <TabsList className="bg-vvisa-surface border border-vvisa-border rounded-lg p-1 h-auto">
+        <TabsList className="h-auto rounded-lg border border-vvisa-border-subtle bg-vvisa-surface p-1 shadow-[var(--vvisa-shadow-sm)]">
           <TabsTrigger
             value="deposit"
             className="data-[state=active]:bg-vvisa-surface-2 data-[state=active]:text-foreground text-vvisa-text-muted rounded-md px-4 py-2 text-sm"

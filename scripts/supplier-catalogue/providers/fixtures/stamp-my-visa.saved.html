@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>StampMyVisa saved catalogue fixture</title>
+    <script id="supplier-catalogue-data" type="application/vnd.vvisa.supplier-catalogue+json">
+      {
+        "supplier": {
+          "id": "stampmyvisa",
+          "name": "StampMyVisa",
+          "source": "saved-html-fixture"
+        },
+        "capturedAt": "2026-06-26T00:00:00.000Z",
+        "products": [
+          {
+            "supplierProductId": "smv-fixture-uae-30",
+            "sourceReference": "fixture:create-visa:uae-tourist-30",
+            "destinationCountry": "United Arab Emirates",
+            "destinationIsoCode": "AE",
+            "travelPurpose": "Tourism",
+            "visaType": "E-Visa",
+            "title": "Dubai Tourist Visa - 30 Days",
+            "visaCategory": "Tourist",
+            "entryType": "single",
+            "validityDays": 60,
+            "visaValidityLabel": "Valid for 60 days from issue",
+            "stayDays": 30,
+            "maximumStayLabel": "Maximum stay 30 days",
+            "processingTime": "3-5 working days",
+            "processingTimeMinDays": 3,
+            "processingTimeMaxDays": 5,
+            "minimumPassportValidityMonths": 6,
+            "passportValidityBasis": "FROM_TRAVEL_DATE",
+            "rawPassportValidityRule": "Passport should be valid for 6 months from travel date.",
+            "passportValidityReviewRequired": false,
+            "physicalSubmissionRequired": false,
+            "originalPassportRequired": false,
+            "biometricRequired": false,
+            "appointmentRequired": false,
+            "visaApplicationCentreRequired": false,
+            "courierRequired": false,
+            "passportCollectionAvailable": false,
+            "currency": "INR",
+            "netPrice": 6400,
+            "visaFeeMinor": 290000,
+            "vfsFeeMinor": 0,
+            "supplierServiceFeeMinor": 296610,
+            "courierFeeMinor": 0,
+            "otherFeeMinor": 0,
+            "gstMinor": 53390,
+            "finalDisplayedTotalMinor": 640000,
+            "priceLines": [
+              { "code": "VISA_FEE", "label": "Visa Fee", "amount": 290000, "currency": "INR", "taxable": false, "perApplicant": true },
+              { "code": "SERVICE_FEE", "label": "Service Fee", "amount": 296610, "currency": "INR", "taxable": true, "perApplicant": true },
+              { "code": "GST", "label": "GST (18%)", "amount": 53390, "currency": "INR", "taxable": false, "perApplicant": true }
+            ],
+            "documents": [
+              { "name": "Passport front page", "status": "MANDATORY", "sourceGroup": "Mandatory Details", "sourceText": "Passport front page is required.", "uploadRequired": true },
+              { "name": "Recent photograph", "status": "MANDATORY", "sourceGroup": "Mandatory Details", "sourceText": "Recent photograph is required.", "uploadRequired": true },
+              { "name": "Bank statement", "status": "CONDITIONAL", "condition": "Required when asked by immigration or for weak travel history.", "sourceGroup": "Financial Details", "sourceText": "Bank statement may be required.", "uploadRequired": true },
+              { "name": "Employment proof", "status": "OPTIONAL", "sourceGroup": "Optional Documents", "sourceText": "Employment proof can strengthen the application.", "uploadRequired": true },
+              { "name": "Estimated processing time is not guaranteed", "status": "INFORMATIONAL", "sourceGroup": "Important Information", "sourceText": "Processing timelines are estimates only.", "uploadRequired": false }
+            ],
+            "classificationEvidence": [
+              { "matchedText": "Electronic Dubai tourist visa", "sourceSection": "Visa type", "confidence": "HIGH" }
+            ],
+            "sourceUrl": "https://stampmyvisa.com/home/create-visa"
+          },
+          {
+            "supplierProductId": "smv-fixture-uae-sticker-90",
+            "sourceReference": "fixture:create-visa:uae-sticker-90",
+            "destinationCountry": "United Arab Emirates",
+            "destinationIsoCode": "AE",
+            "travelPurpose": "Tourism",
+            "visaType": "Sticker Visa",
+            "title": "UAE Sticker Visa - 90 Days",
+            "visaCategory": "Tourist",
+            "entryType": "single",
+            "validityDays": 90,
+            "visaValidityLabel": "Valid for 90 days from issue",
+            "stayDays": 90,
+            "maximumStayLabel": "Maximum stay 90 days",
+            "processingTime": "7-10 working days",
+            "processingTimeMinDays": 7,
+            "processingTimeMaxDays": 10,
+            "minimumPassportValidityMonths": 6,
+            "passportValidityBasis": "FROM_TRAVEL_DATE",
+            "physicalSubmissionRequired": true,
+            "originalPassportRequired": true,
+            "biometricRequired": false,
+            "appointmentRequired": false,
+            "visaApplicationCentreRequired": true,
+            "passportCollectionAvailable": true,
+            "physicalSubmissionInstructions": "Original passport must be sent to the processing centre. Do not upload passport to supplier during catalogue extraction.",
+            "currency": "INR",
+            "netPrice": 9828,
+            "visaFeeMinor": 290000,
+            "vfsFeeMinor": 515800,
+            "supplierServiceFeeMinor": 150000,
+            "courierFeeMinor": 90000,
+            "otherFeeMinor": 0,
+            "gstMinor": 27000,
+            "finalDisplayedTotalMinor": 982800,
+            "priceLines": [
+              { "code": "VISA_FEE", "label": "Visa Fee", "amount": 290000, "currency": "INR", "taxable": false, "perApplicant": true },
+              { "code": "VFS_FEE", "label": "VFS Fee / pax", "amount": 515800, "currency": "INR", "taxable": false, "perApplicant": true },
+              { "code": "SERVICE_FEE", "label": "Service Fee / pax", "amount": 150000, "currency": "INR", "taxable": true, "perApplicant": true },
+              { "code": "GST", "label": "GST (18%)", "amount": 27000, "currency": "INR", "taxable": false, "perApplicant": true },
+              { "code": "COURIER_FEE", "label": "Courier Fee", "amount": 90000, "currency": "INR", "taxable": false, "perApplicant": true }
+            ],
+            "documents": [
+              { "name": "Original passport", "status": "MANDATORY", "sourceGroup": "Mandatory Details", "sourceText": "Original passport must be submitted.", "uploadRequired": false, "originalRequired": true, "courierRequired": true },
+              { "name": "Passport front page scan", "status": "MANDATORY", "sourceGroup": "Mandatory Details", "sourceText": "Passport scan is required for application record.", "uploadRequired": true },
+              { "name": "Invitation letter", "status": "CONDITIONAL", "condition": "Required when invited by friend or family.", "sourceGroup": "Invitation Documents", "sourceText": "Invitation letter required for invited travellers.", "uploadRequired": true },
+              { "name": "Travel itinerary", "status": "OPTIONAL", "sourceGroup": "Optional Documents", "sourceText": "Travel itinerary is optional.", "uploadRequired": true },
+              { "name": "Send passport after V-Visa confirmation", "status": "INFORMATIONAL", "sourceGroup": "Courier Instructions", "sourceText": "Courier passport only after V-Visa confirms the route.", "uploadRequired": false, "courierRequired": true }
+            ],
+            "stickerRequired": true,
+            "courierRequired": true,
+            "routeCities": ["BENGALURU", "OTHER_INDIA"],
+            "stickerRoutes": [
+              {
+                "id": "uae-sticker-90-bengaluru",
+                "originCityCode": "BENGALURU",
+                "originCityLabel": "Bengaluru",
+                "processingCentreCity": "Bengaluru",
+                "courierFeeMinor": 90000,
+                "serviceFeeAdjustmentMinor": 0,
+                "estimatedOutboundDays": 1,
+                "estimatedReturnDays": 1,
+                "isActive": true
+              },
+              {
+                "id": "uae-sticker-90-other-india",
+                "originCityCode": "OTHER_INDIA",
+                "originCityLabel": "Other India",
+                "processingCentreCity": "Bengaluru",
+                "courierFeeMinor": 150000,
+                "serviceFeeAdjustmentMinor": 25000,
+                "estimatedOutboundDays": 2,
+                "estimatedReturnDays": 2,
+                "isActive": true
+              }
+            ],
+            "classificationEvidence": [
+              { "matchedText": "Original passport must be sent to the processing centre", "sourceSection": "Physical Submission", "confidence": "HIGH" }
+            ],
+            "sourceUrl": "https://stampmyvisa.com/home/create-visa"
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <main>Saved StampMyVisa catalogue fixture for importer extraction tests.</main>
+  </body>
+</html>

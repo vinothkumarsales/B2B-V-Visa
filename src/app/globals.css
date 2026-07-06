@@ -42,113 +42,142 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* VVisa Brand Colors — theme-aware via CSS vars */
   --color-vvisa-bg: var(--vvisa-bg);
   --color-vvisa-surface: var(--vvisa-surface);
   --color-vvisa-surface-2: var(--vvisa-surface-2);
   --color-vvisa-border: var(--vvisa-border-color);
+  --color-vvisa-border-subtle: var(--vvisa-border-subtle);
   --color-vvisa-border-active: var(--vvisa-border-active);
-  --color-vvisa-brand: #4F46E5;
-  --color-vvisa-brand-light: #6366F1;
-  --color-vvisa-gold: #F59E0B;
-  --color-vvisa-green: #10B981;
-  --color-vvisa-red: #EF4444;
-  --color-vvisa-blue: #3B82F6;
+  --color-vvisa-brand: #2563eb;
+  --color-vvisa-brand-light: #60a5fa;
+  --color-vvisa-gold: var(--vvisa-premium);
+  --color-vvisa-green: var(--vvisa-success);
+  --color-vvisa-red: var(--vvisa-danger);
+  --color-vvisa-blue: var(--vvisa-info);
   --color-vvisa-text: var(--foreground);
   --color-vvisa-text-secondary: var(--vvisa-text-secondary);
   --color-vvisa-text-muted: var(--vvisa-text-muted);
 }
 
-/* ==================== BLUE THEME (default / "bright" mode) ==================== */
 :root {
   --radius: 0.75rem;
-  --background: #0A2364;
-  --foreground: #FFFFFF;
-  --card: #0F2C5A;
-  --card-foreground: #FFFFFF;
-  --popover: #0F2C5A;
-  --popover-foreground: #FFFFFF;
-  --primary: #6366F1;
-  --primary-foreground: #FFFFFF;
-  --secondary: #1A3A6E;
-  --secondary-foreground: #FFFFFF;
-  --muted: #1A3A6E;
-  --muted-foreground: #8A9BB0;
-  --accent: #1A3A6E;
-  --accent-foreground: #FFFFFF;
-  --destructive: #EF4444;
-  --border: #1A3A6E;
-  --input: #1A3A6E;
-  --ring: #6366F1;
-  --chart-1: #6366F1;
-  --chart-2: #22C55E;
-  --chart-3: #F59E0B;
-  --chart-4: #3B82F6;
-  --chart-5: #EF4444;
-  --sidebar: #0A2364;
-  --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #6366F1;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #1E3A6A;
-  --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #1A3A6E;
-  --sidebar-ring: #6366F1;
+  --background: #f7f8fb;
+  --foreground: #151821;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f4f8;
+  --secondary-foreground: #1f2937;
+  --muted: #f1f4f8;
+  --muted-foreground: #667085;
+  --accent: #eef5ff;
+  --accent-foreground: #1f2937;
+  --destructive: #dc2626;
+  --border: #e1e7ef;
+  --input: #d8e1ec;
+  --ring: #2563eb;
+  --chart-1: #2563eb;
+  --chart-2: #16a34a;
+  --chart-3: #b7791f;
+  --chart-4: #0891b2;
+  --chart-5: #dc2626;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #102033;
+  --sidebar-primary: #2563eb;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f1f5fa;
+  --sidebar-accent-foreground: #1f2937;
+  --sidebar-border: #e1e7ef;
+  --sidebar-ring: #2563eb;
 
-  /* VVisa semantic blue theme colors */
-  --vvisa-bg: #0A2364;
-  --vvisa-surface: #0F2C5A;
-  --vvisa-surface-2: #1A3A6E;
-  --vvisa-border-color: #1A3A6E;
-  --vvisa-border-active: #2A4F8E;
-  --vvisa-text-secondary: #B8C5D1;
-  --vvisa-text-muted: #8A9BB0;
+  --vvisa-bg: #f7f8fb;
+  --vvisa-surface: #ffffff;
+  --vvisa-surface-2: #f1f5fa;
+  --vvisa-surface-elevated: #ffffff;
+  --vvisa-surface-interactive: #fbfcff;
+  --vvisa-surface-muted: #f1f4f8;
+  --vvisa-border-color: #dde5ef;
+  --vvisa-border-subtle: #e8edf4;
+  --vvisa-border-active: #a8bdd7;
+  --vvisa-text-secondary: #4b5565;
+  --vvisa-text-muted: #727b8c;
+  --vvisa-primary-hover: #1d4ed8;
+  --vvisa-premium: #b7791f;
+  --vvisa-success: #16a34a;
+  --vvisa-warning: #d97706;
+  --vvisa-danger: #dc2626;
+  --vvisa-info: #0284c7;
+  --vvisa-shadow-sm: 0 2px 8px rgba(21, 24, 33, 0.05);
+  --vvisa-shadow-md: 0 14px 34px rgba(21, 24, 33, 0.09);
+  --vvisa-shadow-lg: 0 26px 76px rgba(21, 24, 33, 0.13);
+  --vvisa-overlay: rgba(15, 23, 42, 0.45);
+  --vvisa-backdrop: rgba(247, 248, 251, 0.88);
+  --motion-fast: 140ms;
+  --motion-normal: 220ms;
+  --motion-slow: 420ms;
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ==================== DARK MODE ==================== */
 .dark {
-  --background: #0A0A0F;
-  --foreground: #F9FAFB;
-  --card: #111118;
-  --card-foreground: #F9FAFB;
-  --popover: #111118;
-  --popover-foreground: #F9FAFB;
-  --primary: #4F46E5;
-  --primary-foreground: #FFFFFF;
-  --secondary: #1A1A24;
-  --secondary-foreground: #F9FAFB;
-  --muted: #1A1A24;
-  --muted-foreground: #9CA3AF;
-  --accent: #1A1A24;
-  --accent-foreground: #F9FAFB;
-  --destructive: #EF4444;
-  --border: #2A2A38;
-  --input: #2A2A38;
-  --ring: #4F46E5;
-  --chart-1: #4F46E5;
-  --chart-2: #10B981;
-  --chart-3: #F59E0B;
-  --chart-4: #3B82F6;
-  --chart-5: #EF4444;
-  --sidebar: #111118;
-  --sidebar-foreground: #F9FAFB;
-  --sidebar-primary: #4F46E5;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #1A1A24;
-  --sidebar-accent-foreground: #F9FAFB;
-  --sidebar-border: #2A2A38;
-  --sidebar-ring: #4F46E5;
+  --background: #08111f;
+  --foreground: #f8fafc;
+  --card: #101b2d;
+  --card-foreground: #f8fafc;
+  --popover: #101b2d;
+  --popover-foreground: #f8fafc;
+  --primary: #60a5fa;
+  --primary-foreground: #061121;
+  --secondary: #16243a;
+  --secondary-foreground: #f8fafc;
+  --muted: #16243a;
+  --muted-foreground: #9aa8bb;
+  --accent: #172b48;
+  --accent-foreground: #f8fafc;
+  --destructive: #ef4444;
+  --border: #223551;
+  --input: #223551;
+  --ring: #60a5fa;
+  --chart-1: #60a5fa;
+  --chart-2: #10b981;
+  --chart-3: #d6a24a;
+  --chart-4: #38bdf8;
+  --chart-5: #ef4444;
+  --sidebar: #0c1829;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #60a5fa;
+  --sidebar-primary-foreground: #061121;
+  --sidebar-accent: #14243b;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #223551;
+  --sidebar-ring: #60a5fa;
 
-  /* VVisa semantic dark colors */
-  --vvisa-bg: #0A0A0F;
-  --vvisa-surface: #111118;
-  --vvisa-surface-2: #1A1A24;
-  --vvisa-border-color: #2A2A38;
-  --vvisa-border-active: #3D3D54;
-  --vvisa-text-secondary: #9CA3AF;
-  --vvisa-text-muted: #6B7280;
+  --vvisa-bg: #08111f;
+  --vvisa-surface: #101b2d;
+  --vvisa-surface-2: #16243a;
+  --vvisa-surface-elevated: #14243b;
+  --vvisa-surface-interactive: #182b46;
+  --vvisa-surface-muted: #0d1a2b;
+  --vvisa-border-color: #223551;
+  --vvisa-border-subtle: #1b2b43;
+  --vvisa-border-active: #34557f;
+  --vvisa-text-secondary: #c6d0de;
+  --vvisa-text-muted: #8fa0b4;
+  --vvisa-primary-hover: #3b82f6;
+  --vvisa-premium: #d6a24a;
+  --vvisa-success: #22c55e;
+  --vvisa-warning: #f59e0b;
+  --vvisa-danger: #f87171;
+  --vvisa-info: #38bdf8;
+  --vvisa-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.22);
+  --vvisa-shadow-md: 0 18px 45px rgba(0, 0, 0, 0.32);
+  --vvisa-shadow-lg: 0 28px 90px rgba(0, 0, 0, 0.42);
+  --vvisa-overlay: rgba(2, 6, 23, 0.62);
+  --vvisa-backdrop: rgba(8, 17, 31, 0.82);
 }
 
-/* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -160,7 +189,7 @@
 
 ::-webkit-scrollbar-thumb {
   background: var(--vvisa-border-color);
-  border-radius: 3px;
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -171,12 +200,55 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground font-sans;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    text-rendering: geometricPrecision;
   }
 }
 
-/* Custom Shimmer Animation */
+@layer utilities {
+  .vv-page {
+    background:
+      radial-gradient(circle at top left, color-mix(in oklab, var(--primary) 12%, transparent), transparent 34rem),
+      linear-gradient(180deg, var(--vvisa-bg), color-mix(in oklab, var(--vvisa-bg) 92%, var(--vvisa-surface-2)));
+  }
+
+  .vv-surface {
+    background: var(--vvisa-surface);
+    border-color: var(--vvisa-border-subtle);
+    box-shadow: var(--vvisa-shadow-sm);
+  }
+
+  .vv-surface-elevated {
+    background: var(--vvisa-surface-elevated);
+    border-color: var(--vvisa-border-subtle);
+    box-shadow: var(--vvisa-shadow-md);
+  }
+
+  .vv-interactive {
+    transition:
+      background-color var(--motion-normal) var(--motion-ease),
+      border-color var(--motion-normal) var(--motion-ease),
+      color var(--motion-fast) var(--motion-ease),
+      box-shadow var(--motion-normal) var(--motion-ease),
+      transform var(--motion-normal) var(--motion-ease);
+  }
+
+  .vv-interactive:hover {
+    transform: translateY(-1px);
+  }
+
+  .vv-tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -188,7 +260,6 @@
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
-/* Marquee Animation */
 @keyframes marquee {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -198,18 +269,30 @@
   animation: marquee 30s linear infinite;
 }
 
-/* Ticker bar hover pause */
 .ticker-bar:hover .animate-marquee {
   animation-play-state: paused;
 }
 
-/* Glow effect */
 .glow-indigo {
-  box-shadow: 0 0 20px rgba(79, 70, 229, 0.15), 0 0 40px rgba(79, 70, 229, 0.05);
+  box-shadow: 0 18px 48px color-mix(in oklab, var(--primary) 18%, transparent);
 }
 
-/* Custom selection */
 ::selection {
-  background: rgba(79, 70, 229, 0.3);
+  background: color-mix(in oklab, var(--primary) 28%, transparent);
   color: var(--foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .vv-interactive:hover {
+    transform: none;
+  }
 }

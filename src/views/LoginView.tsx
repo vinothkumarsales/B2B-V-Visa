@@ -90,13 +90,13 @@ export default function LoginView() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
+    <div className="min-h-screen flex flex-col md:flex-row vv-page">
       {/* Left Panel — Branding */}
       <motion.div
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full md:w-[40%] bg-gradient-to-br from-indigo-600 to-indigo-800 relative overflow-hidden flex flex-col justify-between p-8 md:p-12"
+        className="relative flex w-full flex-col justify-between overflow-hidden bg-primary p-8 text-primary-foreground md:w-[40%] md:p-12"
       >
         {/* Decorative background circles */}
         <div className="absolute -top-24 -left-24 w-72 h-72 bg-white/5 rounded-full" />
@@ -105,7 +105,7 @@ export default function LoginView() {
         {/* Back button */}
         <button
           onClick={() => navigate('landing')}
-          className="relative z-10 flex items-center gap-2 text-white/80 hover:text-white transition-colors w-fit"
+          className="relative z-10 flex w-fit items-center gap-2 text-primary-foreground/80 transition-colors hover:text-primary-foreground"
         >
           <ArrowLeft className="size-4" />
           <span className="text-sm">Back</span>
@@ -115,9 +115,9 @@ export default function LoginView() {
           {/* Logo + Brand */}
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm">
-              <span className="text-foreground font-bold text-xl">V</span>
+              <span className="text-primary-foreground font-bold text-xl">V</span>
             </div>
-            <span className="text-foreground font-semibold text-xl tracking-tight">
+            <span className="text-primary-foreground font-semibold text-xl tracking-tight">
               VVisa Business
             </span>
           </div>

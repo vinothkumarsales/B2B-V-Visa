@@ -7,10 +7,13 @@ import { isDemoMode } from '@/lib/env';
 import { requireAgencyMembership } from '@/server/auth/session';
 import { auditLog } from '@/server/audit/audit-log';
 import { extractDocumentFields } from '@/server/integrations/digio/document-intelligence';
+import { queueDocumentAttachmentSync } from '@/server/integrations/zoho/document-attachment-sync';
+import { queueDocumentOcrDataSync } from '@/server/integrations/zoho/document-ocr-data-sync';
 
 const ocrSchema = z.object({
   imageBase64: z.string().min(20).max(7_000_000),
   documentType: z.string().min(1).max(80),
+  mimeType: z.string().min(3).max(120).optional(),
   documentId: z.string().optional(),
 });
 
@@ -30,7 +33,7 @@ export async function POST(request: NextRequest) {
       });
       if (!document) return apiError('RESOURCE_NOT_FOUND', 'Document not found', 404);
 
-      await db.ocrExtraction.create({
+      const ocrExtraction = await db.ocrExtraction.create({
         data: {
           documentId: document.id,
           provider: 'DIGIO',
@@ -54,6 +57,40 @@ export async function POST(request: NextRequest) {
         resourceId: document.id,
         metadata: { provider: 'DIGIO', documentType: parsed.data.documentType },
       });
+
+      const dataSync = await queueDocumentOcrDataSync({
+        agencyId: session.agencyId,
+        documentId: document.id,
+        ocrExtractionId: ocrExtraction.id,
+        passportFields: result.normalizedExtraction,
+      });
+
+      if (!dataSync.queued) {
+        await auditLog({
+          agencyId: session.agencyId,
+          actorUserId: session.user.id,
+          action: 'DOCUMENT_CRM_OCR_DATA_DEFERRED',
+          resourceType: 'OcrExtraction',
+          resourceId: ocrExtraction.id,
+          metadata: { reason: dataSync.reason, documentType: parsed.data.documentType },
+        });
+      }
+
+      const attachmentSync = await queueDocumentAttachmentSync({
+        agencyId: session.agencyId,
+        documentId: document.id,
+      });
+
+      if (!attachmentSync.queued) {
+        await auditLog({
+          agencyId: session.agencyId,
+          actorUserId: session.user.id,
+          action: 'DOCUMENT_CRM_ATTACHMENT_DEFERRED',
+          resourceType: 'ApplicationDocument',
+          resourceId: document.id,
+          metadata: { reason: attachmentSync.reason, documentType: parsed.data.documentType },
+        });
+      }
     }
 
     return NextResponse.json({

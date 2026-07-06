@@ -1,4 +1,19 @@
-import type { VisaApplication, WalletTransaction, VisaType, AllianceLink, OverstayCase, DashboardStats } from '@/types';
+import type {
+  VisaApplication,
+  WalletTransaction,
+  VisaType,
+  AllianceLink,
+  OverstayCase,
+  DashboardStats,
+  VisaDocumentRequirement,
+  VisaEntryType,
+  VisaKind,
+  VisaPricingLineItem,
+} from '@/types';
+import { buildCatalogueFromApprovedProducts } from '@/lib/catalogue';
+import { buildVisaPriceBreakdown, rupeesToMinor } from '@/lib/pricing';
+import { stampMyVisaApprovedProducts } from '@/lib/stampmyvisa-approved-products';
+import { productionApprovedProducts } from '@/lib/production-approved-products';
 
 export const mockAgency = {
   id: 'agency-001',
@@ -17,7 +32,166 @@ export const mockAgency = {
   walletBalance: 28040,
 };
 
-export const mockVisaTypes: VisaType[] = [
+const slugifyCatalogueId = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
+const inferVisaKind = (visa: Pick<VisaType, 'name'>): VisaKind => {
+  const name = visa.name.toLowerCase();
+
+  if (name.includes('eta')) return 'ETA';
+  if (name.includes('arrival')) return 'VISA_ON_ARRIVAL';
+  if (name.includes('evisa') || name.includes('e-visa') || name.includes('entri')) return 'E_VISA';
+  if (name.includes('sticker') || name.includes('b1/b2') || name.includes('schengen')) return 'STICKER_VISA';
+
+  return 'OTHER';
+};
+
+const inferEntryType = (entry: string): VisaEntryType => {
+  const normalized = entry.toLowerCase();
+
+  if (normalized.includes('multiple')) return 'MULTIPLE';
+  if (normalized.includes('double')) return 'DOUBLE';
+  if (normalized.includes('single')) return 'SINGLE';
+
+  return 'NOT_SPECIFIED';
+};
+
+const buildDocumentRequirements = (visa: Pick<VisaType, 'id' | 'documents'>, visaKind: VisaKind) => {
+  const mandatory: VisaDocumentRequirement[] = visa.documents.map((documentName) => ({
+    id: `${visa.id}-${slugifyCatalogueId(documentName)}`,
+    label: documentName,
+    documentCode: slugifyCatalogueId(documentName).toUpperCase().replace(/-/g, '_'),
+    documentName,
+    requirement: 'MANDATORY',
+    isMandatory: true,
+    isOptional: false,
+    appliesToAdult: true,
+    appliesToMinor: true,
+    appliesToStickerVisa: visaKind === 'STICKER_VISA',
+    appliesToEVisa: visaKind === 'E_VISA' || visaKind === 'ETA',
+    uploadRequired: true,
+    physicalOriginalRequired: visaKind === 'STICKER_VISA' && documentName.toLowerCase().includes('passport'),
+    courierRequired: visaKind === 'STICKER_VISA',
+    sampleAvailable: false,
+    requirementStatus: 'CONFIRMED',
+    appliesTo: 'TRAVELER',
+  }));
+
+  return {
+    mandatory,
+    optional: [] as VisaDocumentRequirement[],
+  };
+};
+
+const buildPricingLineItems = (visa: Pick<VisaType, 'id' | 'price' | 'currency'>): VisaPricingLineItem[] => {
+  const breakdown = buildVisaPriceBreakdown(rupeesToMinor(visa.price), visa.currency);
+  return breakdown.lines.map((line, index) => ({
+    id: `${visa.id}-price-${index}`,
+    label: line.label,
+    type: line.type,
+    amount: line.amountMinor / 100,
+    amountMinor: line.amountMinor,
+    currency: visa.currency,
+    taxable: line.taxable,
+    quantity: 1,
+    includedInBasePrice: true,
+  }));
+};
+
+const enrichVisaTypeCatalogue = (visa: VisaType): VisaType => {
+  const visaKind = visa.visaKind ?? inferVisaKind(visa);
+  const isStickerVisa = visaKind === 'STICKER_VISA';
+  const pricingBreakdown = buildVisaPriceBreakdown(rupeesToMinor(visa.price), visa.currency);
+  const pricingLineItems = visa.pricingLineItems ?? buildPricingLineItems(visa);
+  const stickerRoutes = isStickerVisa ? [
+    {
+      id: `${visa.id}-bengaluru`,
+      type: 'ROUND_TRIP' as const,
+      origin: 'BENGALURU',
+      destination: 'Processing centre',
+      visaProductId: visa.id,
+      originCityCode: 'BENGALURU',
+      originCityLabel: 'Bengaluru',
+      processingCentreCity: 'Bengaluru',
+      courierFeeMinor: 150000,
+      serviceFeeAdjustmentMinor: 0,
+      estimatedOutboundDays: 1,
+      estimatedReturnDays: 1,
+      isActive: true,
+    },
+    {
+      id: `${visa.id}-other-india`,
+      type: 'ROUND_TRIP' as const,
+      origin: 'OTHER_INDIA',
+      destination: 'Processing centre',
+      visaProductId: visa.id,
+      originCityCode: 'OTHER_INDIA',
+      originCityLabel: 'Other India',
+      processingCentreCity: 'Bengaluru',
+      courierFeeMinor: 250000,
+      serviceFeeAdjustmentMinor: 0,
+      estimatedOutboundDays: 2,
+      estimatedReturnDays: 2,
+      isActive: true,
+    },
+  ] : undefined;
+
+  return {
+    ...visa,
+    destinationCode: visa.destination.toUpperCase().replace(/[^A-Z0-9]+/g, '_'),
+    visaKind,
+    entryType: visa.entryType ?? inferEntryType(visa.entry),
+    purpose: visa.purpose ?? (visa.name.toLowerCase().includes('business') ? 'Business' : 'Tourism'),
+    nationalityEligibility: visa.nationalityEligibility ?? ['IN'],
+    processingTimeLabel: visa.processingTimeLabel ?? `Estimated processing time: ${visa.processingTime}`,
+    documentRequirements: visa.documentRequirements ?? buildDocumentRequirements(visa, visaKind),
+    pricingLineItems,
+    pricing: visa.pricing ?? {
+      visaFeeMinor: pricingBreakdown.visaFeeMinor,
+      vvisaServiceFeeMinor: pricingBreakdown.serviceFeeMinor,
+      courierFeeMinor: pricingBreakdown.courierFeeMinor,
+      insuranceFeeMinor: pricingBreakdown.insuranceFeeMinor,
+      convenienceFeeMinor: pricingBreakdown.convenienceFeeMinor,
+      otherFeeMinor: pricingBreakdown.otherFeeMinor,
+      discountMinor: pricingBreakdown.discountMinor,
+      gstMinor: pricingBreakdown.gstMinor,
+      totalAmountMinor: pricingBreakdown.totalMinor,
+      currency: visa.currency,
+      lines: pricingLineItems,
+    },
+    passportValidityRule: visa.passportValidityRule ?? {
+      minimumMonthsFrom: 'ARRIVAL_DATE',
+      minimumMonths: 6,
+      rule: 'SIX_MONTHS_FROM_TRAVEL',
+      blankPagesRequired: isStickerVisa ? 2 : 1,
+    },
+    minimumPassportValidityMonths: visa.minimumPassportValidityMonths ?? 6,
+    courierRules: visa.courierRules ?? {
+      required: isStickerVisa,
+      available: isStickerVisa,
+      physicalSubmissionRequired: isStickerVisa,
+      courierRequired: isStickerVisa,
+      courierDirection: isStickerVisa ? 'BOTH' : 'NOT_REQUIRED',
+      submissionCentreName: isStickerVisa ? 'V-Visa Processing Desk' : undefined,
+      submissionCity: isStickerVisa ? 'Bengaluru' : undefined,
+      returnCourierAvailable: isStickerVisa,
+      outboundCourierFeeMinor: isStickerVisa ? 150000 : undefined,
+      returnCourierFeeMinor: isStickerVisa ? 150000 : undefined,
+      passportCollectionAvailable: isStickerVisa,
+      passportCollectionCities: isStickerVisa ? ['BENGALURU', 'OTHER_INDIA'] : undefined,
+      routes: stickerRoutes,
+      allowSelfDropOff: isStickerVisa,
+      allowSelfCollection: isStickerVisa,
+      notes: isStickerVisa ? 'Courier or self handover may be required for passport submission and collection.' : undefined,
+    },
+    stickerRoutes: visa.stickerRoutes ?? stickerRoutes,
+  };
+};
+
+const mockVisaTypesRaw: VisaType[] = [
   // ==================== VIETNAM (8 entries) ====================
   {
     id: 'visa-001',
@@ -1549,6 +1723,11 @@ export const mockVisaTypes: VisaType[] = [
     documents: ['Passport', 'Photo', 'Travel Itinerary', 'Bank Statement', 'Employment Letter', 'Hotel Booking'],
   },
 ];
+
+export const mockVisaTypes: VisaType[] = buildCatalogueFromApprovedProducts(
+  [...stampMyVisaApprovedProducts, ...productionApprovedProducts],
+  mockVisaTypesRaw.map(enrichVisaTypeCatalogue),
+);
 
 const createTraveler = (overrides: Partial<import('@/types').Traveler> & { id: string; firstName: string; lastName: string; passportNumber: string }): import('@/types').Traveler => ({
   nationality: 'Indian',
