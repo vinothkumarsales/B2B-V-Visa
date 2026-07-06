@@ -38,7 +38,14 @@ function loginError(code: string, message: string, status: number, fields?: unkn
 }
 
 function hasRuntimeAuthConfig() {
-  return Boolean(process.env.DATABASE_URL && process.env.SESSION_SECRET);
+  return Boolean(
+    process.env.DATABASE_URL ||
+      process.env.DATABASE_POSTGRES_PRISMA_URL ||
+      process.env.DATABASE_POSTGRES_POSTGRES_PRISMA_URL ||
+      process.env.DATABASE_POSTGRES_POSTGRES_URL ||
+      process.env.POSTGRES_PRISMA_URL ||
+      process.env.POSTGRES_URL,
+  );
 }
 
 function hasValidBootstrapConfig() {
