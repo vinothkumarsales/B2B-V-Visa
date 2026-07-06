@@ -140,6 +140,34 @@ enum CatalogueChangeType {
   CONTENT_CHANGED
 }
 
+enum AdminRole {
+  super_admin
+  catalog_admin
+  operations_admin
+  finance_admin
+  support_admin
+}
+
+enum AdminImpersonationMode {
+  view_only
+  support
+  operations
+}
+
+enum AdminSessionStatus {
+  active
+  expired
+  revoked
+  ended
+}
+
+enum PartnerPriceOverrideStatus {
+  draft
+  active
+  expired
+  archived
+}
+
 model User {
   id           String             @id @default(cuid())
   name         String?
@@ -152,6 +180,7 @@ model User {
   memberships  AgencyMembership[]
   sessions     Session[]
   auditLogs    AuditLog[]
+  adminUser    AdminUser?
 }
 
 model Session {
@@ -194,6 +223,8 @@ model Agency {
   integrationEvents IntegrationEvent[]
   visaInterests     VisaInterest[]
   crmMappings       CrmEntityMapping[]
+  priceOverrides    PartnerPriceOverride[]
+  impersonationSessions AdminImpersonationSession[]
 }
 
 model AgencyMembership {
@@ -268,8 +299,65 @@ model VisaProduct {
   passportRules                 VisaPassportValidityRule[]
   supplierReferences            SupplierProductReference[]
   importRecords                 SupplierImportRecord[]
+  partnerPriceOverrides         PartnerPriceOverride[]
 
   @@index([destination, isActive])
+}
+
+model AdminUser {
+  id         String    @id @default(cuid())
+  userId     String    @unique
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       AdminRole @default(support_admin)
+  isActive   Boolean   @default(true)
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model AdminImpersonationSession {
+  id              String                 @id @default(cuid())
+  actorAdminUid   String
+  actorAdminEmail String
+  subjectAgencyId String
+  subjectAgency   Agency                 @relation(fields: [subjectAgencyId], references: [id], onDelete: Cascade)
+  mode            AdminImpersonationMode
+  reason          String
+  startedAt       DateTime               @default(now())
+  lastActivityAt  DateTime               @default(now())
+  expiresAt       DateTime
+  endedAt         DateTime?
+  status          AdminSessionStatus     @default(active)
+  ipAddress       String?
+  userAgent       String?
+
+  @@index([actorAdminUid, status])
+  @@index([subjectAgencyId, status])
+}
+
+model PartnerPriceOverride {
+  id                   String                     @id @default(cuid())
+  partnerUid           String
+  partner              Agency                     @relation(fields: [partnerUid], references: [id], onDelete: Cascade)
+  productId            String?
+  product              VisaProduct?               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  countryCode          String?
+  serviceCode          String?
+  overrideType         String
+  valueMinor           Int
+  currency             String                     @default("INR")
+  startsAt             DateTime?
+  endsAt               DateTime?
+  status               PartnerPriceOverrideStatus @default(draft)
+  reason               String
+  internalNotes        String?
+  createdByAdminUserId String
+  approvedByAdminUserId String?
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+
+  @@index([partnerUid, status])
+  @@index([productId, status])
 }
 
 model Country {

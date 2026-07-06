@@ -1,0 +1,72 @@
+import type { AdminRole, MembershipRole } from '@prisma/client';
+
+const BOOTSTRAP_ADMIN_EMAIL = 'vinodhvijay490@gmail.com';
+const COMPANY_ADMIN_DOMAIN = 'digidocsindia.com';
+
+export type AdminPermission =
+  | 'admin.manage'
+  | 'catalog.read'
+  | 'catalog.write'
+  | 'pricing.read'
+  | 'pricing.write'
+  | 'partner.read'
+  | 'partner.write'
+  | 'partner.impersonate'
+  | 'application.create_on_behalf'
+  | 'application.update'
+  | 'wallet.read'
+  | 'wallet.adjust'
+  | 'audit.read'
+  | 'settings.write';
+
+export const ADMIN_PERMISSION_MATRIX: Record<AdminRole, AdminPermission[]> = {
+  super_admin: [
+    'admin.manage',
+    'catalog.read',
+    'catalog.write',
+    'pricing.read',
+    'pricing.write',
+    'partner.read',
+    'partner.write',
+    'partner.impersonate',
+    'application.create_on_behalf',
+    'application.update',
+    'wallet.read',
+    'wallet.adjust',
+    'audit.read',
+    'settings.write',
+  ],
+  catalog_admin: ['catalog.read', 'catalog.write', 'audit.read'],
+  operations_admin: [
+    'partner.read',
+    'partner.write',
+    'partner.impersonate',
+    'application.create_on_behalf',
+    'application.update',
+    'catalog.read',
+    'pricing.read',
+    'audit.read',
+  ],
+  finance_admin: ['pricing.read', 'pricing.write', 'wallet.read', 'wallet.adjust', 'partner.read', 'audit.read'],
+  support_admin: ['partner.read', 'catalog.read', 'pricing.read', 'wallet.read', 'audit.read'],
+};
+
+export function hasAdminPermission(role: AdminRole, permission: AdminPermission) {
+  return ADMIN_PERMISSION_MATRIX[role]?.includes(permission) ?? false;
+}
+
+export function roleFromMembership(role: MembershipRole | null | undefined): AdminRole | null {
+  if (role === 'VVISAS_ADMIN') return 'super_admin';
+  if (role === 'VVISAS_OPERATIONS') return 'operations_admin';
+  if (role === 'VVISAS_FINANCE') return 'finance_admin';
+  return null;
+}
+
+function emailDomain(email: string) {
+  return email.toLowerCase().split('@').at(1) ?? '';
+}
+
+export function isBootstrapAdminEmail(email: string) {
+  const normalized = email.toLowerCase();
+  return normalized === BOOTSTRAP_ADMIN_EMAIL || emailDomain(normalized) === COMPANY_ADMIN_DOMAIN;
+}
