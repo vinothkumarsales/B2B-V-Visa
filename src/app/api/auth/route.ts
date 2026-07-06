@@ -37,6 +37,19 @@ function loginError(code: string, message: string, status: number, fields?: unkn
   return NextResponse.json({ error: { code, message, fields } }, { status });
 }
 
+function hasRuntimeAuthConfig() {
+  return Boolean(process.env.DATABASE_URL && process.env.SESSION_SECRET);
+}
+
+function hasValidBootstrapConfig() {
+  const configuredHash = process.env.ADMIN_BOOTSTRAP_PASSWORD_HASH?.trim();
+  const configuredPassword = process.env.ADMIN_BOOTSTRAP_PASSWORD;
+  return Boolean(
+    (configuredHash && configuredHash.startsWith('pbkdf2$')) ||
+      configuredPassword,
+  );
+}
+
 async function recordBootstrapFailure(input: { email: string; userId?: string | null; reason: string }) {
   const store = getBootstrapAttemptStore();
   const current = store.get(input.email) ?? { failures: 0, lockedUntil: 0 };
@@ -102,6 +115,22 @@ export async function POST(request: NextRequest) {
 
     const email = parsed.data.email.trim().toLowerCase();
     const isAdminBootstrapCandidate = isBootstrapAdminEmail(email);
+
+    if (!hasRuntimeAuthConfig()) {
+      return loginError(
+        'AUTH_CONFIGURATION_REQUIRED',
+        'Login is temporarily unavailable. Server authentication is not fully configured.',
+        503,
+      );
+    }
+
+    if (isAdminBootstrapCandidate && isBootstrapEnabled() && !hasValidBootstrapConfig()) {
+      return loginError(
+        'BOOTSTRAP_SECRET_MISCONFIGURED',
+        'Admin bootstrap login is not configured correctly.',
+        503,
+      );
+    }
 
     let user = await db.user.findUnique({
       where: { email },
@@ -178,6 +207,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     if (isApiResponse(error)) return error;
+    console.error('LOGIN_FAILED', error instanceof Error ? error.message : 'Unknown login error');
     return loginError('LOGIN_FAILED', 'Login failed. Please try again.', 500);
   }
 }
