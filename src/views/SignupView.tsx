@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { mockAgency } from '@/lib/mock-data';
+import { isDemoMode } from '@/lib/app-mode';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -93,15 +94,35 @@ export default function SignupView() {
     setValue('otp', '');
   };
 
-  const onSubmit = () => {
-    // Auto-login after successful signup
-    login(mockAgency);
+  const onSubmit = async (data: SignupFormData) => {
+    if (isDemoMode()) {
+      login(mockAgency);
+      router.push('/dashboard');
+      return;
+    }
+
+    const response = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: data.phone,
+        agencyName: data.agencyName,
+        email: data.email,
+        password: data.password,
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.message || 'Registration failed');
+    }
+
+    login(payload.agency ?? mockAgency);
     router.push('/dashboard');
   };
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row vv-page">
-      {/* Left Panel — Branding */}
+      {/* Left Panel â€” Branding */}
       <motion.div
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
@@ -165,7 +186,7 @@ export default function SignupView() {
                           key={point}
                           className="text-white/60 text-xs leading-relaxed"
                         >
-                          • {point}
+                          â€¢ {point}
                         </li>
                       ))}
                     </ul>
@@ -177,7 +198,7 @@ export default function SignupView() {
         </div>
       </motion.div>
 
-      {/* Right Panel — Signup Form */}
+      {/* Right Panel â€” Signup Form */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -211,7 +232,7 @@ export default function SignupView() {
               </Label>
               <div className="flex gap-0">
                 <div className="flex items-center gap-2 bg-vvisa-surface border border-vvisa-border border-r-0 rounded-l-md px-3 h-11 shrink-0">
-                  <span className="text-lg">🇮🇳</span>
+                  <span className="text-lg">ðŸ‡®ðŸ‡³</span>
                   <span className="text-sm text-vvisa-text-secondary">+91</span>
                 </div>
                 <Input

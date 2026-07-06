@@ -19,6 +19,7 @@ import { Separator } from '@/components/ui/separator';
 import { PriceBreakdownPopover } from '@/components/pricing/PriceBreakdownPopover';
 import { VisaAttributeBadges } from '@/components/visa/VisaAttributeBadges';
 import { calculateAge, evaluatePassportValidity } from '@/lib/date/calculate-age';
+import { normalizePassportAutofillValue, resolvePassportAutofillField } from '@/lib/ocr/passport-fields';
 import {
   Upload, AlertTriangle, Plus, ArrowRight, Check, Circle, Scan,
   Loader2, X, FileCheck, ChevronDown, ChevronUp, Image as ImageIcon,
@@ -64,7 +65,7 @@ interface ApplicantValidationIssue {
   blocksSubmit: boolean;
 }
 
-// Normalize document names — strip parenthetical annotations (e.g. "Bank Statement (min ₹3L)" → "Bank Statement")
+// Normalize document names - strip parenthetical annotations (e.g. "Bank Statement (min Rs 3L)" -> "Bank Statement")
 function normalizeDocName(name: string): string {
   const cleaned = name.replace(/\s*\(.*?\)\s*/g, '').trim();
   // Also normalize common variations
@@ -265,20 +266,7 @@ function readStoredVisaType() {
   }
 }
 
-function formatDateForInput(dateStr: string): string {
-  if (!dateStr) return '';
-  // Handle DD/MM/YYYY format from OCR
-  const parts = dateStr.split(/[\/\-\.]/);
-  if (parts.length === 3) {
-    const [d, m, y] = parts.map((p) => p.trim());
-    // If year is 2 digits, convert to 4 digits
-    const fullYear = y.length === 2 ? (parseInt(y) > 50 ? '19' + y : '20' + y) : y;
-    return `${fullYear}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-  }
-  return '';
-}
-
-/* ─── Traveler Card Component ─── */
+/* --- Traveler Card Component --- */
 function TravelerCard({
   traveler,
   index,
@@ -324,21 +312,17 @@ function TravelerCard({
         const res = await fetch('/api/ocr', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageBase64: base64, documentType: 'passport' }),
+          body: JSON.stringify({ imageBase64: base64, documentType: 'passport', mimeType: file.type }),
         });
         const data = await res.json();
 
         if (data.success && data.fields) {
           for (const f of data.fields) {
-            if (f.value) {
-              const key = f.field as keyof TravelerData;
-              if (key === 'dateOfBirth' || key === 'dateOfIssue' || key === 'dateOfExpiry') {
-                const formatted = formatDateForInput(f.value);
-                if (formatted) onUpdate(traveler.id, key, formatted);
-              } else {
-                onUpdate(traveler.id, key, f.value);
-              }
-            }
+            if (!f.value) continue;
+            const key = resolvePassportAutofillField(f.field);
+            if (!key) continue;
+            const value = normalizePassportAutofillValue(key, String(f.value));
+            if (value) onUpdate(traveler.id, key, value);
           }
           onUpdate(traveler.id, 'ocrStatus', 'done');
         } else {
@@ -417,7 +401,7 @@ function TravelerCard({
               <h3 className="text-sm font-semibold text-foreground">
                 Traveler {index + 1}
                 {traveler.firstName && (
-                  <span className="text-vvisa-text-secondary font-normal"> — {traveler.firstName} {traveler.lastName}</span>
+                  <span className="text-vvisa-text-secondary font-normal"> - {traveler.firstName} {traveler.lastName}</span>
                 )}
               </h3>
               <div className="flex items-center gap-2 mt-0.5">
@@ -428,7 +412,7 @@ function TravelerCard({
                 )}
                 {traveler.ocrStatus === 'scanning' && (
                   <span className="inline-flex items-center gap-1 text-[10px] text-primary">
-                    <Loader2 className="h-3 w-3 animate-spin" /> Scanning with ocr.z.ai...
+                    <Loader2 className="h-3 w-3 animate-spin" /> Scanning with Digio OCR...
                   </span>
                 )}
                 {traveler.ocrStatus === 'error' && (
@@ -490,7 +474,7 @@ function TravelerCard({
               <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
                 <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-700/80 dark:text-amber-200/80">
-                  VVisa uses <span className="text-primary font-medium">ocr.z.ai</span> for 99.9% accurate passport scanning. Upload a clear passport image and details will be filled automatically. However, it is mandatory to review the information before submitting.
+                  VVisa uses <span className="text-primary font-medium">Digio OCR</span> for passport scanning. Upload a clear passport image and details will be filled automatically. However, it is mandatory to review the information before submitting.
                   {isDemoMode() ? ` ${demoModeCopy.documentNotice}` : ''}
                 </p>
               </div>
@@ -518,7 +502,7 @@ function TravelerCard({
                   {traveler.ocrStatus === 'scanning' ? (
                     <>
                       <Loader2 className="h-8 w-8 text-primary animate-spin mb-3" />
-                      <p className="text-sm text-primary font-medium mb-1">Scanning with ocr.z.ai...</p>
+                      <p className="text-sm text-primary font-medium mb-1">Scanning with Digio OCR...</p>
                       <p className="text-xs text-vvisa-text-muted">Extracting passport data</p>
                     </>
                   ) : traveler.ocrStatus === 'done' ? (
@@ -535,9 +519,9 @@ function TravelerCard({
                       <p className="text-sm text-vvisa-text-secondary mb-1">Drag & drop passport image</p>
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] text-primary font-medium">
                         <Scan className="h-3 w-3" />
-                        Powered by ocr.z.ai
+                        Powered by Digio OCR
                       </span>
-                      <p className="text-xs text-vvisa-text-muted mt-2">JPG, PNG or PDF — max 5 MB</p>
+                      <p className="text-xs text-vvisa-text-muted mt-2">JPG, PNG or PDF - max 5 MB</p>
                       <Button
                         variant="outline"
                         className="mt-3 border-vvisa-border text-vvisa-text-secondary hover:bg-vvisa-surface-2 hover:text-foreground rounded-lg text-xs"
@@ -773,7 +757,7 @@ function TravelerCard({
                                   <Scan className="h-3.5 w-3.5 text-vvisa-text-muted mb-1" />
                                   <p className="text-xs text-vvisa-text-muted">Click to upload</p>
                                   <span className="inline-flex items-center gap-0.5 text-[9px] text-primary mt-0.5">
-                                    <Scan className="h-2.5 w-2.5" /> ocr.z.ai ready
+                                    <Scan className="h-2.5 w-2.5" /> Digio OCR ready
                                   </span>
                                 </>
                               )}
@@ -794,7 +778,7 @@ function TravelerCard({
   );
 }
 
-/* ─── Helper: Convert File to Base64 ─── */
+/* --- Helper: Convert File to Base64 --- */
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -809,7 +793,7 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-/* ─── Progress Stepper Component ─── */
+/* --- Progress Stepper Component --- */
 function ProgressStepper({ currentStep }: { currentStep: number }) {
   const steps = ['Application Type', 'Internal ID', 'Traveler Details', 'Additional Documents', 'Review', 'Submit'];
 
@@ -857,7 +841,7 @@ function ProgressStepper({ currentStep }: { currentStep: number }) {
   );
 }
 
-/* ─── Main ApplyView ─── */
+/* --- Main ApplyView --- */
 export default function ApplyView() {
   const router = useRouter();
   const { selectedVisaType, setSelectedVisaType, walletBalance, submitApplication, navigate } = useAppStore();
@@ -1341,7 +1325,7 @@ export default function ApplyView() {
                     <div key={t.id} className="flex justify-between items-center">
                       <span className="text-xs text-vvisa-text-secondary">
                         Traveler {i + 1}
-                        {t.firstName ? ` — ${t.firstName} ${t.lastName}` : ''}
+                        {t.firstName ? ` - ${t.firstName} ${t.lastName}` : ''}
                       </span>
                       <span className="flex items-center gap-1.5">
                         <span className="vv-tabular text-sm text-foreground">{formatINR(pricePerTraveler)}</span>

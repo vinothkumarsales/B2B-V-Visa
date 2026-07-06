@@ -47,6 +47,7 @@ worklog.md
 *.tar.gz
 *.zip
 .runtime/browser-sessions/
+.runtime/zoho-oauth/
 data/supplier-imports/raw/live-session/
 
 # vercel

@@ -27,7 +27,11 @@
     "probe:storage": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/storage.ts",
     "probe:digio": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/digio.ts",
     "probe:zoho-payments": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/zoho-payments.ts",
-    "probe:integrations": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/integrations.ts"
+    "probe:zoho-books": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/zoho-books.ts",
+    "probe:zoho-salesiq": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/zoho-salesiq.ts",
+    "probe:integrations": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/integrations.ts",
+    "probe:crm-outbox": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/crm-outbox-readiness.ts",
+    "zoho:oauth:url": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/integrations/generate-zoho-oauth-url.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

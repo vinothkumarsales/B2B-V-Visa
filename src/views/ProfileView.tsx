@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
@@ -118,9 +118,19 @@ function DocUploadZone({ title, helper, docType, value, onUpload }: DocUploadZon
 }
 
 export default function ProfileView() {
-  const { navigate } = useAppStore();
-  const [country, setCountry] = useState('India');
-  const [state, setState] = useState(mockAgency.state || 'Karnataka');
+  const { agency, login } = useAppStore();
+  const profileAgency = agency ?? mockAgency;
+  const [country, setCountry] = useState(profileAgency.country || 'India');
+  const [state, setState] = useState(profileAgency.state || 'Karnataka');
+  const [phone, setPhone] = useState(profileAgency.phone || '');
+  const [gstNumber, setGstNumber] = useState(profileAgency.gstNumber || '');
+  const [panCard, setPanCard] = useState(profileAgency.panCard || '');
+  const [addressLine1, setAddressLine1] = useState(profileAgency.addressLine1 || '');
+  const [addressLine2, setAddressLine2] = useState(profileAgency.addressLine2 || '');
+  const [city, setCity] = useState(profileAgency.city || '');
+  const [zipCode, setZipCode] = useState(profileAgency.zipCode || '');
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<string | null>(null);
   const [logoUploading, setLogoUploading] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -154,6 +164,42 @@ export default function ProfileView() {
   const handleDocUpload = (docType: string, fileName: string) => {
     setUploadedDocs((prev) => ({ ...prev, [docType]: fileName }));
   };
+
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    setSaveMessage(null);
+    try {
+      const response = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone,
+          country,
+          gstNumber,
+          panCard,
+          addressLine1,
+          addressLine2,
+          city,
+          state,
+          zipCode,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error?.message || 'Profile update failed');
+      login({
+        ...profileAgency,
+        ...payload.agency,
+        accountType: profileAgency.accountType,
+        walletBalance: profileAgency.walletBalance,
+      });
+      setSaveMessage('Profile saved. CRM sync queued.');
+    } catch (error) {
+      setSaveMessage(error instanceof Error ? error.message : 'Profile update failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
 
   return (
     <motion.div
@@ -213,7 +259,7 @@ export default function ProfileView() {
             </div>
             <div className="flex-1 space-y-3">
               <p className="text-sm text-vvisa-text-secondary">
-                JPG, JPEG, PNG or SVG — max 1 MB
+                JPG, JPEG, PNG or SVG â€” max 1 MB
               </p>
               <Button
                 variant="outline"
@@ -266,7 +312,8 @@ export default function ProfileView() {
               <div>
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Contact Number</Label>
                 <Input
-                  defaultValue={mockAgency.phone}
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
                   className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                 />
               </div>
@@ -282,14 +329,16 @@ export default function ProfileView() {
               <div>
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">GST Number</Label>
                 <Input
-                  defaultValue={mockAgency.gstNumber}
+                  value={gstNumber}
+                  onChange={(event) => setGstNumber(event.target.value)}
                   className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10 font-mono"
                 />
               </div>
               <div>
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">PAN Card</Label>
                 <Input
-                  defaultValue={mockAgency.panCard}
+                  value={panCard}
+                  onChange={(event) => setPanCard(event.target.value)}
                   className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10 font-mono"
                 />
               </div>
@@ -308,14 +357,14 @@ export default function ProfileView() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <DocUploadZone
                 title="GST Certificate"
-                helper="PDF — max 5 MB"
+                helper="PDF â€” max 5 MB"
                 docType="gst"
                 value={uploadedDocs.gst}
                 onUpload={handleDocUpload}
               />
               <DocUploadZone
                 title="Cancelled Cheque"
-                helper="JPG, PNG or PDF — max 5 MB"
+                helper="JPG, PNG or PDF â€” max 5 MB"
                 docType="cheque"
                 value={uploadedDocs.cheque}
                 onUpload={handleDocUpload}
@@ -332,14 +381,16 @@ export default function ProfileView() {
               <div>
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Address Line 1</Label>
                 <Input
-                  defaultValue={mockAgency.addressLine1}
+                  value={addressLine1}
+                  onChange={(event) => setAddressLine1(event.target.value)}
                   className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                 />
               </div>
               <div>
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Address Line 2</Label>
                 <Input
-                  defaultValue={mockAgency.addressLine2}
+                  value={addressLine2}
+                  onChange={(event) => setAddressLine2(event.target.value)}
                   className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                 />
               </div>
@@ -347,7 +398,8 @@ export default function ProfileView() {
                 <div>
                   <Label className="text-xs text-vvisa-text-muted mb-1.5 block">City</Label>
                   <Input
-                    defaultValue={mockAgency.city}
+                    value={city}
+                    onChange={(event) => setCity(event.target.value)}
                     className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                   />
                 </div>
@@ -367,7 +419,8 @@ export default function ProfileView() {
                 <div className="col-span-2 sm:col-span-1">
                   <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Zip Code</Label>
                   <Input
-                    defaultValue={mockAgency.zipCode}
+                    value={zipCode}
+                    onChange={(event) => setZipCode(event.target.value)}
                     className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                   />
                 </div>
@@ -398,7 +451,7 @@ export default function ProfileView() {
             <div>
               <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Name as per Aadhar</Label>
               <Input
-                value="—"
+                value="â€”"
                 readOnly
                 className="bg-vvisa-bg border border-vvisa-border rounded-lg text-foreground h-10 opacity-60 cursor-not-allowed"
               />
@@ -406,7 +459,7 @@ export default function ProfileView() {
             <div>
               <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Aadhar Number</Label>
               <Input
-                value="—"
+                value="â€”"
                 readOnly
                 className="bg-vvisa-bg border border-vvisa-border rounded-lg text-foreground h-10 opacity-60 cursor-not-allowed"
               />
@@ -414,7 +467,7 @@ export default function ProfileView() {
             <div>
               <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Address</Label>
               <Input
-                value="—"
+                value="â€”"
                 readOnly
                 className="bg-vvisa-bg border border-vvisa-border rounded-lg text-foreground h-10 opacity-60 cursor-not-allowed"
               />

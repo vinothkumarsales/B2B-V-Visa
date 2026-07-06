@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
@@ -52,6 +53,14 @@ export default function RootLayout({
           {children}
           <Toaster />
         </ThemeProvider>
+        <Script id="zoho-salesiq-init" strategy="afterInteractive">
+          {`window.$zoho=window.$zoho||{};$zoho.salesiq=$zoho.salesiq||{ready:function(){}};`}
+        </Script>
+        <Script
+          id="zsiqscript"
+          src="https://salesiq.zohopublic.in/widget?wc=siqb5fa5cb4b302ffb287f47f7ae09dc9a9a2c173abc6a7b5988191264366b2b29f"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

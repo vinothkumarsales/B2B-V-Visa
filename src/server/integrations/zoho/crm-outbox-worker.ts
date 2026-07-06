@@ -1,6 +1,10 @@
 import { randomUUID } from 'crypto';
 import type { IntegrationEvent, IntegrationEventStatus } from '@prisma/client';
 import { db } from '@/lib/db';
+import { readLocalPrivateDocumentForCrm } from '@/server/storage/private-document-storage';
+import { uploadZohoCrmAttachment } from './attachments';
+import { buildConfiguredPassportCrmUpdateFields, buildConfiguredTravelAgentCrmFields, buildConfiguredVisaInterestLeadCreateFields, createZohoCrmRecord, updateZohoCrmRecord } from './record-update';
+import { env } from '@/lib/env';
 
 const DEFAULT_LOCK_MS = 5 * 60 * 1000;
 const MAX_RETRY_COUNT = 8;
@@ -118,6 +122,420 @@ export async function markZohoCrmEventManualReview(input: {
   });
 }
 
+export async function processZohoCrmOutboxEvent(event: ClaimedCrmOutboxEvent) {
+  try {
+    if (
+      event.eventType === 'LEAD_ATTACHMENT_UPLOAD' ||
+      event.eventType === 'CONTACT_ATTACHMENT_UPLOAD'
+    ) {
+      const payload = parseAttachmentPayload(event.payload);
+      const bytes = await readLocalPrivateDocumentForCrm(payload.storageKey);
+      const result = await uploadZohoCrmAttachment({
+        moduleApiName: payload.crmModule,
+        recordId: payload.crmRecordId,
+        filename: payload.fileName,
+        mimeType: payload.mimeType,
+        content: bytes,
+      });
+
+      await db.documentCrmAttachment.updateMany({
+        where: {
+          portalDocumentId: payload.portalDocumentId,
+          crmModule: payload.crmModule,
+          crmRecordId: payload.crmRecordId,
+          checksum: payload.checksum,
+        },
+        data: {
+          crmAttachmentId: result.providerAttachmentId,
+          syncStatus: 'COMPLETED',
+          lastSyncAttemptAt: new Date(),
+        },
+      });
+
+      return markZohoCrmEventCompleted({
+        eventId: event.id,
+        providerRecordId: result.providerAttachmentId ?? undefined,
+      });
+    }
+
+    if (event.eventType === 'TRAVEL_AGENT_UPSERT' || event.eventType === 'TRAVEL_AGENT_PROFILE_UPDATED') {
+      const payload = parseTravelAgentPayload(event.payload);
+      const fields = buildConfiguredTravelAgentCrmFields({
+        portalTravelAgentId: payload.agencyId,
+        agencyName: payload.agencyName,
+        email: payload.email,
+        mobile: payload.mobile,
+        gstNumber: payload.gstNumber,
+        panCard: payload.panCard,
+        city: payload.city,
+        state: payload.state,
+        country: payload.country,
+        postalCode: payload.postalCode,
+        addressLine1: payload.addressLine1,
+        addressLine2: payload.addressLine2,
+        portalSource: 'V-Visa B2B Portal',
+      });
+
+      if (!env.CRM_WRITE_ENABLED) {
+        return markZohoCrmEventManualReview({
+          eventId: event.id,
+          reasonCode: 'CRM_WRITE_DISABLED',
+        });
+      }
+
+      const existingMapping = await db.crmEntityMapping.findUnique({
+        where: {
+          portalEntityType_portalEntityId_zohoModule: {
+            portalEntityType: 'Agency',
+            portalEntityId: payload.agencyId,
+            zohoModule: env.ZOHO_CRM_TRAVEL_AGENTS_MODULE,
+          },
+        },
+      });
+      const targetZohoRecordId = existingMapping?.zohoRecordId || payload.existingZohoRecordId;
+      const result = targetZohoRecordId
+        ? await updateZohoCrmRecord({
+            moduleApiName: env.ZOHO_CRM_TRAVEL_AGENTS_MODULE,
+            recordId: targetZohoRecordId,
+            fields,
+          })
+        : await createZohoCrmRecord({
+            moduleApiName: env.ZOHO_CRM_TRAVEL_AGENTS_MODULE,
+            fields,
+          });
+
+      const zohoRecordId = result.providerRecordId || targetZohoRecordId;
+      if (!zohoRecordId) throw validationError('ZOHO_TRAVEL_AGENT_ID_MISSING');
+
+      await db.agency.update({
+        where: { id: payload.agencyId },
+        data: {
+          zohoRecordId,
+          syncStatus: 'COMPLETED',
+          lastSyncedAt: new Date(),
+          syncErrorCode: null,
+          syncAttemptCount: { increment: 1 },
+        },
+      });
+
+      await db.crmEntityMapping.upsert({
+        where: {
+          portalEntityType_portalEntityId_zohoModule: {
+            portalEntityType: 'Agency',
+            portalEntityId: payload.agencyId,
+            zohoModule: env.ZOHO_CRM_TRAVEL_AGENTS_MODULE,
+          },
+        },
+        update: {
+          zohoRecordId,
+          syncStatus: 'COMPLETED',
+          lastSyncedAt: new Date(),
+        },
+        create: {
+          agencyId: event.agencyId,
+          portalEntityType: 'Agency',
+          portalEntityId: payload.agencyId,
+          zohoModule: env.ZOHO_CRM_TRAVEL_AGENTS_MODULE,
+          zohoRecordId,
+          syncStatus: 'COMPLETED',
+          lastSyncedAt: new Date(),
+        },
+      });
+
+      return markZohoCrmEventCompleted({
+        eventId: event.id,
+        providerRecordId: zohoRecordId,
+      });
+    }
+
+    if (event.eventType === 'VISA_INTEREST_LEAD_CREATE') {
+      const payload = parseVisaInterestLeadPayload(event.payload);
+      const fields = buildConfiguredVisaInterestLeadCreateFields({
+        leadName: payload.applicantName ?? undefined,
+        applicantName: payload.applicantName ?? undefined,
+        applicantMobile: payload.applicantMobile ?? undefined,
+        applicantEmail: payload.applicantEmail ?? undefined,
+        countryName: payload.countryName ?? undefined,
+        visaTypeName: payload.visaTypeName ?? undefined,
+        category: payload.category ?? undefined,
+        portalVisaInterestId: payload.visaInterestId,
+        leadSource: 'V-Visa B2B Portal',
+      });
+
+      if (!env.CRM_WRITE_ENABLED) {
+        return markZohoCrmEventManualReview({
+          eventId: event.id,
+          reasonCode: 'CRM_WRITE_DISABLED',
+        });
+      }
+
+      const result = await createZohoCrmRecord({
+        moduleApiName: env.ZOHO_CRM_LEADS_MODULE,
+        fields,
+      });
+
+      if (!result.providerRecordId) throw validationError('ZOHO_LEAD_ID_MISSING');
+
+      await db.visaInterest.update({
+        where: { id: payload.visaInterestId },
+        data: {
+          crmLeadId: result.providerRecordId,
+          crmSyncStatus: 'COMPLETED',
+        },
+      });
+
+      await db.crmEntityMapping.upsert({
+        where: {
+          portalEntityType_portalEntityId_zohoModule: {
+            portalEntityType: 'VisaInterest',
+            portalEntityId: payload.visaInterestId,
+            zohoModule: env.ZOHO_CRM_LEADS_MODULE,
+          },
+        },
+        update: {
+          zohoRecordId: result.providerRecordId,
+          syncStatus: 'COMPLETED',
+          lastSyncedAt: new Date(),
+        },
+        create: {
+          agencyId: event.agencyId,
+          portalEntityType: 'VisaInterest',
+          portalEntityId: payload.visaInterestId,
+          zohoModule: env.ZOHO_CRM_LEADS_MODULE,
+          zohoRecordId: result.providerRecordId,
+          syncStatus: 'COMPLETED',
+          lastSyncedAt: new Date(),
+        },
+      });
+
+      return markZohoCrmEventCompleted({
+        eventId: event.id,
+        providerRecordId: result.providerRecordId,
+      });
+    }
+
+    if (
+      event.eventType === 'LEAD_OCR_DATA_UPDATE' ||
+      event.eventType === 'CONTACT_OCR_DATA_UPDATE'
+    ) {
+      const payload = parseOcrDataPayload(event.payload);
+      const updateFields = buildConfiguredPassportCrmUpdateFields({
+        module: payload.crmModule,
+        passportFields: payload.passportFields,
+      });
+
+      if (Object.keys(updateFields).length === 0) {
+        return markZohoCrmEventManualReview({
+          eventId: event.id,
+          reasonCode: `NO_MAPPED_OCR_FIELDS_${payload.crmModule}`,
+        });
+      }
+
+      const result = await updateZohoCrmRecord({
+        moduleApiName: payload.crmModule,
+        recordId: payload.crmRecordId,
+        fields: updateFields,
+      });
+
+      return markZohoCrmEventCompleted({
+        eventId: event.id,
+        providerRecordId: result.providerRecordId,
+      });
+    }
+
+    return markZohoCrmEventManualReview({
+      eventId: event.id,
+      reasonCode: `UNHANDLED_EVENT_TYPE_${event.eventType}`,
+    });
+  } catch (error) {
+    const parsed = classifyWorkerError(error);
+    return markZohoCrmEventRetry({
+      eventId: event.id,
+      attemptCount: event.attemptCount,
+      errorCode: parsed.code,
+      errorCategory: parsed.category,
+    });
+  }
+}
+
 function sanitizeErrorCode(value: string) {
   return value.replace(/[^A-Z0-9_:-]/gi, '_').slice(0, 120);
+}
+
+type AttachmentPayload = {
+  crmModule: string;
+  crmRecordId: string;
+  portalDocumentId: string;
+  storageKey: string;
+  fileName: string;
+  mimeType: string;
+  checksum: string;
+};
+
+type TravelAgentPayload = {
+  agencyId: string;
+  agencyName: string;
+  email?: string | null;
+  mobile?: string | null;
+  gstNumber?: string | null;
+  panCard?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  postalCode?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  existingZohoRecordId?: string | null;
+};
+type VisaInterestLeadPayload = {
+  visaInterestId: string;
+  countryName?: string | null;
+  visaTypeName?: string | null;
+  category?: string | null;
+  applicantName?: string | null;
+  applicantMobile?: string | null;
+  applicantEmail?: string | null;
+};
+type OcrDataPayload = {
+  crmModule: 'Contacts' | 'Leads';
+  crmRecordId: string;
+  portalDocumentId: string;
+  ocrExtractionId: string;
+  passportFields: Record<string, string>;
+};
+
+function parseAttachmentPayload(value: unknown): AttachmentPayload {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw validationError('INVALID_ATTACHMENT_PAYLOAD');
+  }
+
+  const payload = value as Record<string, unknown>;
+  const required = [
+    'crmModule',
+    'crmRecordId',
+    'portalDocumentId',
+    'storageKey',
+    'fileName',
+    'mimeType',
+    'checksum',
+  ] as const;
+
+  for (const key of required) {
+    if (typeof payload[key] !== 'string' || !payload[key]) {
+      throw validationError(`MISSING_${key.toUpperCase()}`);
+    }
+  }
+
+  return payload as AttachmentPayload;
+}
+
+function parseTravelAgentPayload(value: unknown): TravelAgentPayload {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw validationError('INVALID_TRAVEL_AGENT_PAYLOAD');
+  }
+
+  const payload = value as Record<string, unknown>;
+  if (typeof payload.agencyId !== 'string' || !payload.agencyId) {
+    throw validationError('MISSING_AGENCY_ID');
+  }
+  if (typeof payload.agencyName !== 'string' || !payload.agencyName) {
+    throw validationError('MISSING_AGENCY_NAME');
+  }
+
+  return {
+    agencyId: payload.agencyId,
+    agencyName: payload.agencyName,
+    email: stringOrNull(payload.email),
+    mobile: stringOrNull(payload.mobile),
+    gstNumber: stringOrNull(payload.gstNumber),
+    panCard: stringOrNull(payload.panCard),
+    city: stringOrNull(payload.city),
+    state: stringOrNull(payload.state),
+    country: stringOrNull(payload.country),
+    postalCode: stringOrNull(payload.postalCode),
+    addressLine1: stringOrNull(payload.addressLine1),
+    addressLine2: stringOrNull(payload.addressLine2),
+    existingZohoRecordId: stringOrNull(payload.existingZohoRecordId),
+  };
+}
+function parseVisaInterestLeadPayload(value: unknown): VisaInterestLeadPayload {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw validationError('INVALID_VISA_INTEREST_LEAD_PAYLOAD');
+  }
+
+  const payload = value as Record<string, unknown>;
+  if (typeof payload.visaInterestId !== 'string' || !payload.visaInterestId) {
+    throw validationError('MISSING_VISA_INTEREST_ID');
+  }
+
+  return {
+    visaInterestId: payload.visaInterestId,
+    countryName: stringOrNull(payload.countryName),
+    visaTypeName: stringOrNull(payload.visaTypeName),
+    category: stringOrNull(payload.category),
+    applicantName: stringOrNull(payload.applicantName),
+    applicantMobile: stringOrNull(payload.applicantMobile),
+    applicantEmail: stringOrNull(payload.applicantEmail),
+  };
+}
+
+function stringOrNull(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+function parseOcrDataPayload(value: unknown): OcrDataPayload {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw validationError('INVALID_OCR_DATA_PAYLOAD');
+  }
+
+  const payload = value as Record<string, unknown>;
+  const crmModule = payload.crmModule;
+  if (crmModule !== 'Contacts' && crmModule !== 'Leads') {
+    throw validationError('INVALID_OCR_DATA_CRM_MODULE');
+  }
+
+  const required = ['crmRecordId', 'portalDocumentId', 'ocrExtractionId'] as const;
+  for (const key of required) {
+    if (typeof payload[key] !== 'string' || !payload[key]) {
+      throw validationError(`MISSING_${key.toUpperCase()}`);
+    }
+  }
+
+  if (!payload.passportFields || typeof payload.passportFields !== 'object' || Array.isArray(payload.passportFields)) {
+    throw validationError('MISSING_PASSPORT_FIELDS');
+  }
+
+  return {
+    crmModule,
+    crmRecordId: payload.crmRecordId as string,
+    portalDocumentId: payload.portalDocumentId as string,
+    ocrExtractionId: payload.ocrExtractionId as string,
+    passportFields: Object.fromEntries(
+      Object.entries(payload.passportFields as Record<string, unknown>)
+        .filter(([, fieldValue]) => typeof fieldValue === 'string' && fieldValue.trim())
+        .map(([fieldKey, fieldValue]) => [fieldKey, String(fieldValue).trim()]),
+    ),
+  };
+}
+
+function validationError(code: string) {
+  const error = new Error(code);
+  error.name = 'ValidationError';
+  return error;
+}
+
+function classifyWorkerError(error: unknown): {
+  code: string;
+  category: 'TRANSIENT' | 'VALIDATION' | 'CONFLICT' | 'PROVIDER' | 'UNKNOWN';
+} {
+  const code = error instanceof Error ? error.message : 'UNKNOWN_ERROR';
+  if (error instanceof Error && error.name === 'ValidationError') {
+    return { code, category: 'VALIDATION' };
+  }
+  if (error instanceof Error && (error.name === 'ZohoCrmAttachmentError' || error.name === 'ZohoCrmRecordUpdateError')) {
+    return { code, category: 'PROVIDER' };
+  }
+  if (/not found|ENOENT|Invalid storage key/i.test(code)) {
+    return { code, category: 'VALIDATION' };
+  }
+  return { code, category: 'TRANSIENT' };
 }

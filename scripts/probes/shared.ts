@@ -1,7 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-export type ProbeResult = Record<string, string | number | boolean | null | string[]>;
+export type ProbeJsonValue = string | number | boolean | null | ProbeJsonValue[] | { [key: string]: ProbeJsonValue };
+export type ProbeResult = Record<string, ProbeJsonValue>;
 
 export function loadLocalEnv() {
   for (const file of ['.env', '.env.local']) {
@@ -18,6 +19,22 @@ export function loadLocalEnv() {
       process.env[key] ??= value;
     }
   }
+  applyIntegrationEnvAliases();
+}
+
+function applyIntegrationEnvAliases() {
+  process.env.ZOHO_CRM_CLIENT_ID ||= process.env.ZOHO_CLIENT_ID;
+  process.env.ZOHO_CRM_CLIENT_SECRET ||= process.env.ZOHO_CLIENT_SECRET;
+  process.env.ZOHO_CRM_REFRESH_TOKEN ||= process.env.ZOHO_REFRESH_TOKEN;
+  process.env.ZOHO_CRM_ACCOUNTS_URL ||= process.env.ZOHO_ACCOUNTS_BASE;
+  process.env.ZOHO_CRM_API_BASE_URL ||=
+    process.env.ZOHO_API_DOMAIN || process.env.ZOHO_BASE_URL;
+  process.env.ZOHO_PAYMENTS_CLIENT_ID ||= process.env.ZOHO_PAYMENT_CLIENT_ID;
+  process.env.ZOHO_PAYMENTS_CLIENT_SECRET ||= process.env.ZOHO_PAYMENT_CLIENT_SECRET;
+  process.env.ZOHO_PAYMENTS_REFRESH_TOKEN ||= process.env.ZOHO_PAYMENT_REFRESH_TOKEN;
+  process.env.ZOHO_PAYMENTS_ACCOUNT_ID ||=
+    process.env.ZOHO_PAYMENT_ACCOUNT_ID || process.env.NEXT_PUBLIC_ZOHO_PAYMENT_ACCOUNT_ID;
+  process.env.ZOHO_PAYMENTS_WEBHOOK_SECRET ||= process.env.ZOHO_PAYMENT_WEBHOOK_SECRET;
 }
 
 export function boolEnv(name: string, fallback = false) {
@@ -68,7 +85,10 @@ export async function getZohoCrmAccessTokenForProbe() {
     ok: response.ok && Boolean(data.access_token),
     status: response.status,
     token: data.access_token,
-    errorCode: response.ok ? null : data.error || 'token_refresh_failed',
+    errorCode:
+      response.ok && data.access_token
+        ? null
+        : data.error || 'missing_access_token',
   };
 }
 

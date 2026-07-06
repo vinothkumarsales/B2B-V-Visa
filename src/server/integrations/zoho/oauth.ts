@@ -11,6 +11,7 @@ type ZohoTokenState = {
 type ZohoTokenResponse = {
   access_token?: string;
   expires_in?: number;
+  api_domain?: string;
   error?: string;
 };
 
@@ -39,6 +40,14 @@ export function getZohoCrmReadiness(): ZohoReadiness {
   };
 }
 
+export function getZohoReadiness(): ZohoReadiness {
+  return getZohoCrmReadiness();
+}
+
+export async function getZohoAccessToken(): Promise<string> {
+  return getZohoCrmAccessToken();
+}
+
 export async function getZohoCrmAccessToken(): Promise<string> {
   const now = Date.now();
   if (tokenState && tokenState.expiresAt - TOKEN_SAFETY_WINDOW_MS > now) {
@@ -57,7 +66,7 @@ export async function getZohoCrmAccessToken(): Promise<string> {
 
 async function refreshZohoCrmToken(): Promise<ZohoTokenState> {
   if (!env.ZOHO_CRM_CLIENT_ID || !env.ZOHO_CRM_CLIENT_SECRET || !env.ZOHO_CRM_REFRESH_TOKEN) {
-    throw sanitizedZohoError('ZOHO_CRM_NOT_CONFIGURED');
+    throw sanitizedZohoError('ZOHO_NOT_CONFIGURED');
   }
 
   const params = new URLSearchParams({
@@ -74,7 +83,7 @@ async function refreshZohoCrmToken(): Promise<ZohoTokenState> {
   const data = (await response.json().catch(() => ({}))) as ZohoTokenResponse;
 
   if (!response.ok || !data.access_token) {
-    throw sanitizedZohoError(data.error || 'ZOHO_CRM_TOKEN_REFRESH_FAILED');
+    throw sanitizedZohoError(data.error || 'ZOHO_TOKEN_REFRESH_FAILED');
   }
 
   return {
@@ -85,7 +94,7 @@ async function refreshZohoCrmToken(): Promise<ZohoTokenState> {
 
 export async function zohoCrmFetch(path: string, init: RequestInit = {}) {
   const token = await getZohoCrmAccessToken();
-  const url = `${env.ZOHO_CRM_API_BASE_URL.replace(/\/$/, '')}/crm/v2/${path.replace(/^\//, '')}`;
+  const url = buildZohoCrmUrl(path);
   const response = await fetchWithTimeout(url, {
     ...init,
     headers: {
@@ -111,6 +120,42 @@ export async function zohoCrmFetch(path: string, init: RequestInit = {}) {
   });
 }
 
+export function buildZohoCrmUrl(path: string) {
+  return `${env.ZOHO_CRM_API_BASE_URL.replace(/\/$/, '')}/crm/${env.ZOHO_CRM_API_VERSION}/${path.replace(/^\//, '')}`;
+}
+
+export async function zohoProductFetch(
+  baseUrl: string,
+  path: string,
+  init: RequestInit = {},
+) {
+  const token = await getZohoAccessToken();
+  const url = `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+  const response = await fetchWithTimeout(url, {
+    ...init,
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: `Zoho-oauthtoken ${token}`,
+      ...(init.headers ?? {}),
+    },
+  });
+
+  if (response.status !== 401) return response;
+
+  tokenState = null;
+  const retryToken = await getZohoAccessToken();
+  return fetchWithTimeout(url, {
+    ...init,
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: `Zoho-oauthtoken ${retryToken}`,
+      ...(init.headers ?? {}),
+    },
+  });
+}
+
 async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TOKEN_TIMEOUT_MS);
@@ -122,7 +167,7 @@ async function fetchWithTimeout(url: string, init: RequestInit): Promise<Respons
 }
 
 function sanitizedZohoError(code: string) {
-  const error = new Error(`Zoho CRM provider error: ${code}`);
-  error.name = 'ZohoCrmProviderError';
+  const error = new Error(`Zoho provider error: ${code}`);
+  error.name = 'ZohoProviderError';
   return error;
 }

@@ -59,20 +59,34 @@ export const crmFieldMappings = {
       field('travelAgentLookup', null, true, 'crm_lookup', 'PORTAL', 'MANUAL_REVIEW', 'NONE'),
     ],
   },
-  Transactions: {
-    moduleKey: 'Transactions',
-    envModuleKey: 'ZOHO_CRM_TRANSACTIONS_MODULE',
+  Accounts: {
+    moduleKey: 'Accounts',
+    envModuleKey: 'ZOHO_CRM_ACCOUNTS_MODULE',
     fields: [
+      field('accountName', 'Account_Name', true, 'trim_spaces', 'SHARED', 'MANUAL_REVIEW', 'CONTACT'),
+      field('portalTravelAgentId', null, false, 'cuid', 'PORTAL', 'CREATE_ONLY', 'NONE'),
+    ],
+  },
+  Deals: {
+    moduleKey: 'Deals',
+    envModuleKey: 'ZOHO_CRM_DEALS_MODULE',
+    fields: [
+      field('dealName', 'Deal_Name', true, 'trim_spaces', 'PORTAL', 'PORTAL_OVERWRITES', 'NONE'),
+      field('stage', 'Stage', true, 'crm_picklist', 'PORTAL', 'PORTAL_OVERWRITES', 'NONE'),
+      field('amount', 'Amount', false, 'decimal_major_units', 'PORTAL', 'PORTAL_OVERWRITES', 'FINANCIAL'),
+      field('closingDate', 'Closing_Date', false, 'date', 'PORTAL', 'PORTAL_OVERWRITES', 'NONE'),
+      field('portalApplicationId', null, false, 'cuid', 'PORTAL', 'CREATE_ONLY', 'NONE'),
+    ],
+  },
+  Service_Requests: {
+    moduleKey: 'Service_Requests',
+    envModuleKey: 'ZOHO_CRM_SERVICES_MODULE',
+    fields: [
+      field('serviceRequestName', 'Name', true, 'trim_spaces', 'PORTAL', 'PORTAL_OVERWRITES', 'NONE'),
       field('portalPaymentId', null, true, 'cuid', 'PORTAL', 'CREATE_ONLY', 'FINANCIAL'),
       field('providerPaymentId', null, true, 'provider_reference', 'PORTAL', 'CREATE_ONLY', 'FINANCIAL'),
       field('amountMinor', null, true, 'minor_units', 'PORTAL', 'CREATE_ONLY', 'FINANCIAL'),
       field('applicationId', null, true, 'cuid', 'PORTAL', 'CREATE_ONLY', 'NONE'),
-    ],
-  },
-  Applications: {
-    moduleKey: 'Applications',
-    envModuleKey: 'ZOHO_CRM_APPLICATIONS_MODULE',
-    fields: [
       field('portalApplicationId', null, true, 'cuid', 'PORTAL', 'CREATE_ONLY', 'NONE'),
       field('destination', null, true, 'trim_spaces', 'PORTAL', 'PORTAL_OVERWRITES', 'NONE'),
       field('visaType', null, true, 'trim_spaces', 'PORTAL', 'PORTAL_OVERWRITES', 'NONE'),

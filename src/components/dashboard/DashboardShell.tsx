@@ -42,6 +42,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { SalesIqChatButton } from '@/components/SalesIqChatButton';
 import type { ViewRoute } from '@/types';
 
 interface NavItem {
@@ -317,6 +318,7 @@ function SupportPopover() {
                   support@vvisa.in
                 </span>
               </a>
+              <SalesIqChatButton />
             </div>
           </div>
         </div>
