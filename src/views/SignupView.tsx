@@ -7,8 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
-import { mockAgency } from '@/lib/mock-data';
-import { isDemoMode } from '@/lib/app-mode';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -95,12 +93,6 @@ export default function SignupView() {
   };
 
   const onSubmit = async (data: SignupFormData) => {
-    if (isDemoMode()) {
-      login(mockAgency);
-      router.push('/dashboard');
-      return;
-    }
-
     const response = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -116,7 +108,7 @@ export default function SignupView() {
       throw new Error(payload.message || 'Registration failed');
     }
 
-    login(payload.agency ?? mockAgency);
+    login(payload.agency);
     router.push('/dashboard');
   };
 

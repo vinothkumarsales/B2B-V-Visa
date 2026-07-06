@@ -2,8 +2,6 @@
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { apiError, isApiResponse } from '@/lib/api-response';
-import { isDemoMode } from '@/lib/env';
-import { mockAgency } from '@/lib/mock-data';
 import { auditLog } from '@/server/audit/audit-log';
 import { hashPassword } from '@/server/auth/password';
 import { createSession } from '@/server/auth/session';
@@ -20,10 +18,6 @@ export async function POST(request: NextRequest) {
   try {
     const parsed = registerSchema.safeParse(await request.json());
     if (!parsed.success) return apiError('INVALID_INPUT', 'Invalid registration details', 400);
-
-    if (isDemoMode) {
-      return NextResponse.json({ user: mockAgency, agency: mockAgency, mode: 'demo' });
-    }
 
     const email = parsed.data.email.trim().toLowerCase();
     const phone = parsed.data.phone.trim();

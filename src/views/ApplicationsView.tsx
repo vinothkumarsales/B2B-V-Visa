@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
-import { mockApplications, statusConfig } from '@/lib/mock-data';
+import { statusConfig } from '@/lib/mock-data';
 import type { VisaApplication } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,8 +13,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, ArrowRight, Download, Eye, Check, Plane, Calendar, FileText, User } from 'lucide-react';
-
-const CLIENT_ID = 'enKOdaUD6df8RHXgzoP723VOvHA2';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -67,22 +65,22 @@ const approvedSteps = [
 
 export default function ApplicationsView() {
   const router = useRouter();
-  const { navigate, setSelectedApplicationId } = useAppStore();
+  const { navigate, setSelectedApplicationId, applications, agency } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [travelDate, setTravelDate] = useState('');
   const [destination, setDestination] = useState('all');
   const [activeTab, setActiveTab] = useState<TabFilter>('ALL');
 
   const allDestinations = useMemo(
-    () => [...new Set(mockApplications.map((a) => a.destination))],
-    []
+    () => [...new Set(applications.map((a) => a.destination))],
+    [applications]
   );
 
   const sortedApplications = useMemo(() => {
-    return [...mockApplications].sort(
+    return [...applications].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-  }, []);
+  }, [applications]);
 
   const filteredApps = useMemo(() => {
     return sortedApplications.filter((app) => {
@@ -103,12 +101,12 @@ export default function ApplicationsView() {
   }, [sortedApplications, searchQuery, travelDate, destination, activeTab]);
 
   const tabCounts = useMemo(() => ({
-    ALL: mockApplications.length,
-    APPROVED: mockApplications.filter((a) => a.status === 'APPROVED').length,
-    PAYMENT_PENDING: mockApplications.filter((a) => a.status === 'PAYMENT_PENDING').length,
-    SUBMITTED: mockApplications.filter((a) => a.status === 'SUBMITTED').length,
-    DRAFT: mockApplications.filter((a) => a.status === 'DRAFT').length,
-  }), []);
+    ALL: applications.length,
+    APPROVED: applications.filter((a) => a.status === 'APPROVED').length,
+    PAYMENT_PENDING: applications.filter((a) => a.status === 'PAYMENT_PENDING').length,
+    SUBMITTED: applications.filter((a) => a.status === 'SUBMITTED').length,
+    DRAFT: applications.filter((a) => a.status === 'DRAFT').length,
+  }), [applications]);
 
   const isGroup = (app: VisaApplication) => app.groupId != null && app.travelers.length > 1;
 
@@ -124,7 +122,7 @@ export default function ApplicationsView() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Applications</h1>
         <p className="text-sm text-vvisa-text-muted mt-1">Track and manage visa applications</p>
-        <p className="text-xs text-vvisa-text-muted font-mono mt-1">{CLIENT_ID}</p>
+        {agency?.id && <p className="text-xs text-vvisa-text-muted font-mono mt-1">{agency.id}</p>}
       </div>
 
       {/* Filters Row */}
@@ -209,6 +207,7 @@ export default function ApplicationsView() {
               <motion.div key={app.id} variants={cardVariants}>
                 <GroupCard
                   app={app}
+                  agencyId={agency?.id}
                   onViewGroup={() => {
                     setSelectedApplicationId(app.id);
                     navigate('application-detail');
@@ -220,7 +219,7 @@ export default function ApplicationsView() {
           } else if (app.status === 'APPROVED') {
             return (
               <motion.div key={app.id} variants={cardVariants}>
-                <IndividualApprovedCard app={app} />
+                <IndividualApprovedCard app={app} agencyId={agency?.id} />
               </motion.div>
             );
           } else {
@@ -228,6 +227,7 @@ export default function ApplicationsView() {
               <motion.div key={app.id} variants={cardVariants}>
                 <IndividualDefaultCard
                   app={app}
+                  agencyId={agency?.id}
                   onView={() => {
                     setSelectedApplicationId(app.id);
                     navigate('application-detail');
@@ -252,7 +252,7 @@ export default function ApplicationsView() {
 }
 
 /* ─── Group Application Card ─── */
-function GroupCard({ app, onViewGroup }: { app: VisaApplication; onViewGroup: () => void }) {
+function GroupCard({ app, agencyId, onViewGroup }: { app: VisaApplication; agencyId?: string; onViewGroup: () => void }) {
   const approvedCount = app.travelers.filter((t) => t.status === 'APPROVED').length;
   const totalTravelers = app.travelers.length;
   const allApproved = approvedCount === totalTravelers;
@@ -320,7 +320,7 @@ function GroupCard({ app, onViewGroup }: { app: VisaApplication; onViewGroup: ()
 
         {/* Bottom: Client ID + View Group */}
         <div className="flex items-center justify-between pt-3 border-t border-vvisa-border">
-          <span className="text-[10px] text-vvisa-text-muted font-mono">{CLIENT_ID}</span>
+          {agencyId && <span className="text-[10px] text-vvisa-text-muted font-mono">{agencyId}</span>}
           <Button
             variant="ghost"
             className="text-primary hover:text-primary/80 hover:bg-primary/10 text-xs p-0 h-auto"
@@ -334,7 +334,7 @@ function GroupCard({ app, onViewGroup }: { app: VisaApplication; onViewGroup: ()
 }
 
 /* ─── Individual Approved Card ─── */
-function IndividualApprovedCard({ app }: { app: VisaApplication }) {
+function IndividualApprovedCard({ app, agencyId }: { app: VisaApplication; agencyId?: string }) {
   const traveler = app.travelers[0];
   if (!traveler) return null;
 
@@ -415,7 +415,7 @@ function IndividualApprovedCard({ app }: { app: VisaApplication }) {
         </div>
 
         {/* Client ID */}
-        <p className="text-[10px] text-vvisa-text-muted font-mono mb-3">{CLIENT_ID}</p>
+        {agencyId && <p className="text-[10px] text-vvisa-text-muted font-mono mb-3">{agencyId}</p>}
 
         {/* Actions */}
         <div className="flex flex-wrap gap-2">
@@ -438,7 +438,7 @@ function IndividualApprovedCard({ app }: { app: VisaApplication }) {
 }
 
 /* ─── Individual Pending / Submitted / Draft Card ─── */
-function IndividualDefaultCard({ app, onView }: { app: VisaApplication; onView: () => void }) {
+function IndividualDefaultCard({ app, agencyId, onView }: { app: VisaApplication; agencyId?: string; onView: () => void }) {
   const traveler = app.travelers[0];
   if (!traveler) return null;
 
@@ -473,7 +473,7 @@ function IndividualDefaultCard({ app, onView }: { app: VisaApplication; onView: 
         </div>
 
         {/* Client ID */}
-        <p className="text-[10px] text-vvisa-text-muted font-mono mb-3">{CLIENT_ID}</p>
+        {agencyId && <p className="text-[10px] text-vvisa-text-muted font-mono mb-3">{agencyId}</p>}
 
         {/* Actions */}
         <div className="flex flex-wrap gap-2">

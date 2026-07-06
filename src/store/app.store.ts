@@ -56,6 +56,7 @@ interface AppState {
   agency: Agency | null;
   login: (agency: Agency) => void;
   logout: () => void;
+  clearUserScopedState: () => void;
 
   // Selected visa/application context
   selectedVisaType: VisaType | null;
@@ -108,7 +109,21 @@ export const useAppStore = create<AppState>((set, get) => ({
   isAuthenticated: false,
   agency: null,
   login: (agency) => set({ isAuthenticated: true, agency, currentView: 'dashboard', previousView: null }),
-  logout: () => set({ isAuthenticated: false, agency: null, currentView: 'landing', previousView: null }),
+  logout: () => get().clearUserScopedState(),
+  clearUserScopedState: () => set({
+    isAuthenticated: false,
+    agency: null,
+    currentView: 'login',
+    previousView: null,
+    selectedVisaType: null,
+    selectedApplicationId: null,
+    applications: [],
+    walletBalance: 0,
+    transactions: [],
+    stats: { totalApplications: 0, approvedThisMonth: 0, walletBalance: 0, pendingPayment: 0 },
+    allianceLinks: [],
+    overstayCases: [],
+  }),
 
   // Selected visa
   selectedVisaType: null,

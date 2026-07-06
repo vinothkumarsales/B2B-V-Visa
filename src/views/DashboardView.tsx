@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
-import { mockApplications, mockVisaTypes, popularDestinations, statusConfig } from '@/lib/mock-data';
+import { mockVisaTypes, popularDestinations, statusConfig } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +27,7 @@ function formatDate(dateStr: string): string {
 
 export default function DashboardView() {
   const router = useRouter();
-  const { navigate, setSelectedVisaType, stats } = useAppStore();
+  const { navigate, stats, applications, agency } = useAppStore();
   const [goingTo, setGoingTo] = useState('');
   const [travelDate, setTravelDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
@@ -38,7 +38,7 @@ export default function DashboardView() {
     d.toLowerCase().includes(goingTo.toLowerCase())
   );
 
-  const recentApps = mockApplications.slice(0, 3);
+  const recentApps = applications.slice(0, 3);
 
   const handleSearch = () => {
     if (!goingTo.trim()) return;
@@ -217,7 +217,7 @@ export default function DashboardView() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-foreground">Recent Applications</h2>
-              <span className="text-xs text-vvisa-border-active font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
+              {agency?.id && <span className="text-xs text-vvisa-border-active font-mono">{agency.id}</span>}
               <button
                 onClick={() => {
                   navigate('applications');

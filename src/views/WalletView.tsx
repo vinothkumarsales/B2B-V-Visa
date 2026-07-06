@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
-import { mockTransactions, statusConfig } from '@/lib/mock-data';
-import type { WalletTransactionType } from '@/types';
+import { statusConfig } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,7 +36,7 @@ const typeConfig: Record<string, { label: string; bg: string; text: string }> = 
 };
 
 export default function WalletView() {
-  const { walletBalance } = useAppStore();
+  const { walletBalance, transactions, agency } = useAppStore();
   const [depositTab, setDepositTab] = useState('bank');
 
   return (
@@ -55,7 +54,7 @@ export default function WalletView() {
             <h1 className="text-2xl font-bold text-foreground">Wallet</h1>
             <p className="text-sm text-vvisa-text-muted mt-1">Manage your balance, deposits, and withdrawals</p>
           </div>
-          <span className="text-xs text-vvisa-border-active font-mono">enKOdaUD6df8RHXgzoP723VOvHA2</span>
+          {agency?.id && <span className="text-xs text-vvisa-border-active font-mono">{agency.id}</span>}
         </div>
         <Card className="vv-surface-elevated shrink-0 rounded-xl border">
           <CardContent className="px-5 py-3 text-right">
@@ -332,7 +331,7 @@ export default function WalletView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {mockTransactions.map((txn) => {
+                  {transactions.map((txn) => {
                     const tc = typeConfig[txn.type] || typeConfig.PAYMENT;
                     const isCredit = txn.type === 'DEPOSIT' || txn.type === 'REFUND';
                     return (
@@ -356,6 +355,13 @@ export default function WalletView() {
                       </tr>
                     );
                   })}
+                  {transactions.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-8 text-center text-sm text-vvisa-text-muted">
+                        No wallet transactions yet.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

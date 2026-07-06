@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
-import { mockApplications, statusConfig } from '@/lib/mock-data';
+import { statusConfig } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,11 +34,11 @@ const statusSteps = [
 ];
 
 export default function ApplicationDetailView() {
-  const { navigate, selectedApplicationId } = useAppStore();
+  const { navigate, selectedApplicationId, applications, agency } = useAppStore();
 
   const app = useMemo(
-    () => mockApplications.find((a) => a.id === selectedApplicationId),
-    [selectedApplicationId]
+    () => applications.find((a) => a.id === selectedApplicationId),
+    [applications, selectedApplicationId]
   );
 
   if (!app) {
@@ -86,7 +86,7 @@ export default function ApplicationDetailView() {
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold text-foreground">{app.groupName || 'Application'}</h1>
-            <span className="text-[9px] text-vvisa-border-active font-mono ml-2">enKOdaUD6df8RHXgzoP723VOvHA2</span>
+            {agency?.id && <span className="text-[9px] text-vvisa-border-active font-mono ml-2">{agency.id}</span>}
             {app.internalId && (
               <Badge variant="secondary" className="bg-vvisa-surface-2 text-vvisa-text-secondary text-xs border-0 font-mono">
                 {app.internalId}

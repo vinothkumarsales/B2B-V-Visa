@@ -3,7 +3,6 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
-import { mockAgency } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,8 +16,6 @@ const pageVariants = {
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -8 },
 };
-
-const CLIENT_ID = 'enKOdaUD6df8RHXgzoP723VOvHA2';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat',
@@ -119,16 +116,17 @@ function DocUploadZone({ title, helper, docType, value, onUpload }: DocUploadZon
 
 export default function ProfileView() {
   const { agency, login } = useAppStore();
-  const profileAgency = agency ?? mockAgency;
-  const [country, setCountry] = useState(profileAgency.country || 'India');
-  const [state, setState] = useState(profileAgency.state || 'Karnataka');
-  const [phone, setPhone] = useState(profileAgency.phone || '');
-  const [gstNumber, setGstNumber] = useState(profileAgency.gstNumber || '');
-  const [panCard, setPanCard] = useState(profileAgency.panCard || '');
-  const [addressLine1, setAddressLine1] = useState(profileAgency.addressLine1 || '');
-  const [addressLine2, setAddressLine2] = useState(profileAgency.addressLine2 || '');
-  const [city, setCity] = useState(profileAgency.city || '');
-  const [zipCode, setZipCode] = useState(profileAgency.zipCode || '');
+  const profileAgency = agency;
+  const agencyId = profileAgency?.id;
+  const [country, setCountry] = useState(profileAgency?.country || 'India');
+  const [state, setState] = useState(profileAgency?.state || 'Karnataka');
+  const [phone, setPhone] = useState(profileAgency?.phone || '');
+  const [gstNumber, setGstNumber] = useState(profileAgency?.gstNumber || '');
+  const [panCard, setPanCard] = useState(profileAgency?.panCard || '');
+  const [addressLine1, setAddressLine1] = useState(profileAgency?.addressLine1 || '');
+  const [addressLine2, setAddressLine2] = useState(profileAgency?.addressLine2 || '');
+  const [city, setCity] = useState(profileAgency?.city || '');
+  const [zipCode, setZipCode] = useState(profileAgency?.zipCode || '');
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<string | null>(null);
@@ -187,10 +185,10 @@ export default function ProfileView() {
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error?.message || 'Profile update failed');
       login({
-        ...profileAgency,
+        ...profileAgency!,
         ...payload.agency,
-        accountType: profileAgency.accountType,
-        walletBalance: profileAgency.walletBalance,
+        accountType: profileAgency?.accountType ?? 'b2b',
+        walletBalance: profileAgency?.walletBalance ?? 0,
       });
       setSaveMessage('Profile saved. CRM sync queued.');
     } catch (error) {
@@ -217,7 +215,7 @@ export default function ProfileView() {
               <Building2 className="h-4 w-4 text-vvisa-text-secondary" />
               Agency Logo
             </div>
-            <span className="text-xs text-vvisa-text-muted font-mono font-normal">{CLIENT_ID}</span>
+            {agencyId && <span className="text-xs text-vvisa-text-muted font-mono font-normal">{agencyId}</span>}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -281,7 +279,7 @@ export default function ProfileView() {
               <User className="h-4 w-4 text-vvisa-text-secondary" />
               Agency Information
             </div>
-            <span className="text-xs text-vvisa-text-muted font-mono font-normal">{CLIENT_ID}</span>
+            {agencyId && <span className="text-xs text-vvisa-text-muted font-mono font-normal">{agencyId}</span>}
           </CardTitle>
           <p className="text-xs text-vvisa-text-muted">Update your GST, PAN, and address details</p>
         </CardHeader>
@@ -428,7 +426,8 @@ export default function ProfileView() {
             </div>
           </div>
 
-          <Button className="bg-primary hover:bg-primary/90 text-white rounded-lg h-10 px-6">
+          {saveMessage && <p className="text-xs text-vvisa-text-muted">{saveMessage}</p>}
+          <Button onClick={handleSaveProfile} disabled={saving || !profileAgency} className="bg-primary hover:bg-primary/90 text-white rounded-lg h-10 px-6">
             Save Changes
           </Button>
         </CardContent>
@@ -442,7 +441,7 @@ export default function ProfileView() {
               <Lock className="h-4 w-4 text-vvisa-text-secondary" />
               Aadhar Details
             </div>
-            <span className="text-xs text-vvisa-text-muted font-mono font-normal">{CLIENT_ID}</span>
+            {agencyId && <span className="text-xs text-vvisa-text-muted font-mono font-normal">{agencyId}</span>}
           </CardTitle>
           <p className="text-xs text-vvisa-text-muted">Identity verification information</p>
         </CardHeader>

@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
-import { mockAgency } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -61,8 +60,8 @@ export default function LoginView() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: mockAgency.email,
-      password: 'password123',
+      email: '',
+      password: '',
     },
   });
 
@@ -80,8 +79,12 @@ export default function LoginView() {
         setServerError(data?.error?.message ?? data?.error ?? 'Login failed');
         return;
       }
-      login(data.user ?? mockAgency);
-      router.push('/dashboard');
+      if (data.agency) {
+        login(data.agency);
+        router.push('/dashboard');
+      } else {
+        router.push('/admin');
+      }
     } catch {
       setServerError('Unable to reach the login service');
     } finally {
@@ -268,6 +271,8 @@ export default function LoginView() {
           {/* Google Button */}
           <Button
             variant="outline"
+            type="button"
+            onClick={() => setServerError('Google login is not configured for this deployment yet. Use email login or create an account.')}
             className="w-full h-11 bg-vvisa-surface border-vvisa-border text-white hover:bg-vvisa-surface-2 hover:text-foreground font-medium transition-colors cursor-pointer"
           >
             <svg className="size-4 mr-2" viewBox="0 0 24 24">

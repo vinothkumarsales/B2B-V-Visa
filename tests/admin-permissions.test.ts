@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { hasAdminPermission, isBootstrapAdminEmail, roleFromMembership } from '../src/server/admin/permissions.ts';
+import {
+  hasAdminPermission,
+  isBootstrapAdminEmail,
+  roleFromMembership,
+} from '../src/server/admin/permissions.ts';
 
 test('admin bootstrap email checks use exact company domain', () => {
   assert.equal(isBootstrapAdminEmail('vinodhvijay490@gmail.com'), true);
