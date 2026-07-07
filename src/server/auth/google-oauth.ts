@@ -20,7 +20,8 @@ export function createGoogleOAuthState() {
 }
 
 export function getGoogleRedirectUri(origin: string) {
-  return `${origin}/api/auth/google/callback`;
+  const appUrl = process.env.APP_URL?.trim().replace(/\/$/, '');
+  return `${appUrl || origin}/api/auth/google/callback`;
 }
 
 export function buildGoogleOAuthUrl(input: { origin: string; state: string }) {

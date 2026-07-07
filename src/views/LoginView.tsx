@@ -50,12 +50,28 @@ function loginErrorMessage(code?: string) {
     case 'ACCOUNT_LOCKED':
       return 'Too many failed attempts. Try again later.';
     case 'google_not_configured':
+    case 'GOOGLE_NOT_CONFIGURED':
       return 'Google login is not configured yet. Add the Google OAuth credentials in Vercel and redeploy.';
     case 'google_invalid_state':
+    case 'GOOGLE_STATE_MISMATCH':
       return 'Google login expired. Please try again.';
     case 'google_email_unverified':
+    case 'GOOGLE_EMAIL_NOT_VERIFIED':
       return 'Google could not verify this email address.';
     case 'google_login_failed':
+    case 'GOOGLE_TOKEN_EXCHANGE_FAILED':
+      return 'Google rejected the login callback. Check that the Google client secret and callback URL are correct.';
+    case 'GOOGLE_PROFILE_FAILED':
+      return 'Google login succeeded, but the profile could not be loaded.';
+    case 'DATABASE_CONNECTION_FAILED':
+      return 'Google login reached the server, but the database connection failed.';
+    case 'DATABASE_SCHEMA_MISSING':
+      return 'Google login reached the database, but required tables are missing.';
+    case 'USER_BOOTSTRAP_FAILED':
+      return 'Google login could not create the account. Please try again.';
+    case 'SESSION_CREATION_FAILED':
+      return 'Google login could not create the session. Please try again.';
+    case 'GOOGLE_LOGIN_FAILED':
       return 'Google login failed. Please try again.';
     default:
       return 'Login failed. Please try again.';

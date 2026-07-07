@@ -18,6 +18,31 @@ function redirectToLogin(request: NextRequest, error: string) {
   return NextResponse.redirect(new URL(`/login?error=${error}`, request.url));
 }
 
+function logGoogleStage(stage: string, metadata?: Record<string, unknown>) {
+  console.info('GOOGLE_AUTH_STAGE', { stage, ...metadata });
+}
+
+function googleErrorCode(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  const code = typeof error === 'object' && error && 'code' in error ? String(error.code) : '';
+
+  if (code === 'P2021' || message.includes('does not exist') || message.includes('relation')) {
+    return 'DATABASE_SCHEMA_MISSING';
+  }
+  if (
+    code.startsWith('P10') ||
+    message.includes('authentication failed') ||
+    message.includes('connection') ||
+    message.includes('ECONN') ||
+    message.includes('certificate')
+  ) {
+    return 'DATABASE_CONNECTION_FAILED';
+  }
+  if (message.includes('Google token exchange failed')) return 'GOOGLE_TOKEN_EXCHANGE_FAILED';
+  if (message.includes('Google profile fetch failed')) return 'GOOGLE_PROFILE_FAILED';
+  return 'GOOGLE_LOGIN_FAILED';
+}
+
 function randomPasswordHash() {
   return hashPassword(randomBytes(32).toString('base64url'));
 }
@@ -30,21 +55,54 @@ export async function GET(request: NextRequest) {
   const expectedState = cookieStore.get(GOOGLE_OAUTH_STATE_COOKIE)?.value;
   cookieStore.delete(GOOGLE_OAUTH_STATE_COOKIE);
 
-  if (!googleOAuthConfigured()) return redirectToLogin(request, 'google_not_configured');
-  if (!code || !state || !expectedState || state !== expectedState) {
-    return redirectToLogin(request, 'google_invalid_state');
+  logGoogleStage('callback_parameters_received', {
+    hasCode: Boolean(code),
+    hasState: Boolean(state),
+    hasStateCookie: Boolean(expectedState),
+    callbackOrigin: url.origin,
+  });
+
+  if (!googleOAuthConfigured()) {
+    logGoogleStage('configuration_missing', {
+      hasClientId: Boolean(process.env.GOOGLE_CLIENT_ID),
+      hasClientSecret: Boolean(process.env.GOOGLE_CLIENT_SECRET),
+    });
+    return redirectToLogin(request, 'GOOGLE_NOT_CONFIGURED');
   }
+  if (!code || !state || !expectedState || state !== expectedState) {
+    logGoogleStage('state_validation_failed', {
+      hasCode: Boolean(code),
+      hasState: Boolean(state),
+      hasStateCookie: Boolean(expectedState),
+      stateMatches: Boolean(state && expectedState && state === expectedState),
+    });
+    return redirectToLogin(request, 'GOOGLE_STATE_MISMATCH');
+  }
+  logGoogleStage('state_validation_passed');
 
   try {
+    logGoogleStage('authorization_code_exchange_started');
     const token = await exchangeGoogleCode({ code, origin: url.origin });
+    logGoogleStage('authorization_code_exchange_succeeded');
+
+    logGoogleStage('google_profile_fetch_started');
     const profile = await fetchGoogleProfile(token.access_token);
     const email = profile.email?.trim().toLowerCase();
+    logGoogleStage('google_profile_fetch_succeeded', {
+      hasEmail: Boolean(email),
+      emailVerified: Boolean(profile.email_verified),
+    });
 
     if (!email || !profile.email_verified) {
-      return redirectToLogin(request, 'google_email_unverified');
+      logGoogleStage('email_verification_failed', {
+        hasEmail: Boolean(email),
+        emailVerified: Boolean(profile.email_verified),
+      });
+      return redirectToLogin(request, 'GOOGLE_EMAIL_NOT_VERIFIED');
     }
 
     const isAdminEmail = isBootstrapAdminEmail(email);
+    logGoogleStage('database_user_lookup_started', { isAdminEmail });
     const result = await db.$transaction(async (tx) => {
       const existing = await tx.user.findUnique({
         where: { email },
@@ -53,6 +111,7 @@ export async function GET(request: NextRequest) {
 
       if (existing) return { user: existing, agency: existing.memberships[0]?.agency ?? null, created: false };
 
+      logGoogleStage('user_bootstrap_started', { isAdminEmail });
       const user = await tx.user.create({
         data: {
           name: profile.name ?? email.split('@')[0],
@@ -82,11 +141,19 @@ export async function GET(request: NextRequest) {
           },
         },
       });
+      logGoogleStage('agency_wallet_bootstrap_succeeded');
 
       return { user, agency, created: true };
     });
+    logGoogleStage('database_user_lookup_succeeded', {
+      created: result.created,
+      hasAgency: Boolean(result.agency),
+      isAdminEmail,
+    });
 
+    logGoogleStage('session_creation_started');
     await createSession(result.user.id);
+    logGoogleStage('session_creation_succeeded');
 
     await auditLog({
       agencyId: result.agency?.id,
@@ -98,12 +165,20 @@ export async function GET(request: NextRequest) {
     });
 
     if (result.created && result.agency) {
+      logGoogleStage('crm_sync_queue_started');
       await queueTravelAgentCrmSync({ agencyId: result.agency.id });
+      logGoogleStage('crm_sync_queue_succeeded');
     }
 
+    logGoogleStage('final_redirect', { destination: isAdminEmail ? '/admin' : '/dashboard' });
     return NextResponse.redirect(new URL(isAdminEmail ? '/admin' : '/dashboard', request.url));
   } catch (error) {
-    console.error('GOOGLE_LOGIN_FAILED', error instanceof Error ? error.message : 'Unknown Google login error');
-    return redirectToLogin(request, 'google_login_failed');
+    const code = googleErrorCode(error);
+    console.error('GOOGLE_AUTH_FAILED', {
+      code,
+      message: error instanceof Error ? error.message : 'Unknown Google login error',
+      prismaCode: typeof error === 'object' && error && 'code' in error ? String(error.code) : undefined,
+    });
+    return redirectToLogin(request, code);
   }
 }
