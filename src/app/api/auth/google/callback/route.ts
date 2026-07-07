@@ -178,6 +178,10 @@ export async function GET(request: NextRequest) {
       code,
       message: error instanceof Error ? error.message : 'Unknown Google login error',
       prismaCode: typeof error === 'object' && error && 'code' in error ? String(error.code) : undefined,
+      googleStatus: typeof error === 'object' && error && 'googleStatus' in error ? String(error.googleStatus) : undefined,
+      googleError: typeof error === 'object' && error && 'googleError' in error ? String(error.googleError) : undefined,
+      googleErrorDescription: typeof error === 'object' && error && 'googleErrorDescription' in error ? String(error.googleErrorDescription) : undefined,
+      redirectUri: typeof error === 'object' && error && 'redirectUri' in error ? String(error.redirectUri) : undefined,
     });
     return redirectToLogin(request, code);
   }

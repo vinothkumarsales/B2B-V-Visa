@@ -11,8 +11,12 @@ export type GoogleProfile = {
   picture?: string;
 };
 
+function envValue(name: string) {
+  return process.env[name]?.trim().replace(/^["']|["']$/g, '');
+}
+
 export function googleOAuthConfigured() {
-  return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+  return Boolean(envValue('GOOGLE_CLIENT_ID') && envValue('GOOGLE_CLIENT_SECRET'));
 }
 
 export function createGoogleOAuthState() {
@@ -20,13 +24,13 @@ export function createGoogleOAuthState() {
 }
 
 export function getGoogleRedirectUri(origin: string) {
-  const appUrl = process.env.APP_URL?.trim().replace(/\/$/, '');
+  const appUrl = envValue('APP_URL')?.replace(/\/$/, '');
   return `${appUrl || origin}/api/auth/google/callback`;
 }
 
 export function buildGoogleOAuthUrl(input: { origin: string; state: string }) {
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-  url.searchParams.set('client_id', process.env.GOOGLE_CLIENT_ID ?? '');
+  url.searchParams.set('client_id', envValue('GOOGLE_CLIENT_ID') ?? '');
   url.searchParams.set('redirect_uri', getGoogleRedirectUri(input.origin));
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('scope', 'openid email profile');
@@ -36,20 +40,32 @@ export function buildGoogleOAuthUrl(input: { origin: string; state: string }) {
 }
 
 export async function exchangeGoogleCode(input: { code: string; origin: string }) {
+  const redirectUri = getGoogleRedirectUri(input.origin);
   const response = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       code: input.code,
-      client_id: process.env.GOOGLE_CLIENT_ID ?? '',
-      client_secret: process.env.GOOGLE_CLIENT_SECRET ?? '',
-      redirect_uri: getGoogleRedirectUri(input.origin),
+      client_id: envValue('GOOGLE_CLIENT_ID') ?? '',
+      client_secret: envValue('GOOGLE_CLIENT_SECRET') ?? '',
+      redirect_uri: redirectUri,
       grant_type: 'authorization_code',
     }),
   });
 
   if (!response.ok) {
-    throw new Error(`Google token exchange failed: ${response.status}`);
+    const errorPayload = await response.json().catch(() => null) as {
+      error?: string;
+      error_description?: string;
+    } | null;
+    const error = new Error(`Google token exchange failed: ${response.status}`);
+    Object.assign(error, {
+      googleStatus: response.status,
+      googleError: errorPayload?.error,
+      googleErrorDescription: errorPayload?.error_description,
+      redirectUri,
+    });
+    throw error;
   }
 
   return response.json() as Promise<{ access_token: string }>;
