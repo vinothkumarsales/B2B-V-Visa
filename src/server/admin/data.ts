@@ -1,5 +1,28 @@
 import { db } from '@/lib/db';
 
+function adminReadFallback<T>(stage: string, fallback: T) {
+  return (error: unknown): T => {
+    const prismaError = error as {
+      code?: string;
+      meta?: { modelName?: string; model?: string; target?: unknown };
+      message?: string;
+    };
+    console.error('ADMIN_READ_FAILED', {
+      route: 'admin_overview',
+      stage,
+      prismaCode: prismaError.code ?? null,
+      model: prismaError.meta?.modelName ?? prismaError.meta?.model ?? null,
+      target: prismaError.meta?.target ?? null,
+      safeErrorCode: 'ADMIN_READ_FAILED',
+    });
+    return fallback;
+  };
+}
+
+async function readMetric<T>(stage: string, read: Promise<T>, fallback: T) {
+  return read.catch(adminReadFallback(stage, fallback));
+}
+
 export async function getAdminOverview() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -23,26 +46,26 @@ export async function getAdminOverview() {
     recentPartners,
     recentAuditLogs,
   ] = await Promise.all([
-    db.agency.count(),
-    db.agency.count({ where: { status: 'APPROVED' } }),
-    db.agency.count({ where: { status: { in: ['DOCUMENTS_PENDING', 'UNDER_REVIEW'] } } }),
-    db.visaApplication.count(),
-    db.visaApplication.count({ where: { createdAt: { gte: today } } }),
-    db.applicationDocument.count({ where: { status: { in: ['REQUESTED', 'MANUAL_REVIEW_REQUIRED', 'OCR_PENDING'] } } }),
-    db.country.count({ where: { isActive: true } }),
-    db.visaProduct.count({ where: { isActive: true } }),
-    db.visaApplication.count({ where: { status: 'PAYMENT_PENDING' } }),
-    db.visaApplication.count({ where: { status: 'APPROVED', updatedAt: { gte: monthStart } } }),
-    db.visaApplication.count({ where: { status: 'REJECTED', updatedAt: { gte: monthStart } } }),
-    db.dashboardSection.count({ where: { status: 'draft' } }).catch(() => 0),
-    db.integrationEvent.count({ where: { status: { in: ['FAILED', 'FAILED_TERMINAL'] } } }),
-    db.visaApplication.findMany({
+    readMetric('agency.total.count', db.agency.count(), 0),
+    readMetric('agency.approved.count', db.agency.count({ where: { status: 'APPROVED' } }), 0),
+    readMetric('agency.pending_approval.count', db.agency.count({ where: { status: { in: ['DOCUMENTS_PENDING', 'UNDER_REVIEW'] } } }), 0),
+    readMetric('visa_application.total.count', db.visaApplication.count(), 0),
+    readMetric('visa_application.today.count', db.visaApplication.count({ where: { createdAt: { gte: today } } }), 0),
+    readMetric('application_document.pending.count', db.applicationDocument.count({ where: { status: { in: ['REQUESTED', 'MANUAL_REVIEW_REQUIRED', 'OCR_PENDING'] } } }), 0),
+    readMetric('country.active.count', db.country.count({ where: { isActive: true } }), 0),
+    readMetric('visa_product.active.count', db.visaProduct.count({ where: { isActive: true } }), 0),
+    readMetric('visa_application.payment_pending.count', db.visaApplication.count({ where: { status: 'PAYMENT_PENDING' } }), 0),
+    readMetric('visa_application.approved_month.count', db.visaApplication.count({ where: { status: 'APPROVED', updatedAt: { gte: monthStart } } }), 0),
+    readMetric('visa_application.rejected_month.count', db.visaApplication.count({ where: { status: 'REJECTED', updatedAt: { gte: monthStart } } }), 0),
+    readMetric('dashboard_section.draft.count', db.dashboardSection.count({ where: { status: 'draft' } }), 0),
+    readMetric('integration_event.failed.count', db.integrationEvent.count({ where: { status: { in: ['FAILED', 'FAILED_TERMINAL'] } } }), 0),
+    readMetric('visa_application.recent.list', db.visaApplication.findMany({
       take: 6,
       orderBy: { createdAt: 'desc' },
       include: { agency: true },
-    }),
-    db.agency.findMany({ take: 6, orderBy: { createdAt: 'desc' } }),
-    db.auditLog.findMany({ take: 8, orderBy: { createdAt: 'desc' }, include: { actorUser: true, agency: true } }),
+    }), []),
+    readMetric('agency.recent.list', db.agency.findMany({ take: 6, orderBy: { createdAt: 'desc' } }), []),
+    readMetric('audit_log.recent.list', db.auditLog.findMany({ take: 8, orderBy: { createdAt: 'desc' }, include: { actorUser: true, agency: true } }), []),
   ]);
 
   return {
