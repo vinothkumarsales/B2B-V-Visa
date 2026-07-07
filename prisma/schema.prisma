@@ -1237,11 +1237,22 @@ model CareerPaymentIntent {
   currency         String
   idempotencyKey   String                    @unique
   pricingSnapshot  Json
+  providerMode     String                    @default("fixture")
+  providerCheckoutId String?
+  providerPaymentIntentId String?
+  checkoutUrl      String?
+  expiresAt        DateTime?
+  checkoutCreatedAt DateTime?
+  failureCode      String?
+  failureMessageSafe String?
+  attemptGroupKey  String?
+  attemptNumber    Int                       @default(1)
   createdAt        DateTime                  @default(now())
   updatedAt        DateTime                  @updatedAt
 
   @@index([candidateId, status])
   @@index([serviceRequestId, status])
+  @@index([attemptGroupKey, attemptNumber])
 }
 
 model CareerSubscription {

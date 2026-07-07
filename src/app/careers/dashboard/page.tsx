@@ -5,10 +5,14 @@ import { requireSession } from '@/server/auth/session';
 import { careerCandidateFacingStatus } from '@/server/careers/onboarding';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { CareerCheckoutPanel } from '@/components/careers/CareerCheckoutPanel';
+import { careersFeatureSnapshot } from '@/server/careers/feature-flags';
 
 export default async function CareersDashboardPage() {
   const session = await requireSession().catch(() => null);
   if (!session) redirect('/login');
+  const flags = careersFeatureSnapshot();
+  const checkoutEnabled = flags.CAREERS_SAAS_ENABLED && flags.CAREERS_PACKAGES_ENABLED && flags.CAREERS_PAYMENTS_ENABLED && flags.CAREERS_CHECKOUT_ENABLED;
 
   const candidate = await db.careerCandidate.findFirst({
     where: { userId: session.user.id },
@@ -42,6 +46,20 @@ export default async function CareersDashboardPage() {
           </Card>
         ) : (
           <>
+            {candidate.serviceRequests[0] && candidate.paymentIntents[0] && (
+              <Card className="rounded-lg border-vvisa-border-subtle">
+                <CardHeader><CardTitle>Checkout</CardTitle></CardHeader>
+                <CardContent>
+                  <CareerCheckoutPanel
+                    enabled={checkoutEnabled}
+                    serviceRequestId={candidate.serviceRequests[0].id}
+                    packageCode={candidate.serviceRequests[0].packageCode}
+                    currency={candidate.paymentIntents[0].currency}
+                    amountMinor={candidate.paymentIntents[0].amountMinor}
+                  />
+                </CardContent>
+              </Card>
+            )}
             <div className="grid gap-4 md:grid-cols-3">
               <Card className="rounded-lg border-vvisa-border-subtle">
                 <CardHeader><CardTitle>Status</CardTitle></CardHeader>
