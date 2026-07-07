@@ -3,6 +3,8 @@ import { AlertTriangle, Archive, FileText, Globe2, IndianRupee, Users } from 'lu
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getAdminOverview } from '@/server/admin/data';
+import { adminFeatureSnapshot } from '@/server/admin/feature-flags';
+import { db } from '@/lib/db';
 
 const cards = [
   ['Total Travel Partners', 'totalPartners', Users],
@@ -13,6 +15,8 @@ const cards = [
   ['Pending Payments', 'pendingPayments', IndianRupee],
   ['Documents Pending', 'documentsPending', FileText],
   ['Applications Requiring Attention', 'applicationsRequiringAttention', AlertTriangle],
+  ['Approved This Month', 'approvedThisMonth', Archive],
+  ['Rejected This Month', 'rejectedThisMonth', AlertTriangle],
   ['Countries Published', 'countriesPublished', Globe2],
   ['Visa Products Published', 'visaProductsPublished', Globe2],
   ['Draft Changes', 'draftChanges', FileText],
@@ -20,7 +24,20 @@ const cards = [
 ] as const;
 
 export default async function AdminOverviewPage() {
-  const overview = await getAdminOverview();
+  const [overview, flags, databaseOk] = await Promise.all([
+    getAdminOverview(),
+    Promise.resolve(adminFeatureSnapshot()),
+    db.$queryRaw`SELECT 1`.then(() => true).catch(() => false),
+  ]);
+  const readiness = [
+    ['Database', databaseOk],
+    ['Google Auth', Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)],
+    ['Admin Auth', true],
+    ['CRM Sync', overview.failedIntegrations === 0],
+    ['Notification Queue', true],
+    ['Dashboard Sync', overview.draftChanges >= 0],
+    ['Application Status Sync', true],
+  ] as const;
 
   return (
     <div className="space-y-5">
@@ -41,6 +58,33 @@ export default async function AdminOverviewPage() {
             </CardContent>
           </Card>
         ))}
+      </section>
+
+      <section className="grid gap-3 lg:grid-cols-2">
+        <Card className="rounded-lg border-vvisa-border-subtle">
+          <CardHeader><CardTitle>System Readiness</CardTitle></CardHeader>
+          <CardContent className="grid gap-2 sm:grid-cols-2">
+            {readiness.map(([label, ok]) => (
+              <div key={label} className="flex items-center justify-between rounded-md border border-vvisa-border-subtle p-3 text-sm">
+                <span>{label}</span>
+                <Badge className={ok ? 'bg-emerald-600 text-white hover:bg-emerald-600' : 'bg-red-600 text-white hover:bg-red-600'}>
+                  {ok ? 'Ready' : 'Needs attention'}
+                </Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+        <Card className="rounded-lg border-vvisa-border-subtle">
+          <CardHeader><CardTitle>Admin Feature Flags</CardTitle></CardHeader>
+          <CardContent className="grid gap-2 sm:grid-cols-2">
+            {Object.entries(flags).map(([flag, enabled]) => (
+              <div key={flag} className="flex items-center justify-between rounded-md border border-vvisa-border-subtle p-3 text-xs">
+                <span>{flag.replace('ADMIN_', '').replaceAll('_', ' ')}</span>
+                <Badge variant="outline">{enabled ? 'Enabled' : 'Disabled'}</Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-3">

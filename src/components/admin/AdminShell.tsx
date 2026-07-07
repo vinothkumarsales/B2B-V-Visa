@@ -37,8 +37,10 @@ const navItems = [
   { href: '/admin/pricing', label: 'Pricing', icon: BadgeIndianRupee },
   { href: '/admin/document-checklists', label: 'Document Checklists', icon: ClipboardList },
   { href: '/admin/jurisdictions', label: 'Jurisdictions', icon: Database },
-  { href: '/admin/dashboard-content', label: 'Dashboard Content', icon: LayoutDashboard },
+  { href: '/admin/dashboard-editor', label: 'Dashboard Editor', icon: LayoutDashboard },
+  { href: '/admin/application-statuses', label: 'Application Status Manager', icon: ClipboardList },
   { href: '/admin/wallets', label: 'Wallet Management', icon: WalletCards },
+  { href: '/admin/announcements', label: 'Announcements', icon: Bell },
   { href: '/admin/import-export', label: 'Imports & Exports', icon: FileClock },
   { href: '/admin/audit-logs', label: 'Audit Logs', icon: ShieldCheck },
   { href: '/admin/users', label: 'Admin Users', icon: Users },
@@ -116,9 +118,7 @@ export function AdminShell({
               <div className="flex items-center gap-2">
                 <h1 className="truncate text-base font-semibold">Admin Console</h1>
                 <Badge className="rounded-md bg-red-600 text-white hover:bg-red-600">Production</Badge>
-                <Badge variant="outline" className="rounded-md">
-                  Writes {admin.writesEnabled ? 'enabled' : 'disabled'}
-                </Badge>
+                <Badge variant="outline" className="rounded-md">Global Writes: {admin.writesEnabled ? 'Enabled' : 'Disabled'}</Badge>
               </div>
               <p className="truncate text-xs text-vvisa-text-muted">{admin.email} · {admin.role.replace('_', ' ')}</p>
             </div>

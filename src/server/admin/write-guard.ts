@@ -2,6 +2,7 @@ import { randomBytes } from 'crypto';
 import { auditLog } from '@/server/audit/audit-log';
 import { apiError } from '@/lib/api-response';
 import { adminWritesEnabled, requireAdminPermission } from './auth';
+import { adminFeatureEnabled, type AdminFeatureFlag } from './feature-flags';
 import type { AdminPermission } from './permissions';
 
 export type AdminWriteAuditInput = {
@@ -18,10 +19,13 @@ export type AdminWriteAuditInput = {
   impersonationSessionId?: string | null;
 };
 
-export async function requireAdminMutation(permission: AdminPermission) {
+export async function requireAdminMutation(permission: AdminPermission, featureFlag?: AdminFeatureFlag) {
   const admin = await requireAdminPermission(permission);
   if (!adminWritesEnabled()) {
     throw apiError('ADMIN_WRITES_DISABLED', 'Admin write operations are currently disabled in production.', 403);
+  }
+  if (featureFlag && !adminFeatureEnabled(featureFlag)) {
+    throw apiError('ADMIN_WRITES_DISABLED', 'This admin write feature is currently disabled in production.', 403);
   }
   return {
     ...admin,

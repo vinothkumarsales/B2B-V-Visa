@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { adminWritesEnabled, getAdminSession } from '@/server/admin/auth';
+import { adminFeatureSnapshot } from '@/server/admin/feature-flags';
 import { apiError } from '@/lib/api-response';
 
 export async function GET() {
@@ -11,5 +12,6 @@ export async function GET() {
     role: admin.role,
     permissions: admin.permissions,
     writesEnabled: adminWritesEnabled(),
+    flags: adminFeatureSnapshot(),
   });
 }

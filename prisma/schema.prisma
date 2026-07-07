@@ -168,6 +168,27 @@ enum PartnerPriceOverrideStatus {
   archived
 }
 
+enum AdminContentStatus {
+  draft
+  published
+  archived
+}
+
+enum DashboardSectionType {
+  welcome
+  quick_actions
+  summary_cards
+  recent_applications
+  wallet_summary
+  featured_visas
+  featured_services
+  partner_offers
+  referral_program
+  support
+  announcements
+  important_updates
+}
+
 model User {
   id           String             @id @default(cuid())
   name         String?
@@ -225,6 +246,55 @@ model Agency {
   crmMappings       CrmEntityMapping[]
   priceOverrides    PartnerPriceOverride[]
   impersonationSessions AdminImpersonationSession[]
+}
+
+model DashboardSection {
+  id              String                 @id @default(cuid())
+  key             String                 @unique
+  name            String
+  type            DashboardSectionType
+  status          AdminContentStatus     @default(draft)
+  targetAudience  Json
+  displayOrder    Int
+  isVisible       Boolean                @default(true)
+  startsAt        DateTime?
+  endsAt          DateTime?
+  updatedByUserId String?
+  lastPublishedAt DateTime?
+  config          Json
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  versions        DashboardSectionVersion[]
+  audienceRules   DashboardAudienceRule[]
+
+  @@index([status, displayOrder])
+  @@index([type, isVisible])
+}
+
+model DashboardSectionVersion {
+  id                 String             @id @default(cuid())
+  dashboardSectionId String
+  dashboardSection   DashboardSection   @relation(fields: [dashboardSectionId], references: [id], onDelete: Cascade)
+  version            Int
+  status             AdminContentStatus @default(draft)
+  snapshot           Json
+  createdByUserId    String?
+  publishedAt        DateTime?
+  createdAt          DateTime           @default(now())
+
+  @@unique([dashboardSectionId, version])
+}
+
+model DashboardAudienceRule {
+  id                 String           @id @default(cuid())
+  dashboardSectionId String
+  dashboardSection   DashboardSection @relation(fields: [dashboardSectionId], references: [id], onDelete: Cascade)
+  ruleType           String
+  operator           String
+  value              Json
+  createdAt          DateTime         @default(now())
+
+  @@index([dashboardSectionId, ruleType])
 }
 
 model AgencyMembership {
@@ -593,6 +663,102 @@ model VisaApplication {
   paymentOrders    PaymentOrder[]
 
   @@index([agencyId, status])
+}
+
+model ApplicationStatusConfig {
+  id                    String                        @id @default(cuid())
+  code                  ApplicationStatus             @unique
+  adminLabel            String
+  partnerLabel          String
+  partnerDescription    String?
+  internalDescription   String?
+  icon                  String?
+  colorToken            String
+  displayOrder          Int
+  progressPercent       Int
+  isPartnerVisible      Boolean                       @default(true)
+  isAdminVisible        Boolean                       @default(true)
+  isTerminal            Boolean                       @default(false)
+  isSuccess             Boolean                       @default(false)
+  isFailure             Boolean                       @default(false)
+  isActive              Boolean                       @default(true)
+  paymentStatusEffect   String?
+  documentStatusEffect  String?
+  createdAt             DateTime                      @default(now())
+  updatedAt             DateTime                      @updatedAt
+  transitionsFrom       ApplicationStatusTransition[] @relation("TransitionFrom")
+  transitionsTo         ApplicationStatusTransition[] @relation("TransitionTo")
+  mappings              ApplicationStatusMapping[]
+  slaRules              ApplicationSlaRule[]
+}
+
+model ApplicationMilestone {
+  id                 String                     @id @default(cuid())
+  key                String                     @unique
+  label              String
+  description        String?
+  displayOrder       Int
+  progressPercent    Int
+  isPartnerVisible   Boolean                    @default(true)
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+  mappings           ApplicationStatusMapping[]
+}
+
+model ApplicationStatusTransition {
+  id                   String                  @id @default(cuid())
+  fromStatusCode        ApplicationStatus
+  fromStatus            ApplicationStatusConfig @relation("TransitionFrom", fields: [fromStatusCode], references: [code], onDelete: Cascade)
+  toStatusCode          ApplicationStatus
+  toStatus              ApplicationStatusConfig @relation("TransitionTo", fields: [toStatusCode], references: [code], onDelete: Cascade)
+  requiredRole          String?
+  requiresPayment       Boolean                 @default(false)
+  requiresDocuments     Boolean                 @default(false)
+  requiresNotes         Boolean                 @default(false)
+  partnerNotification   Boolean                 @default(false)
+  internalNotification  Boolean                 @default(false)
+  crmSync               Boolean                 @default(false)
+  isActive              Boolean                 @default(true)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+
+  @@unique([fromStatusCode, toStatusCode])
+}
+
+model ApplicationStatusMapping {
+  id             String                  @id @default(cuid())
+  statusCode     ApplicationStatus
+  status         ApplicationStatusConfig @relation(fields: [statusCode], references: [code], onDelete: Cascade)
+  milestoneId    String?
+  milestone      ApplicationMilestone?   @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  zohoModule     String?
+  zohoField      String?
+  zohoStatusValue String?
+  supplierStatus String?
+  syncDirection  String                  @default("PORTAL_SOURCE_OF_TRUTH")
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  @@index([statusCode])
+}
+
+model ApplicationSlaRule {
+  id                   String                  @id @default(cuid())
+  statusCode           ApplicationStatus
+  status               ApplicationStatusConfig @relation(fields: [statusCode], references: [code], onDelete: Cascade)
+  countryCode          String?
+  visaProductId        String?
+  expectedDurationHours Int
+  warningAfterHours    Int
+  overdueAfterHours    Int
+  escalationRecipient  String?
+  partnerNotification  Boolean                 @default(false)
+  operationsNotification Boolean                @default(true)
+  isActive             Boolean                 @default(true)
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+
+  @@index([statusCode, countryCode])
 }
 
 model Applicant {

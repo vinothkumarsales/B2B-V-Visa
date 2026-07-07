@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { apiError } from '@/lib/api-response';
 import { getSession, requireSession } from '@/server/auth/session';
 import { auditLog } from '@/server/audit/audit-log';
+import { adminFeatureEnabled } from './feature-flags';
 import {
   ADMIN_PERMISSION_MATRIX,
   hasAdminPermission,
@@ -15,7 +16,7 @@ import {
 import type { AdminRole } from '@prisma/client';
 
 export function adminWritesEnabled() {
-  return process.env.ADMIN_WRITES_ENABLED?.trim().toLowerCase() === 'true';
+  return adminFeatureEnabled('ADMIN_WRITES_ENABLED');
 }
 
 export function requireAdminWritesEnabled() {

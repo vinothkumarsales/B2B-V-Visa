@@ -26,11 +26,18 @@ test('permission matrix blocks support admins from high-risk writes', () => {
   assert.equal(hasAdminPermission('support_admin', 'partner.read'), true);
   assert.equal(hasAdminPermission('support_admin', 'application.create_on_behalf'), false);
   assert.equal(hasAdminPermission('support_admin', 'dashboard_content.write'), false);
+  assert.equal(hasAdminPermission('support_admin', 'dashboard.read'), true);
+  assert.equal(hasAdminPermission('support_admin', 'dashboard.publish'), false);
+  assert.equal(hasAdminPermission('support_admin', 'application_status.read'), true);
+  assert.equal(hasAdminPermission('support_admin', 'application_status.publish'), false);
   assert.equal(hasAdminPermission('support_admin', 'wallet.adjust'), false);
   assert.equal(hasAdminPermission('catalog_admin', 'wallet.adjust'), false);
+  assert.equal(hasAdminPermission('catalog_admin', 'dashboard.write'), true);
+  assert.equal(hasAdminPermission('catalog_admin', 'dashboard.publish'), false);
   assert.equal(hasAdminPermission('catalog_admin', 'dashboard_content.write'), true);
   assert.equal(hasAdminPermission('super_admin', 'admin.manage'), true);
   assert.equal(hasAdminPermission('super_admin', 'application.submit_on_behalf'), true);
+  assert.equal(hasAdminPermission('super_admin', 'application_status.publish'), true);
 });
 
 test('existing VVisa membership roles map to admin roles', () => {

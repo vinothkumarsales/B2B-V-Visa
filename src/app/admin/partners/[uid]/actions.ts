@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { auditLog } from '@/server/audit/audit-log';
-import { requireAdmin } from '@/server/admin/auth';
+import { requireAdminMutation } from '@/server/admin/write-guard';
 
 const priceOverrideSchema = z.object({
   partnerUid: z.string().min(1),
@@ -16,7 +16,7 @@ const priceOverrideSchema = z.object({
 });
 
 export async function createPartnerPriceOverride(formData: FormData) {
-  const admin = await requireAdmin('pricing.write');
+  const admin = await requireAdminMutation('pricing.write');
   const parsed = priceOverrideSchema.parse({
     partnerUid: formData.get('partnerUid'),
     productId: formData.get('productId') || undefined,

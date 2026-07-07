@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 export async function getAdminOverview() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
   const [
     totalPartners,
@@ -13,6 +14,11 @@ export async function getAdminOverview() {
     documentsPending,
     countriesPublished,
     visaProductsPublished,
+    pendingPayments,
+    approvedThisMonth,
+    rejectedThisMonth,
+    draftChanges,
+    failedIntegrations,
     recentApplications,
     recentPartners,
     recentAuditLogs,
@@ -25,6 +31,11 @@ export async function getAdminOverview() {
     db.applicationDocument.count({ where: { status: { in: ['REQUESTED', 'MANUAL_REVIEW_REQUIRED', 'OCR_PENDING'] } } }),
     db.country.count({ where: { isActive: true } }),
     db.visaProduct.count({ where: { isActive: true } }),
+    db.visaApplication.count({ where: { status: 'PAYMENT_PENDING' } }),
+    db.visaApplication.count({ where: { status: 'APPROVED', updatedAt: { gte: monthStart } } }),
+    db.visaApplication.count({ where: { status: 'REJECTED', updatedAt: { gte: monthStart } } }),
+    db.dashboardSection.count({ where: { status: 'draft' } }).catch(() => 0),
+    db.integrationEvent.count({ where: { status: { in: ['FAILED', 'FAILED_TERMINAL'] } } }),
     db.visaApplication.findMany({
       take: 6,
       orderBy: { createdAt: 'desc' },
@@ -40,13 +51,15 @@ export async function getAdminOverview() {
     pendingPartnerApprovals,
     totalApplications,
     applicationsSubmittedToday,
-    pendingPayments: 0,
+    pendingPayments,
     documentsPending,
     applicationsRequiringAttention: documentsPending,
+    approvedThisMonth,
+    rejectedThisMonth,
     countriesPublished,
     visaProductsPublished,
-    draftChanges: 0,
-    failedIntegrations: 0,
+    draftChanges,
+    failedIntegrations,
     recentApplications,
     recentPartners,
     recentAuditLogs,

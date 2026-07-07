@@ -9,9 +9,18 @@ export type AdminPermission =
   | 'catalog.write'
   | 'pricing.read'
   | 'pricing.write'
+  | 'dashboard.read'
+  | 'dashboard.write'
+  | 'dashboard.publish'
+  | 'application_status.read'
+  | 'application_status.write'
+  | 'application_status.publish'
+  | 'application.read'
   | 'partner.read'
   | 'partner.write'
   | 'partner.impersonate'
+  | 'application.bulk_update'
+  | 'application.assign'
   | 'application.create_on_behalf'
   | 'application.submit_on_behalf'
   | 'application.update'
@@ -28,9 +37,18 @@ export const ADMIN_PERMISSION_MATRIX: Record<AdminRole, AdminPermission[]> = {
     'catalog.write',
     'pricing.read',
     'pricing.write',
+    'dashboard.read',
+    'dashboard.write',
+    'dashboard.publish',
+    'application_status.read',
+    'application_status.write',
+    'application_status.publish',
+    'application.read',
     'partner.read',
     'partner.write',
     'partner.impersonate',
+    'application.bulk_update',
+    'application.assign',
     'application.create_on_behalf',
     'application.submit_on_behalf',
     'application.update',
@@ -40,8 +58,20 @@ export const ADMIN_PERMISSION_MATRIX: Record<AdminRole, AdminPermission[]> = {
     'audit.read',
     'settings.write',
   ],
-  catalog_admin: ['catalog.read', 'catalog.write', 'dashboard_content.write', 'audit.read'],
+  catalog_admin: [
+    'catalog.read',
+    'catalog.write',
+    'dashboard.read',
+    'dashboard.write',
+    'dashboard_content.write',
+    'application_status.read',
+    'audit.read',
+  ],
   operations_admin: [
+    'application.read',
+    'application.update',
+    'application.assign',
+    'application_status.read',
     'partner.read',
     'partner.write',
     'partner.impersonate',
@@ -51,8 +81,8 @@ export const ADMIN_PERMISSION_MATRIX: Record<AdminRole, AdminPermission[]> = {
     'pricing.read',
     'audit.read',
   ],
-  finance_admin: ['pricing.read', 'pricing.write', 'wallet.read', 'wallet.adjust', 'partner.read', 'audit.read'],
-  support_admin: ['partner.read', 'catalog.read', 'pricing.read', 'wallet.read', 'audit.read'],
+  finance_admin: ['pricing.read', 'pricing.write', 'wallet.read', 'wallet.adjust', 'partner.read', 'application.read', 'audit.read'],
+  support_admin: ['partner.read', 'catalog.read', 'pricing.read', 'wallet.read', 'dashboard.read', 'application_status.read', 'application.read', 'audit.read'],
 };
 
 export function hasAdminPermission(role: AdminRole, permission: AdminPermission) {

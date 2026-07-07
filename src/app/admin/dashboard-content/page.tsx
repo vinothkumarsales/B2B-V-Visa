@@ -1,5 +1,5 @@
-import { AdminModulePlaceholder } from '@/components/admin/AdminModulePlaceholder';
+import { redirect } from 'next/navigation';
 
 export default function AdminDashboardContentPage() {
-  return <AdminModulePlaceholder title="Dashboard Content" />;
+  redirect('/admin/dashboard-editor');
 }

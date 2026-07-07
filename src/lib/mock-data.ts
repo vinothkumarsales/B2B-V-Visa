@@ -11,6 +11,7 @@ import type {
   VisaPricingLineItem,
 } from '@/types';
 import { buildCatalogueFromApprovedProducts } from '@/lib/catalogue';
+export { statusConfig } from '@/lib/status-config';
 import { buildVisaPriceBreakdown, rupeesToMinor } from '@/lib/pricing';
 import { stampMyVisaApprovedProducts } from '@/lib/stampmyvisa-approved-products';
 import { productionApprovedProducts } from '@/lib/production-approved-products';
@@ -2034,22 +2035,6 @@ export const popularDestinations = [
   'Kazakhstan', 'Philippines', 'Brazil', 'Mexico', 'Fiji', 'Tanzania', 'Kenya', 'Morocco', 'Iceland', 'Ireland',
   'Portugal', 'Greece', 'Czech Republic', 'Poland', 'Hungary', 'Austria', 'Denmark', 'Sweden', 'Norway', 'Finland',
 ];
-
-export const statusConfig: Record<string, { label: string; bg: string; text: string; dot: string }> = {
-  APPROVED: { label: 'Approved', bg: 'bg-emerald-950/50', text: 'text-emerald-400', dot: 'bg-emerald-400' },
-  REJECTED: { label: 'Rejected', bg: 'bg-red-950/50', text: 'text-red-400', dot: 'bg-red-400' },
-  PAYMENT_PENDING: { label: 'Pending Payment', bg: 'bg-amber-950/50', text: 'text-amber-400', dot: 'bg-amber-400' },
-  PENDING: { label: 'Pending', bg: 'bg-amber-950/50', text: 'text-amber-400', dot: 'bg-amber-400' },
-  SUBMITTED: { label: 'Submitted', bg: 'bg-blue-950/50', text: 'text-blue-400', dot: 'bg-blue-400' },
-  DRAFT: { label: 'Draft', bg: 'bg-gray-800/50', text: 'text-gray-400', dot: 'bg-gray-400' },
-  RECEIVED: { label: 'Received', bg: 'bg-blue-950/50', text: 'text-blue-400', dot: 'bg-blue-400' },
-  VALIDATED: { label: 'Validated', bg: 'bg-indigo-950/50', text: 'text-indigo-400', dot: 'bg-indigo-400' },
-  QUEUED: { label: 'Queued', bg: 'bg-purple-950/50', text: 'text-purple-400', dot: 'bg-purple-400' },
-  PAID: { label: 'Paid', bg: 'bg-emerald-950/50', text: 'text-emerald-400', dot: 'bg-emerald-400' },
-  OTP_PENDING: { label: 'OTP Pending', bg: 'bg-amber-950/50', text: 'text-amber-400', dot: 'bg-amber-400' },
-  FAILED: { label: 'Failed', bg: 'bg-red-950/50', text: 'text-red-400', dot: 'bg-red-400' },
-  CANCELLED: { label: 'Cancelled', bg: 'bg-gray-800/50', text: 'text-gray-400', dot: 'bg-gray-400' },
-};
 
 export const mockStats: DashboardStats = {
   totalApplications: 12,

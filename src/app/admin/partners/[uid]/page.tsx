@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,8 +34,8 @@ export default async function AdminPartnerProfilePage({ params }: { params: Prom
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline">{partner.status.replaceAll('_', ' ')}</Badge>
-          <Button variant="outline">View User Dashboard</Button>
-          <Button>Create Application for Partner</Button>
+          <Button asChild variant="outline"><Link href={`/admin/partners/${partner.id}/dashboard-preview`}>Preview Dashboard</Link></Button>
+          <Button disabled>Create Application for Partner</Button>
         </div>
       </div>
 
@@ -169,8 +170,11 @@ export default async function AdminPartnerProfilePage({ params }: { params: Prom
                   <Label>Reason</Label>
                   <Textarea name="reason" minLength={8} placeholder="Required audit reason" required />
                 </div>
-                <Button type="submit" className="w-full">Save Override</Button>
+                <Button type="submit" className="w-full" disabled>Save Override</Button>
               </form>
+              <p className="mt-3 text-xs text-vvisa-text-muted">
+                Pricing writes are blocked while ADMIN_WRITES_ENABLED is false.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>

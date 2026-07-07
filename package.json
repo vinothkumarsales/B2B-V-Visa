@@ -31,7 +31,8 @@
     "probe:zoho-salesiq": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/zoho-salesiq.ts",
     "probe:integrations": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/integrations.ts",
     "probe:crm-outbox": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/crm-outbox-readiness.ts",
-    "zoho:oauth:url": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/integrations/generate-zoho-oauth-url.ts"
+    "zoho:oauth:url": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/integrations/generate-zoho-oauth-url.ts",
+    "admin:bootstrap-read-preview": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/admin/bootstrap-read-preview-defaults.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
