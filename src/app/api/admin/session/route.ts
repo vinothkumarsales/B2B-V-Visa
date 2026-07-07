@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAdminSession } from '@/server/admin/auth';
+import { adminWritesEnabled, getAdminSession } from '@/server/admin/auth';
 import { apiError } from '@/lib/api-response';
 
 export async function GET() {
@@ -10,5 +10,6 @@ export async function GET() {
     user: { id: admin.user.id, email: admin.user.email, name: admin.user.name },
     role: admin.role,
     permissions: admin.permissions,
+    writesEnabled: adminWritesEnabled(),
   });
 }

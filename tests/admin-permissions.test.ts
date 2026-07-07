@@ -3,6 +3,8 @@ import test from 'node:test';
 import {
   hasAdminPermission,
   isBootstrapAdminEmail,
+  isCompanyAdminEmail,
+  isPrimaryBootstrapAdminEmail,
   roleFromMembership,
 } from '../src/server/admin/permissions.ts';
 
@@ -14,12 +16,21 @@ test('admin bootstrap email checks use exact company domain', () => {
   assert.equal(isBootstrapAdminEmail('owner@digidocsindia.co'), false);
 });
 
+test('only the primary bootstrap admin receives automatic super-admin eligibility', () => {
+  assert.equal(isPrimaryBootstrapAdminEmail('vinodhvijay490@gmail.com'), true);
+  assert.equal(isPrimaryBootstrapAdminEmail('owner@digidocsindia.com'), false);
+  assert.equal(isCompanyAdminEmail('owner@digidocsindia.com'), true);
+});
+
 test('permission matrix blocks support admins from high-risk writes', () => {
   assert.equal(hasAdminPermission('support_admin', 'partner.read'), true);
   assert.equal(hasAdminPermission('support_admin', 'application.create_on_behalf'), false);
+  assert.equal(hasAdminPermission('support_admin', 'dashboard_content.write'), false);
   assert.equal(hasAdminPermission('support_admin', 'wallet.adjust'), false);
   assert.equal(hasAdminPermission('catalog_admin', 'wallet.adjust'), false);
+  assert.equal(hasAdminPermission('catalog_admin', 'dashboard_content.write'), true);
   assert.equal(hasAdminPermission('super_admin', 'admin.manage'), true);
+  assert.equal(hasAdminPermission('super_admin', 'application.submit_on_behalf'), true);
 });
 
 test('existing VVisa membership roles map to admin roles', () => {

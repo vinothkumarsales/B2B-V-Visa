@@ -6,18 +6,58 @@ import { auditLog } from '@/server/audit/audit-log';
 import {
   ADMIN_PERMISSION_MATRIX,
   hasAdminPermission,
+  isCompanyAdminEmail,
   isBootstrapAdminEmail,
+  isPrimaryBootstrapAdminEmail,
   roleFromMembership,
   type AdminPermission,
 } from './permissions';
 import type { AdminRole } from '@prisma/client';
 
+export function adminWritesEnabled() {
+  return process.env.ADMIN_WRITES_ENABLED?.trim().toLowerCase() === 'true';
+}
+
+export function requireAdminWritesEnabled() {
+  if (!adminWritesEnabled()) {
+    throw apiError('ADMIN_WRITES_DISABLED', 'Admin write operations are currently disabled in production.', 403);
+  }
+}
+
+export async function ensureAdminAccount(user: { id: string; email: string }) {
+  const email = user.email.toLowerCase();
+  const existing = await db.adminUser.findUnique({ where: { userId: user.id } });
+  if (existing) return existing;
+
+  if (isPrimaryBootstrapAdminEmail(email)) {
+    return db.adminUser.create({
+      data: {
+        userId: user.id,
+        role: 'super_admin',
+        isActive: true,
+      },
+    });
+  }
+
+  if (isCompanyAdminEmail(email)) {
+    return db.adminUser.create({
+      data: {
+        userId: user.id,
+        role: 'support_admin',
+        isActive: false,
+      },
+    });
+  }
+
+  return null;
+}
+
 export async function getAdminSession() {
   const session = await getSession();
   if (!session) return null;
 
-  const storedAdmin = await db.adminUser.findUnique({ where: { userId: session.user.id } });
-  const bootstrapRole = isBootstrapAdminEmail(session.user.email) ? 'super_admin' : roleFromMembership(session.role);
+  const storedAdmin = await ensureAdminAccount(session.user);
+  const bootstrapRole = isPrimaryBootstrapAdminEmail(session.user.email) ? 'super_admin' : roleFromMembership(session.role);
   const role = storedAdmin?.isActive && !storedAdmin.revokedAt ? storedAdmin.role : bootstrapRole;
 
   if (!role || !session.user.isActive) return null;
@@ -52,4 +92,8 @@ export async function requireAdmin(permission?: AdminPermission) {
   }
 
   return admin;
+}
+
+export async function requireAdminPermission(permission: AdminPermission) {
+  return requireAdmin(permission);
 }

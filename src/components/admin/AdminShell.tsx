@@ -78,7 +78,7 @@ export function AdminShell({
   admin,
 }: {
   children: ReactNode;
-  admin: { email: string; role: string };
+  admin: { email: string; role: string; writesEnabled?: boolean };
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -116,6 +116,9 @@ export function AdminShell({
               <div className="flex items-center gap-2">
                 <h1 className="truncate text-base font-semibold">Admin Console</h1>
                 <Badge className="rounded-md bg-red-600 text-white hover:bg-red-600">Production</Badge>
+                <Badge variant="outline" className="rounded-md">
+                  Writes {admin.writesEnabled ? 'enabled' : 'disabled'}
+                </Badge>
               </div>
               <p className="truncate text-xs text-vvisa-text-muted">{admin.email} · {admin.role.replace('_', ' ')}</p>
             </div>

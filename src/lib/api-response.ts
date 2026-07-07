@@ -11,7 +11,14 @@ export type ApiErrorCode =
   | 'DOCUMENT_REQUIRED'
   | 'PAYMENT_NOT_CONFIRMED'
   | 'PROVIDER_UNAVAILABLE'
-  | 'PRODUCTION_CONFIGURATION_REQUIRED';
+  | 'PRODUCTION_CONFIGURATION_REQUIRED'
+  | 'ADMIN_WRITES_DISABLED'
+  | 'ADMIN_PERMISSION_REQUIRED'
+  | 'ADMIN_ACCOUNT_PENDING'
+  | 'ADMIN_ACCOUNT_SUSPENDED'
+  | 'CONFIRMATION_REQUIRED'
+  | 'AUDIT_WRITE_FAILED'
+  | 'INVALID_ADMIN_MUTATION';
 
 export function apiError(code: ApiErrorCode, message: string, status = 400) {
   return NextResponse.json({ error: { code, message } }, { status });

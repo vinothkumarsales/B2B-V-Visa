@@ -13,9 +13,11 @@ export type AdminPermission =
   | 'partner.write'
   | 'partner.impersonate'
   | 'application.create_on_behalf'
+  | 'application.submit_on_behalf'
   | 'application.update'
   | 'wallet.read'
   | 'wallet.adjust'
+  | 'dashboard_content.write'
   | 'audit.read'
   | 'settings.write';
 
@@ -30,13 +32,15 @@ export const ADMIN_PERMISSION_MATRIX: Record<AdminRole, AdminPermission[]> = {
     'partner.write',
     'partner.impersonate',
     'application.create_on_behalf',
+    'application.submit_on_behalf',
     'application.update',
     'wallet.read',
     'wallet.adjust',
+    'dashboard_content.write',
     'audit.read',
     'settings.write',
   ],
-  catalog_admin: ['catalog.read', 'catalog.write', 'audit.read'],
+  catalog_admin: ['catalog.read', 'catalog.write', 'dashboard_content.write', 'audit.read'],
   operations_admin: [
     'partner.read',
     'partner.write',
@@ -69,4 +73,12 @@ function emailDomain(email: string) {
 export function isBootstrapAdminEmail(email: string) {
   const normalized = email.toLowerCase();
   return normalized === BOOTSTRAP_ADMIN_EMAIL || emailDomain(normalized) === COMPANY_ADMIN_DOMAIN;
+}
+
+export function isPrimaryBootstrapAdminEmail(email: string) {
+  return email.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
+}
+
+export function isCompanyAdminEmail(email: string) {
+  return emailDomain(email) === COMPANY_ADMIN_DOMAIN;
 }
