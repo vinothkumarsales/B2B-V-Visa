@@ -22,6 +22,12 @@ export default async function AdminCareersPage() {
         orderBy: { displayOrder: 'asc' },
       })
     : [];
+  const webhookEvents = flags.CAREERS_INTERNAL_CONSOLE_ENABLED
+    ? await db.careerPaymentWebhookEvent.findMany({
+        orderBy: { receivedAt: 'desc' },
+        take: 25,
+      })
+    : [];
 
   return (
     <div className="space-y-5">
@@ -100,6 +106,44 @@ export default async function AdminCareersPage() {
               {candidates.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-sm text-vvisa-text-muted">No careers candidates to show.</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      <Card className="rounded-lg border-vvisa-border-subtle">
+        <CardHeader><CardTitle>Payment webhook events</CardTitle></CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Provider</TableHead>
+                <TableHead>Event</TableHead>
+                <TableHead>Payment intent</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Verified</TableHead>
+                <TableHead>Received</TableHead>
+                <TableHead>Failure</TableHead>
+                <TableHead>Duplicate</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {webhookEvents.map((event) => (
+                <TableRow key={event.id}>
+                  <TableCell>{event.provider}</TableCell>
+                  <TableCell>{event.eventType.replaceAll('_', ' ')}</TableCell>
+                  <TableCell className="font-mono text-xs">{event.paymentIntentId ?? '-'}</TableCell>
+                  <TableCell><Badge variant="outline">{event.processingStatus}</Badge></TableCell>
+                  <TableCell>{event.signatureVerified ? 'Yes' : 'No'}</TableCell>
+                  <TableCell>{event.receivedAt.toISOString()}</TableCell>
+                  <TableCell>{event.failureCode ?? '-'}</TableCell>
+                  <TableCell>{event.duplicate ? 'Yes' : 'No'}</TableCell>
+                </TableRow>
+              ))}
+              {webhookEvents.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-sm text-vvisa-text-muted">No Careers payment webhook events to show.</TableCell>
                 </TableRow>
               )}
             </TableBody>

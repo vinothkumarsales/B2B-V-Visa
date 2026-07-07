@@ -1240,6 +1240,7 @@ model CareerPaymentIntent {
   providerMode     String                    @default("fixture")
   providerCheckoutId String?
   providerPaymentIntentId String?
+  providerPaymentId String?
   checkoutUrl      String?
   expiresAt        DateTime?
   checkoutCreatedAt DateTime?
@@ -1249,10 +1250,41 @@ model CareerPaymentIntent {
   attemptNumber    Int                       @default(1)
   createdAt        DateTime                  @default(now())
   updatedAt        DateTime                  @updatedAt
+  webhookEvents    CareerPaymentWebhookEvent[]
 
   @@index([candidateId, status])
   @@index([serviceRequestId, status])
   @@index([attemptGroupKey, attemptNumber])
+  @@index([providerPaymentId])
+}
+
+model CareerPaymentWebhookEvent {
+  id                      String               @id @default(cuid())
+  provider                String
+  providerEventId         String
+  eventType               String
+  paymentIntentId         String?
+  paymentIntent           CareerPaymentIntent? @relation(fields: [paymentIntentId], references: [id], onDelete: SetNull)
+  providerCheckoutId      String?
+  providerPaymentIntentId String?
+  providerPaymentId       String?
+  amountMinor             Int?
+  currency                String?
+  occurredAt              DateTime
+  receivedAt              DateTime             @default(now())
+  processingStatus        String
+  signatureVerified       Boolean              @default(false)
+  duplicate               Boolean              @default(false)
+  safeReference           String?
+  failureCode             String?
+  failureMessageSafe      String?
+  payloadChecksum         String
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+
+  @@unique([provider, providerEventId])
+  @@index([paymentIntentId, receivedAt])
+  @@index([processingStatus, receivedAt])
 }
 
 model CareerSubscription {

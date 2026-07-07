@@ -25,6 +25,8 @@ test('careers snapshot only enables explicit true values', () => {
   assert.equal(snapshot.CAREERS_PACKAGES_ENABLED, true);
   assert.equal(snapshot.CAREERS_PAYMENTS_ENABLED, false);
   assert.equal(snapshot.CAREERS_CHECKOUT_ENABLED, false);
+  assert.equal(snapshot.CAREERS_PAYMENT_WEBHOOKS_ENABLED, false);
+  assert.equal(snapshot.CAREERS_FIXTURE_WEBHOOKS_ENABLED, false);
   assert.equal(snapshot.CAREERS_RESUME_UPLOAD_ENABLED, false);
   process.env.CAREERS_SAAS_ENABLED = previousSaas;
   process.env.CAREERS_PACKAGES_ENABLED = previousPackages;
