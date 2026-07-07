@@ -4,6 +4,8 @@ import { apiError } from '@/lib/api-response';
 import { auditLog } from '@/server/audit/audit-log';
 import { getPrivateDocumentStorage } from '@/server/storage/private-document-storage';
 import { careersFeatureEnabled, careersSafeMutationEnabled } from './feature-flags';
+import { careerPaymentIntentInitialStatus, careerSubscriptionInitialStatus } from './payment-domain';
+import { CAREER_SUPPORTED_CURRENCIES, resolveCareerPackageSelection } from './packages';
 import { careerCandidateFacingStatus, careerProfileCompletion } from './policy';
 
 export const careerOnboardingSchema = z.object({
@@ -30,6 +32,7 @@ export const careerOnboardingSchema = z.object({
   packageCode: z
     .enum(['EUROPE_JOB_SEARCH_ASSIST', 'EUROPE_JOB_SEARCH_PRO', 'EUROPE_JOB_SEARCH_PREMIUM'])
     .default('EUROPE_JOB_SEARCH_ASSIST'),
+  currency: z.enum(CAREER_SUPPORTED_CURRENCIES).default('INR'),
 });
 
 export const careerResumeUploadSchema = z.object({
@@ -58,6 +61,10 @@ export async function createOrUpdateCareerOnboarding(input: {
 
   const completion = careerProfileCompletion(input.payload);
   const status = completion >= 100 ? 'profile_ready' : 'profile_needs_information';
+  const packageSelection = await resolveCareerPackageSelection({
+    packageCode: input.payload.packageCode,
+    currency: input.payload.currency,
+  });
 
   const result = await db.$transaction(async (tx) => {
     const existing = await tx.careerCandidate.findFirst({
@@ -90,10 +97,49 @@ export async function createOrUpdateCareerOnboarding(input: {
       data: {
         candidateId: candidate.id,
         packageCode: input.payload.packageCode,
+        packageId: packageSelection.package.id,
         status: 'draft',
         paymentStatus: 'not_started',
         activationStatus: 'not_started',
         dashboardStatus: 'Payment pending',
+      },
+    });
+
+    const pricingSnapshot = await tx.careerPricingSnapshot.create({
+      data: {
+        serviceRequestId: serviceRequest.id,
+        ...packageSelection.pricingSnapshot,
+      },
+    });
+
+    await tx.careerPaymentIntent.create({
+      data: {
+        candidateId: candidate.id,
+        serviceRequestId: serviceRequest.id,
+        status: careerPaymentIntentInitialStatus(),
+        provider: 'configuration_only',
+        amountMinor: packageSelection.price.amountMinor,
+        currency: packageSelection.price.currency,
+        idempotencyKey: `career-payment:${serviceRequest.id}:${packageSelection.price.currency}`,
+        pricingSnapshot: {
+          id: pricingSnapshot.id,
+          packageCode: pricingSnapshot.packageCode,
+          packageName: pricingSnapshot.packageName,
+          amountMinor: pricingSnapshot.amountMinor,
+          currency: pricingSnapshot.currency,
+          billingMode: pricingSnapshot.billingMode,
+        },
+      },
+    });
+
+    await tx.careerSubscription.create({
+      data: {
+        candidateId: candidate.id,
+        serviceRequestId: serviceRequest.id,
+        status: careerSubscriptionInitialStatus(),
+        packageCode: input.payload.packageCode,
+        amountMinor: packageSelection.price.amountMinor,
+        currency: packageSelection.price.currency,
       },
     });
 
@@ -102,11 +148,11 @@ export async function createOrUpdateCareerOnboarding(input: {
         candidateId: candidate.id,
         status,
         label: careerCandidateFacingStatus(status),
-        detail: 'Phase 1 onboarding profile saved. Payment and automation are not active in this phase.',
+        detail: 'Careers package and pricing snapshot saved. Checkout, payment capture, and automation are not active in this phase.',
       },
     });
 
-    return { candidate, serviceRequest };
+    return { candidate, serviceRequest, pricingSnapshot };
   });
 
   await auditLog({
@@ -114,7 +160,12 @@ export async function createOrUpdateCareerOnboarding(input: {
     action: 'CAREER_ONBOARDING_SAVED',
     resourceType: 'CareerCandidate',
     resourceId: result.candidate.id,
-    metadata: { status: result.candidate.status, packageCode: input.payload.packageCode },
+    metadata: {
+      status: result.candidate.status,
+      packageCode: input.payload.packageCode,
+      currency: input.payload.currency,
+      pricingSnapshotId: result.pricingSnapshot.id,
+    },
   });
 
   return result;

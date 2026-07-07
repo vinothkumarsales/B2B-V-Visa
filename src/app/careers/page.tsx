@@ -3,14 +3,18 @@ import { BriefcaseBusiness, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { careersFeatureSnapshot } from '@/server/careers/feature-flags';
+import { listPublicCareerPackages } from '@/server/careers/packages';
 
-export default function CareersLandingPage() {
+export default async function CareersLandingPage() {
   const flags = careersFeatureSnapshot();
-  const packages = [
-    ['Europe Job Search Assist', 'Resume intake, role targeting, progress dashboard, and managed internal review.'],
-    ['Europe Job Search Pro', 'Adds deeper opportunity review, recruiter-draft preparation, and consultant workflow.'],
-    ['Europe Job Search Premium', 'Adds priority consultant handling and expanded employer-response support in future phases.'],
-  ];
+  const configuredPackages = await listPublicCareerPackages('INR');
+  const packages = configuredPackages.length
+    ? configuredPackages.map((item) => [item.name, item.description])
+    : [
+        ['Europe Job Search Assist', 'Resume intake, role targeting, progress dashboard, and managed internal review.'],
+        ['Europe Job Search Pro', 'Adds deeper opportunity review, recruiter-draft preparation, and consultant workflow.'],
+        ['Europe Job Search Premium', 'Adds priority consultant handling and expanded employer-response support in future phases.'],
+      ];
 
   return (
     <main className="min-h-screen bg-vvisa-surface-2 text-foreground">

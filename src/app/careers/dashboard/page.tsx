@@ -16,6 +16,8 @@ export default async function CareersDashboardPage() {
       preferences: true,
       resumes: { orderBy: { createdAt: 'desc' }, take: 3 },
       serviceRequests: { orderBy: { createdAt: 'desc' }, take: 1 },
+      paymentIntents: { orderBy: { createdAt: 'desc' }, take: 1 },
+      subscriptions: { orderBy: { createdAt: 'desc' }, take: 1 },
       statusEvents: { orderBy: { createdAt: 'desc' }, take: 6 },
     },
     orderBy: { createdAt: 'desc' },
@@ -53,6 +55,7 @@ export default async function CareersDashboardPage() {
                 <CardContent className="text-sm text-vvisa-text-secondary">
                   {candidate.serviceRequests[0]?.packageCode.replaceAll('_', ' ') ?? 'Not selected'}
                   <div className="mt-2">Payment: {candidate.serviceRequests[0]?.paymentStatus ?? 'not_started'}</div>
+                  <div className="mt-2">Subscription: {candidate.subscriptions[0]?.status ?? 'draft'}</div>
                 </CardContent>
               </Card>
               <Card className="rounded-lg border-vvisa-border-subtle">
@@ -70,6 +73,15 @@ export default async function CareersDashboardPage() {
                 <p>Roles: {Array.isArray(candidate.preferences?.targetRoles) ? candidate.preferences.targetRoles.join(', ') : '-'}</p>
                 <p>Sponsorship: {candidate.preferences?.sponsorshipRequired === true ? 'Required' : candidate.preferences?.sponsorshipRequired === false ? 'Not required' : '-'}</p>
                 <p>Relocation: {candidate.preferences?.relocationRequired === true ? 'Required' : candidate.preferences?.relocationRequired === false ? 'Not required' : '-'}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-lg border-vvisa-border-subtle">
+              <CardHeader><CardTitle>Payment readiness</CardTitle></CardHeader>
+              <CardContent className="grid gap-3 text-sm text-vvisa-text-secondary md:grid-cols-3">
+                <p>Intent: {candidate.paymentIntents[0]?.status ?? 'draft'}</p>
+                <p>Currency: {candidate.paymentIntents[0]?.currency ?? '-'}</p>
+                <p>Amount: {candidate.paymentIntents[0] ? candidate.paymentIntents[0].amountMinor / 100 : '-'}</p>
               </CardContent>
             </Card>
 

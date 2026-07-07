@@ -7,9 +7,36 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-export function CareerOnboardingForm({ enabled }: { enabled: boolean }) {
+type CareerPackageOption = {
+  code: string;
+  name: string;
+  description: string;
+  currency: string;
+  amountMinor: number;
+  billingMode: string;
+};
+
+export function CareerOnboardingForm({
+  enabled,
+  packages,
+}: {
+  enabled: boolean;
+  packages: CareerPackageOption[];
+}) {
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
+  const packageOptions = packages.length
+    ? packages
+    : [
+        {
+          code: 'EUROPE_JOB_SEARCH_ASSIST',
+          name: 'Europe Job Search Assist',
+          description: 'Package configuration is currently disabled.',
+          currency: 'INR',
+          amountMinor: 0,
+          billingMode: 'one_time',
+        },
+      ];
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -46,6 +73,7 @@ export function CareerOnboardingForm({ enabled }: { enabled: boolean }) {
           minimumFitScore: 4,
           portalPreferences: ['greenhouse', 'ashby', 'lever'],
           packageCode: formData.get('packageCode'),
+          currency: formData.get('currency') || 'INR',
         }),
       });
 
@@ -64,7 +92,7 @@ export function CareerOnboardingForm({ enabled }: { enabled: boolean }) {
       <CardContent>
         {!enabled && (
           <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-            Careers onboarding is feature-flagged off. Set CAREERS_SAAS_ENABLED and CAREERS_ONBOARDING_ENABLED to enable writes.
+            Careers onboarding or package configuration is feature-flagged off. Set CAREERS_SAAS_ENABLED, CAREERS_ONBOARDING_ENABLED, and CAREERS_PACKAGES_ENABLED to enable writes.
           </div>
         )}
         <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">
@@ -107,10 +135,13 @@ export function CareerOnboardingForm({ enabled }: { enabled: boolean }) {
           <div className="space-y-2">
             <Label htmlFor="packageCode">Package</Label>
             <select id="packageCode" name="packageCode" className="h-10 w-full rounded-md border border-vvisa-border-subtle bg-background px-3 text-sm" disabled={!enabled}>
-              <option value="EUROPE_JOB_SEARCH_ASSIST">Europe Job Search Assist</option>
-              <option value="EUROPE_JOB_SEARCH_PRO">Europe Job Search Pro</option>
-              <option value="EUROPE_JOB_SEARCH_PREMIUM">Europe Job Search Premium</option>
+              {packageOptions.map((item) => (
+                <option key={item.code} value={item.code}>
+                  {item.name} - {formatMoney(item.amountMinor, item.currency)}
+                </option>
+              ))}
             </select>
+            <input type="hidden" name="currency" value={packageOptions[0]?.currency ?? 'INR'} />
           </div>
           <div className="flex items-center gap-4 pt-7 text-sm">
             <label className="flex items-center gap-2"><input name="sponsorshipRequired" type="checkbox" disabled={!enabled} /> Sponsorship required</label>
@@ -124,4 +155,13 @@ export function CareerOnboardingForm({ enabled }: { enabled: boolean }) {
       </CardContent>
     </Card>
   );
+}
+
+function formatMoney(amountMinor: number, currency: string) {
+  if (amountMinor <= 0) return currency;
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 0,
+  }).format(amountMinor / 100);
 }

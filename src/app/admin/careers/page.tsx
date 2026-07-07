@@ -16,6 +16,12 @@ export default async function AdminCareersPage() {
         take: 50,
       })
     : [];
+  const packages = flags.CAREERS_INTERNAL_CONSOLE_ENABLED && flags.CAREERS_PACKAGES_ENABLED
+    ? await db.careerServicePackage.findMany({
+        include: { prices: { where: { isActive: true }, orderBy: { currency: 'asc' } } },
+        orderBy: { displayOrder: 'asc' },
+      })
+    : [];
 
   return (
     <div className="space-y-5">
@@ -30,6 +36,41 @@ export default async function AdminCareersPage() {
           </CardContent>
         </Card>
       )}
+      <Card className="rounded-lg border-vvisa-border-subtle">
+        <CardHeader><CardTitle>Package catalogue</CardTitle></CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Package</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Public</TableHead>
+                <TableHead>Prices</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {packages.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell>
+                    <div className="font-medium">{item.name}</div>
+                    <div className="text-xs text-vvisa-text-muted">{item.code.replaceAll('_', ' ')}</div>
+                  </TableCell>
+                  <TableCell><Badge variant="outline">{item.status}</Badge></TableCell>
+                  <TableCell>{item.isPublic ? 'Yes' : 'No'}</TableCell>
+                  <TableCell>{item.prices.map((price) => `${price.currency} ${price.amountMinor / 100}`).join(', ') || '-'}</TableCell>
+                </TableRow>
+              ))}
+              {packages.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-sm text-vvisa-text-muted">
+                    Careers package visibility is disabled or no package rows are available.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
       <Card className="rounded-lg border-vvisa-border-subtle">
         <CardHeader><CardTitle>Candidate queue</CardTitle></CardHeader>
         <CardContent>

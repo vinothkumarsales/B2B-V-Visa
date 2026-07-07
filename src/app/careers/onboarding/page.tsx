@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { CareerOnboardingForm } from '@/components/careers/CareerOnboardingForm';
 import { careersFeatureSnapshot } from '@/server/careers/feature-flags';
+import { listPublicCareerPackages } from '@/server/careers/packages';
 import { Button } from '@/components/ui/button';
 
-export default function CareersOnboardingPage() {
+export default async function CareersOnboardingPage() {
   const flags = careersFeatureSnapshot();
-  const enabled = flags.CAREERS_SAAS_ENABLED && flags.CAREERS_ONBOARDING_ENABLED;
+  const packages = await listPublicCareerPackages('INR');
+  const enabled = flags.CAREERS_SAAS_ENABLED && flags.CAREERS_ONBOARDING_ENABLED && flags.CAREERS_PACKAGES_ENABLED && packages.length > 0;
 
   return (
     <main className="min-h-screen bg-vvisa-surface-2 px-5 py-8 text-foreground">
@@ -20,7 +22,7 @@ export default function CareersOnboardingPage() {
           </div>
           <Button asChild variant="outline"><Link href="/careers">Back</Link></Button>
         </div>
-        <CareerOnboardingForm enabled={enabled} />
+        <CareerOnboardingForm enabled={enabled} packages={packages} />
       </div>
     </main>
   );

@@ -15,13 +15,18 @@ test('careers feature flags default to disabled', () => {
 
 test('careers snapshot only enables explicit true values', () => {
   const previousSaas = process.env.CAREERS_SAAS_ENABLED;
+  const previousPackages = process.env.CAREERS_PACKAGES_ENABLED;
   const previousUpload = process.env.CAREERS_RESUME_UPLOAD_ENABLED;
   process.env.CAREERS_SAAS_ENABLED = 'true';
+  process.env.CAREERS_PACKAGES_ENABLED = 'true';
   process.env.CAREERS_RESUME_UPLOAD_ENABLED = 'false';
   const snapshot = careersFeatureSnapshot();
   assert.equal(snapshot.CAREERS_SAAS_ENABLED, true);
+  assert.equal(snapshot.CAREERS_PACKAGES_ENABLED, true);
+  assert.equal(snapshot.CAREERS_PAYMENTS_ENABLED, false);
   assert.equal(snapshot.CAREERS_RESUME_UPLOAD_ENABLED, false);
   process.env.CAREERS_SAAS_ENABLED = previousSaas;
+  process.env.CAREERS_PACKAGES_ENABLED = previousPackages;
   process.env.CAREERS_RESUME_UPLOAD_ENABLED = previousUpload;
 });
 

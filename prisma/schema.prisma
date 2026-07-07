@@ -212,6 +212,32 @@ enum CareerServicePackageCode {
   EUROPE_JOB_SEARCH_PREMIUM
 }
 
+enum CareerPackageStatus {
+  draft
+  active
+  archived
+}
+
+enum CareerPaymentIntentStatus {
+  draft
+  awaiting_checkout
+  checkout_created
+  payment_pending
+  paid
+  failed
+  cancelled
+  expired
+}
+
+enum CareerSubscriptionStatus {
+  draft
+  pending_payment
+  active
+  past_due
+  cancelled
+  expired
+}
+
 model User {
   id           String             @id @default(cuid())
   name         String?
@@ -1071,9 +1097,46 @@ model CareerCandidate {
   resumes                  CareerResume[]
   serviceRequests          CareerServiceRequest[]
   statusEvents             CareerStatusEvent[]
+  paymentIntents           CareerPaymentIntent[]
+  subscriptions            CareerSubscription[]
 
   @@index([userId, status])
   @@index([email])
+}
+
+model CareerServicePackage {
+  id              String                   @id @default(cuid())
+  code            CareerServicePackageCode @unique
+  name            String
+  description     String
+  status          CareerPackageStatus      @default(draft)
+  displayOrder    Int                      @default(0)
+  features        Json
+  quotas          Json
+  supportedRegions Json
+  isPublic        Boolean                  @default(false)
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  prices          CareerPackagePrice[]
+  serviceRequests CareerServiceRequest[]
+
+  @@index([status, displayOrder])
+  @@index([isPublic, status])
+}
+
+model CareerPackagePrice {
+  id          String               @id @default(cuid())
+  packageId   String
+  package     CareerServicePackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  currency    String
+  amountMinor Int
+  billingMode String               @default("one_time")
+  isActive    Boolean              @default(true)
+  validFrom   DateTime             @default(now())
+  validUntil  DateTime?
+  createdAt   DateTime             @default(now())
+
+  @@index([packageId, currency, isActive])
 }
 
 model CareerSearchPreference {
@@ -1116,14 +1179,21 @@ model CareerServiceRequest {
   candidateId      String
   candidate        CareerCandidate          @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   packageCode      CareerServicePackageCode
+  packageId        String?
+  package          CareerServicePackage?    @relation(fields: [packageId], references: [id], onDelete: SetNull)
   status           String                   @default("draft")
   paymentStatus    String                   @default("not_started")
   activationStatus String                   @default("not_started")
   dashboardStatus  String                   @default("Payment pending")
   createdAt        DateTime                 @default(now())
   updatedAt        DateTime                 @updatedAt
+  pricingSnapshots CareerPricingSnapshot[]
+  paymentIntents   CareerPaymentIntent[]
+  subscriptions    CareerSubscription[]
 
   @@index([candidateId, status])
+  @@index([packageId])
+  @@index([paymentStatus, activationStatus])
 }
 
 model CareerStatusEvent {
@@ -1136,4 +1206,60 @@ model CareerStatusEvent {
   createdAt   DateTime              @default(now())
 
   @@index([candidateId, createdAt])
+}
+
+model CareerPricingSnapshot {
+  id               String               @id @default(cuid())
+  serviceRequestId String
+  serviceRequest   CareerServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  packageCode      CareerServicePackageCode
+  packageName      String
+  currency         String
+  amountMinor      Int
+  billingMode      String
+  features         Json
+  quotas           Json
+  sourcePriceId    String?
+  createdAt        DateTime             @default(now())
+
+  @@index([serviceRequestId, createdAt])
+}
+
+model CareerPaymentIntent {
+  id               String                    @id @default(cuid())
+  candidateId      String
+  candidate        CareerCandidate           @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  serviceRequestId String
+  serviceRequest   CareerServiceRequest      @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  status           CareerPaymentIntentStatus @default(draft)
+  provider         String                    @default("configuration_only")
+  amountMinor      Int
+  currency         String
+  idempotencyKey   String                    @unique
+  pricingSnapshot  Json
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  @@index([candidateId, status])
+  @@index([serviceRequestId, status])
+}
+
+model CareerSubscription {
+  id               String                   @id @default(cuid())
+  candidateId      String
+  candidate        CareerCandidate          @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  serviceRequestId String
+  serviceRequest   CareerServiceRequest     @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  status           CareerSubscriptionStatus @default(draft)
+  packageCode      CareerServicePackageCode
+  currency         String
+  amountMinor      Int
+  startedAt        DateTime?
+  currentPeriodEnd DateTime?
+  cancelledAt      DateTime?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  @@index([candidateId, status])
+  @@index([serviceRequestId, status])
 }
