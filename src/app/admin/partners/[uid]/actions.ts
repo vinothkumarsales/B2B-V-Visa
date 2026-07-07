@@ -16,7 +16,7 @@ const priceOverrideSchema = z.object({
 });
 
 export async function createPartnerPriceOverride(formData: FormData) {
-  const admin = await requireAdminMutation('pricing.write');
+  const admin = await requireAdminMutation('pricing.write', 'ADMIN_PRICING_WRITES_ENABLED');
   const parsed = priceOverrideSchema.parse({
     partnerUid: formData.get('partnerUid'),
     productId: formData.get('productId') || undefined,

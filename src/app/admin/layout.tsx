@@ -1,5 +1,6 @@
 import { AdminShell } from '@/components/admin/AdminShell';
 import { adminWritesEnabled, getAdminSession } from '@/server/admin/auth';
+import { adminFeatureSnapshot } from '@/server/admin/feature-flags';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -21,7 +22,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <AdminShell admin={{ email: admin.user.email, role: admin.role, writesEnabled: adminWritesEnabled() }}>
+    <AdminShell admin={{ email: admin.user.email, role: admin.role, writesEnabled: adminWritesEnabled(), flags: adminFeatureSnapshot() }}>
       {children}
     </AdminShell>
   );

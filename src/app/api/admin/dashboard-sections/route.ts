@@ -16,7 +16,7 @@ export async function GET() {
 
 export async function POST() {
   try {
-    await requireAdminMutation('dashboard.write');
+    await requireAdminMutation('dashboard.write', 'ADMIN_DASHBOARD_WRITES_ENABLED');
     return apiError('INVALID_ADMIN_MUTATION', 'Dashboard writes are not available in this phase.', 400);
   } catch (error) {
     if (isApiResponse(error)) return error;

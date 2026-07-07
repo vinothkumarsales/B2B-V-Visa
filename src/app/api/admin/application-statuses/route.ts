@@ -17,7 +17,7 @@ export async function GET() {
 
 export async function POST() {
   try {
-    await requireAdminMutation('application_status.write');
+    await requireAdminMutation('application_status.write', 'ADMIN_STATUS_WRITES_ENABLED');
     return apiError('INVALID_ADMIN_MUTATION', 'Application status writes are not available in this phase.', 400);
   } catch (error) {
     if (isApiResponse(error)) return error;
