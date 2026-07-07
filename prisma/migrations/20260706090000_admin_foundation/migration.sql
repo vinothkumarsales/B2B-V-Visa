@@ -1,31 +1,51 @@
 -- Admin console foundation: roles, support sessions, and partner-specific pricing overrides.
-CREATE TYPE "AdminRole" AS ENUM (
-  'super_admin',
-  'catalog_admin',
-  'operations_admin',
-  'finance_admin',
-  'support_admin'
-);
+DO $$
+BEGIN
+  CREATE TYPE "AdminRole" AS ENUM (
+    'super_admin',
+    'catalog_admin',
+    'operations_admin',
+    'finance_admin',
+    'support_admin'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TYPE "AdminImpersonationMode" AS ENUM (
-  'view_only',
-  'support',
-  'operations'
-);
+DO $$
+BEGIN
+  CREATE TYPE "AdminImpersonationMode" AS ENUM (
+    'view_only',
+    'support',
+    'operations'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TYPE "AdminSessionStatus" AS ENUM (
-  'active',
-  'expired',
-  'revoked',
-  'ended'
-);
+DO $$
+BEGIN
+  CREATE TYPE "AdminSessionStatus" AS ENUM (
+    'active',
+    'expired',
+    'revoked',
+    'ended'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TYPE "PartnerPriceOverrideStatus" AS ENUM (
-  'draft',
-  'active',
-  'expired',
-  'archived'
-);
+DO $$
+BEGIN
+  CREATE TYPE "PartnerPriceOverrideStatus" AS ENUM (
+    'draft',
+    'active',
+    'expired',
+    'archived'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE TABLE IF NOT EXISTS "AdminUser" (
   "id" TEXT NOT NULL,
