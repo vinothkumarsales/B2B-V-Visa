@@ -5,9 +5,14 @@ import { getApplicationStatusReadModel } from '@/server/admin/read-preview';
 import { requireAdminMutation } from '@/server/admin/write-guard';
 
 export async function GET() {
-  await requireAdmin('application_status.read');
-  const readModel = await getApplicationStatusReadModel();
-  return NextResponse.json(readModel);
+  try {
+    await requireAdmin('application_status.read');
+    const readModel = await getApplicationStatusReadModel();
+    return NextResponse.json(readModel);
+  } catch (error) {
+    if (isApiResponse(error)) return error;
+    throw error;
+  }
 }
 
 export async function POST() {

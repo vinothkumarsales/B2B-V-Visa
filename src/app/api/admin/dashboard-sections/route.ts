@@ -5,8 +5,13 @@ import { getDashboardSections } from '@/server/admin/read-preview';
 import { requireAdminMutation } from '@/server/admin/write-guard';
 
 export async function GET() {
-  await requireAdmin('dashboard.read');
-  return NextResponse.json({ sections: await getDashboardSections() });
+  try {
+    await requireAdmin('dashboard.read');
+    return NextResponse.json({ sections: await getDashboardSections() });
+  } catch (error) {
+    if (isApiResponse(error)) return error;
+    throw error;
+  }
 }
 
 export async function POST() {
