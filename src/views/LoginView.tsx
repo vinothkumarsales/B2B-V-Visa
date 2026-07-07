@@ -49,6 +49,14 @@ function loginErrorMessage(code?: string) {
       return 'The email or password is incorrect.';
     case 'ACCOUNT_LOCKED':
       return 'Too many failed attempts. Try again later.';
+    case 'google_not_configured':
+      return 'Google login is not configured yet. Add the Google OAuth credentials in Vercel and redeploy.';
+    case 'google_invalid_state':
+      return 'Google login expired. Please try again.';
+    case 'google_email_unverified':
+      return 'Google could not verify this email address.';
+    case 'google_login_failed':
+      return 'Google login failed. Please try again.';
     default:
       return 'Login failed. Please try again.';
   }
@@ -59,7 +67,10 @@ export default function LoginView() {
   const navigate = useAppStore((s) => s.navigate);
   const login = useAppStore((s) => s.login);
   const [showPassword, setShowPassword] = useState(false);
-  const [serverError, setServerError] = useState('');
+  const [serverError, setServerError] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return loginErrorMessage(new URLSearchParams(window.location.search).get('error') ?? undefined);
+  });
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -284,7 +295,10 @@ export default function LoginView() {
           <Button
             variant="outline"
             type="button"
-            onClick={() => setServerError('Google login is not configured for this deployment yet. Use email login or create an account.')}
+            onClick={() => {
+              setServerError('');
+              window.location.href = '/api/auth/google';
+            }}
             className="w-full h-11 bg-vvisa-surface border-vvisa-border text-white hover:bg-vvisa-surface-2 hover:text-foreground font-medium transition-colors cursor-pointer"
           >
             <svg className="size-4 mr-2" viewBox="0 0 24 24">
