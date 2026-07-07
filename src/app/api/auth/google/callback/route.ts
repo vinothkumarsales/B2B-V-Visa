@@ -12,7 +12,9 @@ import {
   exchangeGoogleCode,
   fetchGoogleProfile,
   googleOAuthConfigured,
+  type GoogleProfile,
 } from '@/server/auth/google-oauth';
+import type { Prisma } from '@prisma/client';
 
 function redirectToLogin(request: NextRequest, error: string) {
   return NextResponse.redirect(new URL(`/login?error=${error}`, request.url));
@@ -22,15 +24,45 @@ function logGoogleStage(stage: string, metadata?: Record<string, unknown>) {
   console.info('GOOGLE_AUTH_STAGE', { stage, ...metadata });
 }
 
-function googleErrorCode(error: unknown) {
+type GoogleCallbackStage =
+  | 'state_validation'
+  | 'token_exchange'
+  | 'profile_fetch'
+  | 'profile_validation'
+  | 'user_bootstrap'
+  | 'agency_bootstrap'
+  | 'membership_bootstrap'
+  | 'wallet_bootstrap'
+  | 'identity_transaction'
+  | 'session_creation'
+  | 'audit_write'
+  | 'crm_sync_queue'
+  | 'final_redirect';
+
+function prismaErrorCode(error: unknown) {
+  if (typeof error === 'object' && error && 'code' in error) return String(error.code);
+  return undefined;
+}
+
+function prismaErrorMeta(error: unknown) {
+  if (typeof error === 'object' && error && 'meta' in error) {
+    return error.meta as Record<string, unknown>;
+  }
+  return undefined;
+}
+
+function googleErrorCode(error: unknown, stage: GoogleCallbackStage) {
   const message = error instanceof Error ? error.message : String(error);
-  const code = typeof error === 'object' && error && 'code' in error ? String(error.code) : '';
+  const code = prismaErrorCode(error) ?? '';
 
   if (code === 'P2021' || message.includes('does not exist') || message.includes('relation')) {
     return 'DATABASE_SCHEMA_MISSING';
   }
+  if (code === 'P2002') return 'DATABASE_CONSTRAINT_FAILED';
   if (
     code.startsWith('P10') ||
+    message.includes('42P05') ||
+    message.includes('prepared statement') ||
     message.includes('authentication failed') ||
     message.includes('connection') ||
     message.includes('ECONN') ||
@@ -40,6 +72,13 @@ function googleErrorCode(error: unknown) {
   }
   if (message.includes('Google token exchange failed')) return 'GOOGLE_TOKEN_EXCHANGE_FAILED';
   if (message.includes('Google profile fetch failed')) return 'GOOGLE_PROFILE_FAILED';
+  if (stage === 'profile_validation') return 'GOOGLE_PROFILE_INVALID';
+  if (stage === 'user_bootstrap') return code === 'P2002' ? 'USER_CONFLICT' : 'USER_BOOTSTRAP_FAILED';
+  if (stage === 'agency_bootstrap') return 'AGENCY_BOOTSTRAP_FAILED';
+  if (stage === 'membership_bootstrap') return 'MEMBERSHIP_BOOTSTRAP_FAILED';
+  if (stage === 'wallet_bootstrap') return 'WALLET_BOOTSTRAP_FAILED';
+  if (stage === 'session_creation') return 'SESSION_CREATION_FAILED';
+  if (stage === 'audit_write') return 'AUDIT_WRITE_FAILED';
   return 'GOOGLE_LOGIN_FAILED';
 }
 
@@ -47,7 +86,92 @@ function randomPasswordHash() {
   return hashPassword(randomBytes(32).toString('base64url'));
 }
 
+async function ensureGoogleIdentity(input: {
+  tx: Prisma.TransactionClient;
+  email: string;
+  profile: GoogleProfile;
+  isAdminEmail: boolean;
+  setStage: (stage: GoogleCallbackStage) => void;
+}) {
+  input.setStage('user_bootstrap');
+  const user = await input.tx.user.upsert({
+    where: { email: input.email },
+    update: {
+      name: input.profile.name ?? undefined,
+      isActive: true,
+    },
+    create: {
+      name: input.profile.name ?? input.email.split('@')[0],
+      email: input.email,
+      passwordHash: randomPasswordHash(),
+    },
+    include: {
+      memberships: {
+        include: { agency: true },
+        orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }],
+      },
+    },
+  });
+
+  if (input.isAdminEmail) {
+    return { user, agency: user.memberships[0]?.agency ?? null, created: user.createdAt.getTime() === user.updatedAt.getTime() };
+  }
+
+  input.setStage('agency_bootstrap');
+  const existingAgency = user.memberships[0]?.agency ?? await input.tx.agency.findUnique({
+    where: { email: input.email },
+  });
+  const agency = existingAgency ?? await input.tx.agency.create({
+    data: {
+      name: input.profile.name ? `${input.profile.name}'s Agency` : input.email.split('@')[0],
+      email: input.email,
+      status: 'DRAFT',
+    },
+  });
+
+  input.setStage('membership_bootstrap');
+  await input.tx.agencyMembership.upsert({
+    where: {
+      userId_agencyId: {
+        userId: user.id,
+        agencyId: agency.id,
+      },
+    },
+    update: {
+      isDefault: true,
+    },
+    create: {
+      userId: user.id,
+      agencyId: agency.id,
+      role: 'AGENCY_OWNER',
+      isDefault: true,
+    },
+  });
+
+  input.setStage('wallet_bootstrap');
+  await input.tx.wallet.upsert({
+    where: {
+      agencyId_currency: {
+        agencyId: agency.id,
+        currency: 'INR',
+      },
+    },
+    update: {},
+    create: {
+      agencyId: agency.id,
+      currency: 'INR',
+    },
+  });
+
+  return { user, agency, created: false };
+}
+
 export async function GET(request: NextRequest) {
+  const requestId = randomBytes(8).toString('hex');
+  let stage: GoogleCallbackStage = 'state_validation';
+  const setStage = (nextStage: GoogleCallbackStage) => {
+    stage = nextStage;
+  };
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
@@ -81,10 +205,12 @@ export async function GET(request: NextRequest) {
   logGoogleStage('state_validation_passed');
 
   try {
+    setStage('token_exchange');
     logGoogleStage('authorization_code_exchange_started');
     const token = await exchangeGoogleCode({ code, origin: url.origin });
     logGoogleStage('authorization_code_exchange_succeeded');
 
+    setStage('profile_fetch');
     logGoogleStage('google_profile_fetch_started');
     const profile = await fetchGoogleProfile(token.access_token);
     const email = profile.email?.trim().toLowerCase();
@@ -93,6 +219,7 @@ export async function GET(request: NextRequest) {
       emailVerified: Boolean(profile.email_verified),
     });
 
+    setStage('profile_validation');
     if (!email || !profile.email_verified) {
       logGoogleStage('email_verification_failed', {
         hasEmail: Boolean(email),
@@ -103,47 +230,15 @@ export async function GET(request: NextRequest) {
 
     const isAdminEmail = isBootstrapAdminEmail(email);
     logGoogleStage('database_user_lookup_started', { isAdminEmail });
+    setStage('identity_transaction');
     const result = await db.$transaction(async (tx) => {
-      const existing = await tx.user.findUnique({
-        where: { email },
-        include: { memberships: { include: { agency: true } } },
+      return ensureGoogleIdentity({
+        tx,
+        email,
+        profile,
+        isAdminEmail,
+        setStage,
       });
-
-      if (existing) return { user: existing, agency: existing.memberships[0]?.agency ?? null, created: false };
-
-      logGoogleStage('user_bootstrap_started', { isAdminEmail });
-      const user = await tx.user.create({
-        data: {
-          name: profile.name ?? email.split('@')[0],
-          email,
-          passwordHash: randomPasswordHash(),
-        },
-        include: { memberships: { include: { agency: true } } },
-      });
-
-      if (isAdminEmail) return { user, agency: null, created: true };
-
-      const agencyName = profile.name ? `${profile.name}'s Agency` : email.split('@')[0];
-      const agency = await tx.agency.create({
-        data: {
-          name: agencyName,
-          email,
-          status: 'DRAFT',
-          memberships: {
-            create: {
-              userId: user.id,
-              role: 'AGENCY_OWNER',
-              isDefault: true,
-            },
-          },
-          wallets: {
-            create: { currency: 'INR' },
-          },
-        },
-      });
-      logGoogleStage('agency_wallet_bootstrap_succeeded');
-
-      return { user, agency, created: true };
     });
     logGoogleStage('database_user_lookup_succeeded', {
       created: result.created,
@@ -151,10 +246,12 @@ export async function GET(request: NextRequest) {
       isAdminEmail,
     });
 
+    setStage('session_creation');
     logGoogleStage('session_creation_started');
     await createSession(result.user.id);
     logGoogleStage('session_creation_succeeded');
 
+    setStage('audit_write');
     await auditLog({
       agencyId: result.agency?.id,
       actorUserId: result.user.id,
@@ -165,19 +262,26 @@ export async function GET(request: NextRequest) {
     });
 
     if (result.created && result.agency) {
+      setStage('crm_sync_queue');
       logGoogleStage('crm_sync_queue_started');
       await queueTravelAgentCrmSync({ agencyId: result.agency.id });
       logGoogleStage('crm_sync_queue_succeeded');
     }
 
+    setStage('final_redirect');
     logGoogleStage('final_redirect', { destination: isAdminEmail ? '/admin' : '/dashboard' });
     return NextResponse.redirect(new URL(isAdminEmail ? '/admin' : '/dashboard', request.url));
   } catch (error) {
-    const code = googleErrorCode(error);
+    const code = googleErrorCode(error, stage);
+    const meta = prismaErrorMeta(error);
     console.error('GOOGLE_AUTH_FAILED', {
       code,
+      stage,
+      requestId,
       message: error instanceof Error ? error.message : 'Unknown Google login error',
-      prismaCode: typeof error === 'object' && error && 'code' in error ? String(error.code) : undefined,
+      prismaCode: prismaErrorCode(error),
+      modelName: typeof meta?.modelName === 'string' ? meta.modelName : undefined,
+      target: Array.isArray(meta?.target) ? meta.target.join(',') : typeof meta?.target === 'string' ? meta.target : undefined,
       googleStatus: typeof error === 'object' && error && 'googleStatus' in error ? String(error.googleStatus) : undefined,
       googleError: typeof error === 'object' && error && 'googleError' in error ? String(error.googleError) : undefined,
       googleErrorDescription: typeof error === 'object' && error && 'googleErrorDescription' in error ? String(error.googleErrorDescription) : undefined,
