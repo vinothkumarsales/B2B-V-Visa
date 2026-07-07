@@ -189,6 +189,29 @@ enum DashboardSectionType {
   important_updates
 }
 
+enum CareerCandidateStatus {
+  onboarding_started
+  profile_processing
+  profile_needs_information
+  profile_ready
+  payment_pending
+  subscription_active
+  blocked
+  closed
+}
+
+enum CareerResumeStatus {
+  uploaded
+  approved_for_processing
+  rejected
+}
+
+enum CareerServicePackageCode {
+  EUROPE_JOB_SEARCH_ASSIST
+  EUROPE_JOB_SEARCH_PRO
+  EUROPE_JOB_SEARCH_PREMIUM
+}
+
 model User {
   id           String             @id @default(cuid())
   name         String?
@@ -202,6 +225,7 @@ model User {
   sessions     Session[]
   auditLogs    AuditLog[]
   adminUser    AdminUser?
+  careerCandidates CareerCandidate[]
 }
 
 model Session {
@@ -1024,4 +1048,92 @@ model AuditLog {
   createdAt    DateTime @default(now())
 
   @@index([agencyId, resourceType, resourceId])
+}
+
+model CareerCandidate {
+  id                       String                  @id @default(cuid())
+  userId                   String
+  user                     User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status                   CareerCandidateStatus   @default(onboarding_started)
+  fullName                 String
+  email                    String
+  phone                    String?
+  currentCountry           String?
+  nationality              String?
+  currentTitle             String?
+  experienceYears          Int?
+  assignedConsultantName   String?
+  assignedConsultantEmail  String?
+  profileCompletionPercent Int                     @default(0)
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  preferences              CareerSearchPreference?
+  resumes                  CareerResume[]
+  serviceRequests          CareerServiceRequest[]
+  statusEvents             CareerStatusEvent[]
+
+  @@index([userId, status])
+  @@index([email])
+}
+
+model CareerSearchPreference {
+  id                  String          @id @default(cuid())
+  candidateId         String          @unique
+  candidate           CareerCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  targetRegion        String?
+  targetCountries     Json
+  targetRoles         Json
+  excludedRoles       Json
+  workModes           Json
+  salaryExpectation   String?
+  sponsorshipRequired Boolean?
+  relocationRequired  Boolean?
+  minimumFitScore     Float           @default(4.0)
+  portalPreferences   Json
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+}
+
+model CareerResume {
+  id          String             @id @default(cuid())
+  candidateId String
+  candidate   CareerCandidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  version     Int
+  fileName    String
+  mimeType    String
+  sizeBytes   Int
+  storageKey  String
+  checksum    String
+  status      CareerResumeStatus @default(uploaded)
+  createdAt   DateTime           @default(now())
+
+  @@unique([candidateId, version])
+  @@index([candidateId, status])
+}
+
+model CareerServiceRequest {
+  id               String                   @id @default(cuid())
+  candidateId      String
+  candidate        CareerCandidate          @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  packageCode      CareerServicePackageCode
+  status           String                   @default("draft")
+  paymentStatus    String                   @default("not_started")
+  activationStatus String                   @default("not_started")
+  dashboardStatus  String                   @default("Payment pending")
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  @@index([candidateId, status])
+}
+
+model CareerStatusEvent {
+  id          String                @id @default(cuid())
+  candidateId String
+  candidate   CareerCandidate       @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  status      CareerCandidateStatus
+  label       String
+  detail      String?
+  createdAt   DateTime              @default(now())
+
+  @@index([candidateId, createdAt])
 }

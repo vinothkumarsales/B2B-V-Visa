@@ -141,6 +141,21 @@ const envSchema = z.object({
   CRM_ABANDONED_LEAD_ENABLED: z.coerce.boolean().default(false),
   CRM_ABANDONED_LEAD_DELAY_MINUTES: z.coerce.number().int().min(1).default(15),
   CRM_PAYMENT_CONVERSION_ENABLED: z.coerce.boolean().default(false),
+
+  CAREERS_SAAS_ENABLED: z.coerce.boolean().default(false),
+  CAREERS_ONBOARDING_ENABLED: z.coerce.boolean().default(false),
+  CAREERS_RESUME_UPLOAD_ENABLED: z.coerce.boolean().default(false),
+  CAREERS_INTERNAL_CONSOLE_ENABLED: z.coerce.boolean().default(false),
+  CAREERS_GOOGLE_CALENDAR_ENABLED: z.coerce.boolean().default(false),
+  CAREERS_OUTLOOK_CALENDAR_ENABLED: z.coerce.boolean().default(false),
+  CAREERS_ZOHO_CALENDAR_ENABLED: z.coerce.boolean().default(false),
+  CAREERS_GOOGLE_MEET_ENABLED: z.coerce.boolean().default(false),
+  CAREERS_ZOOM_ENABLED: z.coerce.boolean().default(false),
+  CAREERS_TEAMS_ENABLED: z.coerce.boolean().default(false),
+  CAREERS_CALENDAR_EVENT_CREATION_ENABLED: z.coerce.boolean().default(false),
+  CAREERS_CALENDAR_REMINDERS_ENABLED: z.coerce.boolean().default(false),
+  CAREERS_EMPLOYER_RESPONSE_SYNC_ENABLED: z.coerce.boolean().default(false),
+  CAREERS_INTERVIEW_DETECTION_ENABLED: z.coerce.boolean().default(false),
 });
 
 const parsed = envSchema.safeParse(envWithAliases);

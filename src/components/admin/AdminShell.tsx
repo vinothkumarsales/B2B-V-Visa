@@ -33,6 +33,7 @@ const navItems = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
   { href: '/admin/partners', label: 'Partners', icon: Users },
   { href: '/admin/applications', label: 'Applications', icon: Archive },
+  { href: '/admin/careers', label: 'Careers', icon: BriefcaseBusiness },
   { href: '/admin/catalogue', label: 'Countries & Visas', icon: BookOpen },
   { href: '/admin/services', label: 'Services', icon: BriefcaseBusiness },
   { href: '/admin/pricing', label: 'Pricing', icon: BadgeIndianRupee },
