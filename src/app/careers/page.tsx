@@ -198,6 +198,9 @@ export default async function CareersLandingPage() {
               <Button asChild variant="outline" size="lg">
                 <Link href="/careers/dashboard">View dashboard</Link>
               </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link href="/careers/demo">View live demo journey</Link>
+              </Button>
             </div>
             <div className="mt-8 grid gap-3 rounded-xl border border-vvisa-border-subtle bg-white/80 p-4 shadow-[var(--vvisa-shadow-sm)] backdrop-blur sm:grid-cols-3">
               {['Managed service', 'Internal review model', 'Progress dashboard'].map((item) => (
@@ -256,6 +259,9 @@ export default async function CareersLandingPage() {
       </section>
 
       <Section eyebrow="Why Europe?" title="A practical target for ambitious international careers" description="Europe can be attractive for candidates who want structured hiring, stronger professional environments, and long-term global mobility. The opportunity still depends on your profile, field, timing, and employer requirements.">
+        <p className="mb-5 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm leading-6 text-vvisa-text-secondary">
+          Europe is our first launch corridor. The same managed workflow can later support other countries and regions based on available packages.
+        </p>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {europeBenefits.map((item) => (
             <FeatureCard key={item.title} icon={item.icon} title={item.title} description={item.description} />

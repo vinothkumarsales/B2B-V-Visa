@@ -1,10 +1,14 @@
 import { CareersDemoExperience } from '@/components/careers/CareersDemoExperience';
 import {
   careersDemoCandidate,
+  careersDemoAgents,
+  careersDemoApplicationAnswers,
+  careersDemoCoverLetter,
   careersDemoEuropeBenefits,
   careersDemoJobs,
   careersDemoMaterials,
   careersDemoMetrics,
+  careersDemoRecruiterEmail,
   careersDemoTimeline,
 } from '@/server/careers/demo-data';
 
@@ -18,10 +22,14 @@ export default function CareersDemoPage() {
     <CareersDemoExperience
       candidate={careersDemoCandidate}
       timeline={careersDemoTimeline}
+      agents={careersDemoAgents}
       jobs={careersDemoJobs}
       metrics={careersDemoMetrics}
       materials={careersDemoMaterials}
       europeBenefits={careersDemoEuropeBenefits}
+      coverLetter={careersDemoCoverLetter}
+      recruiterEmail={careersDemoRecruiterEmail}
+      applicationAnswers={careersDemoApplicationAnswers}
     />
   );
 }

@@ -6,10 +6,10 @@ import { motion } from 'framer-motion';
 import {
   ArrowRight,
   BadgeCheck,
+  Bot,
   BriefcaseBusiness,
   CalendarClock,
   CheckCircle2,
-  CircleDollarSign,
   ClipboardCheck,
   FileText,
   Globe2,
@@ -24,7 +24,13 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import type { CareersDemoJob, CareersDemoMaterial, CareersDemoTimelineItem } from '@/server/careers/demo-data';
+import type {
+  CareersDemoAgent,
+  CareersDemoApplicationAnswer,
+  CareersDemoJob,
+  CareersDemoMaterial,
+  CareersDemoTimelineItem,
+} from '@/server/careers/demo-data';
 
 type CareersDemoExperienceProps = {
   candidate: {
@@ -35,12 +41,37 @@ type CareersDemoExperienceProps = {
     skills: string[];
     missingInformation: string[];
     reviewStatus: string;
+    confidenceScore: string;
+    currentRole: string;
+    preferredCountries: string[];
+    professionalSummary: string;
+    workExperience: string[];
   };
   timeline: CareersDemoTimelineItem[];
+  agents: CareersDemoAgent[];
   jobs: CareersDemoJob[];
   metrics: readonly (readonly [string, string])[];
   materials: CareersDemoMaterial[];
   europeBenefits: string[];
+  coverLetter: {
+    jobTitle: string;
+    company: string;
+    location: string;
+    generatedBy: string;
+    reviewStatus: string;
+    unsupportedClaims: string;
+    candidateActionRequired: string;
+    body: string[];
+  };
+  recruiterEmail: {
+    to: string;
+    subject: string;
+    status: string;
+    mailboxDraft: string;
+    attachments: string[];
+    bodyPreview: string;
+  };
+  applicationAnswers: CareersDemoApplicationAnswer[];
 };
 
 const safetyLabels = [
@@ -51,17 +82,23 @@ const safetyLabels = [
 ];
 
 const materialIcons = [FileText, ClipboardCheck, MailCheck, BadgeCheck];
+const workflowTabs = ['Resume extraction', 'Jobs', 'Application kit', 'Internal review', 'Tracking'] as const;
 
 export function CareersDemoExperience({
   candidate,
   timeline,
+  agents,
   jobs,
   metrics,
   materials,
   europeBenefits,
+  coverLetter,
+  recruiterEmail,
+  applicationAnswers,
 }: CareersDemoExperienceProps) {
   const [step, setStep] = useState(5);
   const [materialIndex, setMaterialIndex] = useState(0);
+  const [workflowTab, setWorkflowTab] = useState<(typeof workflowTabs)[number]>('Resume extraction');
   const progress = useMemo(() => Math.round(((step + 1) / timeline.length) * 100), [step, timeline.length]);
   const activeMaterial = materials[materialIndex] ?? materials[0];
 
@@ -176,13 +213,67 @@ export function CareersDemoExperience({
         </div>
       </Section>
 
+      <Section eyebrow="Agent workflow results" title="Core agents producing safe demo outputs">
+        <div className="mb-5 flex flex-wrap gap-2">
+          {workflowTabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setWorkflowTab(tab)}
+              className={`rounded-full border px-4 py-2 text-sm font-medium transition ${workflowTab === tab ? 'border-primary bg-primary text-primary-foreground shadow-[var(--vvisa-shadow-sm)]' : 'border-vvisa-border-subtle bg-white text-vvisa-text-secondary hover:bg-vvisa-surface-2'}`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm leading-6 text-vvisa-text-secondary">
+          Demo mode: these agents show fixture results only. No external portal contacted, no real email sent, and no real application submitted.
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {agents.map((agent, index) => (
+            <motion.div
+              key={agent.name}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.3, delay: index * 0.03 }}
+              className="rounded-3xl border border-vvisa-border-subtle bg-white p-5 shadow-[var(--vvisa-shadow-sm)] transition hover:-translate-y-1 hover:shadow-[0_22px_60px_rgba(15,23,42,0.12)]"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Bot className="size-5" />
+                </div>
+                <Badge variant={agent.status === 'Review required' ? 'outline' : 'secondary'}>{agent.status}</Badge>
+              </div>
+              <h3 className="mt-4 font-semibold">{agent.name}</h3>
+              <p className="mt-2 text-sm leading-6 text-vvisa-text-secondary">{agent.action}</p>
+              <div className="mt-4 grid gap-2 text-xs">
+                <Status label="Result" value={agent.result} />
+                <Status label="Output" value={agent.output} />
+                <Status label="Completed" value={agent.completedAt} />
+                <Status label="Confidence" value={agent.confidence} />
+                <Status label="Next" value={agent.next} />
+              </div>
+              <p className="mt-4 text-xs font-medium text-primary">Safe demo label: Fixture result</p>
+            </motion.div>
+          ))}
+        </div>
+      </Section>
+
       <Section eyebrow="Fixture resume extraction preview" title="Extracted candidate profile">
+        <p className="mb-5 rounded-2xl border border-vvisa-border-subtle bg-white p-4 text-sm leading-6 text-vvisa-text-secondary shadow-[var(--vvisa-shadow-sm)]">
+          Demo extraction preview - no real resume processed on this page.
+        </p>
         <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
           <Card className="rounded-3xl border-vvisa-border-subtle bg-slate-950 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
             <CardContent className="p-6">
               <Badge className="bg-cyan-300 text-slate-950">Fixture resume extraction preview</Badge>
               <h2 className="mt-5 text-3xl font-semibold">{candidate.name}</h2>
-              <p className="mt-2 text-slate-300">{candidate.experience} experience - {candidate.targetRegion}</p>
+              <p className="mt-2 text-slate-300">{candidate.currentRole} - {candidate.experience} experience - {candidate.targetRegion}</p>
+              <div className="mt-5 rounded-2xl border border-white/10 bg-white/7 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">Professional summary</p>
+                <p className="mt-2 text-sm leading-6 text-slate-200">{candidate.professionalSummary}</p>
+              </div>
               <div className="mt-6 grid gap-3">
                 {candidate.targetRoles.map((role) => (
                   <div key={role} className="rounded-xl border border-white/10 bg-white/7 p-3 text-sm">{role}</div>
@@ -193,16 +284,22 @@ export function CareersDemoExperience({
           <div className="grid gap-4 md:grid-cols-2">
             <InfoPanel title="Personal details" items={[candidate.name, candidate.targetRegion, candidate.experience]} icon={UsersRound} />
             <InfoPanel title="Skills extracted" items={candidate.skills} icon={Sparkles} />
+            <InfoPanel title="Work experience" items={candidate.workExperience} icon={BriefcaseBusiness} />
             <InfoPanel title="Target roles" items={candidate.targetRoles} icon={Target} />
+            <InfoPanel title="Preferred countries" items={candidate.preferredCountries} icon={Globe2} />
             <InfoPanel title="Missing information" items={candidate.missingInformation} icon={ShieldAlert} />
             <div className="rounded-2xl border border-vvisa-border-subtle bg-emerald-50 p-5 md:col-span-2">
               <p className="flex items-center gap-2 font-semibold text-emerald-900"><CheckCircle2 className="size-5" /> Review status: {candidate.reviewStatus}</p>
+              <p className="mt-2 text-sm text-emerald-800">Confidence score: {candidate.confidenceScore}</p>
             </div>
           </div>
         </div>
       </Section>
 
       <Section eyebrow="Why Europe?" title="A strong market direction without overpromising sponsorship">
+        <p className="mb-5 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm leading-6 text-vvisa-text-secondary">
+          Europe is our first launch corridor. The same managed workflow can later support other countries and regions based on available packages.
+        </p>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {europeBenefits.map((benefit) => (
             <div key={benefit} className="rounded-2xl border border-vvisa-border-subtle bg-white p-5 shadow-[var(--vvisa-shadow-sm)] transition hover:-translate-y-0.5 hover:shadow-[var(--vvisa-shadow-md)]">
@@ -228,6 +325,9 @@ export function CareersDemoExperience({
                 <p className="mt-4 text-sm text-vvisa-text-secondary">{job.location}</p>
                 <div className="mt-4 grid gap-2 text-sm">
                   <Status label="Sponsorship" value={job.sponsorship} />
+                  <Status label="Application kit" value={job.applicationKitStatus} />
+                  <Status label="Internal review" value={job.internalReviewStatus} />
+                  <Status label="Application stage" value={job.applicationStage} />
                   <Status label="Status" value={job.status} />
                   <Status label="Next" value={job.nextStep} />
                 </div>
@@ -249,6 +349,9 @@ export function CareersDemoExperience({
       </Section>
 
       <Section eyebrow="Application materials preview" title="Prepared materials, not real documents">
+        <p className="mb-5 rounded-2xl border border-vvisa-border-subtle bg-white p-4 text-sm leading-6 text-vvisa-text-secondary shadow-[var(--vvisa-shadow-sm)]">
+          Fixture result: generated material is preview-only. No documents are created, uploaded, emailed, or submitted from this demo page.
+        </p>
         <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
           <div className="grid gap-3">
             {materials.map((material, index) => {
@@ -270,6 +373,73 @@ export function CareersDemoExperience({
               <p className="mt-6 rounded-2xl border border-white/10 bg-white/7 p-5 leading-7 text-slate-200">{activeMaterial.snippet}</p>
             </CardContent>
           </Card>
+        </div>
+      </Section>
+
+      <Section eyebrow="Generated cover letter" title="Application Kit Agent output">
+        <div className="grid gap-6 lg:grid-cols-[1fr_0.75fr]">
+          <Card className="rounded-3xl border-vvisa-border-subtle bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
+            <CardContent className="p-6">
+              <Badge className="bg-primary text-primary-foreground">Generated by {coverLetter.generatedBy}</Badge>
+              <h3 className="mt-5 text-3xl font-semibold">{coverLetter.jobTitle} - {coverLetter.company}</h3>
+              <p className="mt-2 text-vvisa-text-secondary">{coverLetter.location}</p>
+              <div className="mt-6 rounded-2xl border border-vvisa-border-subtle bg-vvisa-surface-2 p-5 text-sm leading-7 text-vvisa-text-secondary">
+                {coverLetter.body.map((line) => (
+                  <p key={line} className="mb-3 last:mb-0">{line}</p>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl border-vvisa-border-subtle bg-slate-950 text-white">
+            <CardContent className="grid gap-3 p-6 text-sm">
+              <Status label="Internal review status" value={coverLetter.reviewStatus} />
+              <Status label="Unsupported claims" value={coverLetter.unsupportedClaims} />
+              <Status label="Candidate action required" value={coverLetter.candidateActionRequired} />
+              <div className="rounded-2xl border border-white/10 bg-white/7 p-4">
+                <p className="flex items-center gap-2 font-semibold"><ShieldCheck className="size-4 text-cyan-300" /> No real application submitted</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </Section>
+
+      <Section eyebrow="Recruiter email draft" title="Managed draft workflow">
+        <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+          <Card className="rounded-3xl border-vvisa-border-subtle bg-slate-950 text-white shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
+            <CardContent className="p-6">
+              <Badge className="bg-cyan-300 text-slate-950">No real email sent</Badge>
+              <h3 className="mt-5 text-3xl font-semibold">Recruiter email draft</h3>
+              <p className="mt-4 leading-7 text-slate-300">This demo does not send emails. It shows the managed draft workflow.</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl border-vvisa-border-subtle bg-white shadow-[var(--vvisa-shadow-sm)]">
+            <CardContent className="grid gap-3 p-6 text-sm">
+              <Status label="To" value={recruiterEmail.to} />
+              <Status label="Subject" value={recruiterEmail.subject} />
+              <Status label="Attachments" value={recruiterEmail.attachments.join(', ')} />
+              <Status label="Status" value={recruiterEmail.status} />
+              <Status label="Mailbox draft" value={recruiterEmail.mailboxDraft} />
+              <div className="rounded-2xl border border-vvisa-border-subtle bg-vvisa-surface-2 p-4">
+                <p className="text-xs font-medium uppercase tracking-[0.14em] text-vvisa-text-muted">Body preview</p>
+                <p className="mt-2 leading-7 text-vvisa-text-secondary">{recruiterEmail.bodyPreview}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </Section>
+
+      <Section eyebrow="Application answers preview" title="Conservative answers with candidate-input guardrails">
+        <div className="grid gap-4 lg:grid-cols-3">
+          {applicationAnswers.map((answer) => (
+            <Card key={answer.question} className="rounded-3xl border-vvisa-border-subtle bg-white shadow-[var(--vvisa-shadow-sm)]">
+              <CardContent className="p-5">
+                <Badge variant={answer.status.includes('required') || answer.status.includes('Blocked') ? 'outline' : 'secondary'}>{answer.status}</Badge>
+                <h3 className="mt-4 font-semibold">{answer.question}</h3>
+                <p className="mt-3 text-sm leading-7 text-vvisa-text-secondary">{answer.answer}</p>
+                <p className="mt-4 text-xs font-medium text-primary">Demo mode: legal, salary, and sponsorship answers are not filled blindly.</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </Section>
 
