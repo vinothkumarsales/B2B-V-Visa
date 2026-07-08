@@ -3,6 +3,7 @@ import { careersFeatureSnapshot } from '@/server/careers/feature-flags';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { BriefcaseBusiness, CheckCircle2, CreditCard, Layers3, RefreshCcw, ShieldCheck, UsersRound } from 'lucide-react';
 
 export default async function AdminCareersPage() {
   const flags = careersFeatureSnapshot();
@@ -42,20 +43,40 @@ export default async function AdminCareersPage() {
     : [];
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-xl font-semibold">Careers Review Console</h2>
-        <p className="text-sm text-vvisa-text-muted">Phase 1 shell for candidate onboarding visibility. Review actions arrive in later phases.</p>
+    <div className="space-y-6">
+      <div className="overflow-hidden rounded-2xl border border-vvisa-border-subtle bg-slate-950 text-white shadow-[0_20px_60px_rgba(15,23,42,0.16)]">
+        <div className="grid gap-6 p-6 lg:grid-cols-[1fr_auto] lg:p-8">
+          <div>
+            <Badge className="bg-cyan-300 text-slate-950">
+              <ShieldCheck className="size-3.5" />
+              Read-only operations view
+            </Badge>
+            <h2 className="mt-5 text-3xl font-semibold">Careers Review Console</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
+              Monitor candidate onboarding, packages, payment webhooks, subscriptions, and activation handoffs without triggering Career-Ops, CRM, WorkDrive, email, browser automation, or application execution.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[28rem]">
+            <Metric label="Candidates" value={String(candidates.length)} icon={UsersRound} />
+            <Metric label="Packages" value={String(packages.length)} icon={Layers3} />
+            <Metric label="Handoffs" value={String(activationHandoffs.length)} icon={RefreshCcw} />
+          </div>
+        </div>
       </div>
       {!flags.CAREERS_INTERNAL_CONSOLE_ENABLED && (
-        <Card className="rounded-lg border-vvisa-border-subtle">
+        <Card className="rounded-2xl border-vvisa-border-subtle bg-white">
           <CardContent className="p-4 text-sm text-vvisa-text-secondary">
             Careers internal console is disabled. Set CAREERS_INTERNAL_CONSOLE_ENABLED=true to show candidate onboarding records.
           </CardContent>
         </Card>
       )}
-      <Card className="rounded-lg border-vvisa-border-subtle">
-        <CardHeader><CardTitle>Package catalogue</CardTitle></CardHeader>
+      <div className="grid gap-4 md:grid-cols-3">
+        <SummaryCard title="Webhook events" value={String(webhookEvents.length)} description="Verified provider events retained for audit." icon={CreditCard} />
+        <SummaryCard title="Subscriptions" value={String(subscriptions.length)} description="Read-only subscription activation visibility." icon={CheckCircle2} />
+        <SummaryCard title="Execution boundary" value="Off" description="No live Career-Ops or application execution in this phase." icon={BriefcaseBusiness} />
+      </div>
+      <Card className="overflow-hidden rounded-2xl border-vvisa-border-subtle bg-white shadow-[var(--vvisa-shadow-sm)]">
+        <CardHeader className="border-b border-vvisa-border-subtle bg-vvisa-surface-2"><CardTitle>Package catalogue</CardTitle></CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
@@ -89,8 +110,8 @@ export default async function AdminCareersPage() {
           </Table>
         </CardContent>
       </Card>
-      <Card className="rounded-lg border-vvisa-border-subtle">
-        <CardHeader><CardTitle>Candidate queue</CardTitle></CardHeader>
+      <Card className="overflow-hidden rounded-2xl border-vvisa-border-subtle bg-white shadow-[var(--vvisa-shadow-sm)]">
+        <CardHeader className="border-b border-vvisa-border-subtle bg-vvisa-surface-2"><CardTitle>Candidate queue</CardTitle></CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
@@ -124,8 +145,8 @@ export default async function AdminCareersPage() {
           </Table>
         </CardContent>
       </Card>
-      <Card className="rounded-lg border-vvisa-border-subtle">
-        <CardHeader><CardTitle>Payment webhook events</CardTitle></CardHeader>
+      <Card className="overflow-hidden rounded-2xl border-vvisa-border-subtle bg-white shadow-[var(--vvisa-shadow-sm)]">
+        <CardHeader className="border-b border-vvisa-border-subtle bg-vvisa-surface-2"><CardTitle>Payment webhook events</CardTitle></CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
@@ -162,8 +183,8 @@ export default async function AdminCareersPage() {
           </Table>
         </CardContent>
       </Card>
-      <Card className="rounded-lg border-vvisa-border-subtle">
-        <CardHeader><CardTitle>Subscriptions</CardTitle></CardHeader>
+      <Card className="overflow-hidden rounded-2xl border-vvisa-border-subtle bg-white shadow-[var(--vvisa-shadow-sm)]">
+        <CardHeader className="border-b border-vvisa-border-subtle bg-vvisa-surface-2"><CardTitle>Subscriptions</CardTitle></CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
@@ -194,8 +215,8 @@ export default async function AdminCareersPage() {
           </Table>
         </CardContent>
       </Card>
-      <Card className="rounded-lg border-vvisa-border-subtle">
-        <CardHeader><CardTitle>Activation handoffs</CardTitle></CardHeader>
+      <Card className="overflow-hidden rounded-2xl border-vvisa-border-subtle bg-white shadow-[var(--vvisa-shadow-sm)]">
+        <CardHeader className="border-b border-vvisa-border-subtle bg-vvisa-surface-2"><CardTitle>Activation handoffs</CardTitle></CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
@@ -229,5 +250,34 @@ export default async function AdminCareersPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function Metric({ label, value, icon: Icon }: { label: string; value: string; icon: typeof UsersRound }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/7 p-4">
+      <Icon className="size-5 text-cyan-300" />
+      <p className="mt-3 text-2xl font-semibold">{value}</p>
+      <p className="mt-1 text-xs text-slate-300">{label}</p>
+    </div>
+  );
+}
+
+function SummaryCard({ title, value, description, icon: Icon }: { title: string; value: string; description: string; icon: typeof UsersRound }) {
+  return (
+    <Card className="rounded-2xl border-vvisa-border-subtle bg-white shadow-[var(--vvisa-shadow-sm)]">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm text-vvisa-text-muted">{title}</p>
+            <p className="mt-2 text-3xl font-semibold">{value}</p>
+          </div>
+          <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Icon className="size-5" />
+          </div>
+        </div>
+        <p className="mt-4 text-sm leading-6 text-vvisa-text-secondary">{description}</p>
+      </CardContent>
+    </Card>
   );
 }
