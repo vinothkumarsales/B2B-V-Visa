@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CareerCheckoutPanel } from '@/components/careers/CareerCheckoutPanel';
 import { careersFeatureSnapshot } from '@/server/careers/feature-flags';
+import { careerActivationDisplayStatus } from '@/server/careers/activation-policy';
 
 export default async function CareersDashboardPage() {
   const session = await requireSession().catch(() => null);
@@ -22,6 +23,7 @@ export default async function CareersDashboardPage() {
       serviceRequests: { orderBy: { createdAt: 'desc' }, take: 1 },
       paymentIntents: { orderBy: { createdAt: 'desc' }, take: 1 },
       subscriptions: { orderBy: { createdAt: 'desc' }, take: 1 },
+      activationHandoffs: { orderBy: { createdAt: 'desc' }, take: 1 },
       statusEvents: { orderBy: { createdAt: 'desc' }, take: 6 },
     },
     orderBy: { createdAt: 'desc' },
@@ -74,6 +76,12 @@ export default async function CareersDashboardPage() {
                   {candidate.serviceRequests[0]?.packageCode.replaceAll('_', ' ') ?? 'Not selected'}
                   <div className="mt-2">Payment: {candidate.serviceRequests[0]?.paymentStatus ?? 'not_started'}</div>
                   <div className="mt-2">Subscription: {candidate.subscriptions[0]?.status ?? 'draft'}</div>
+                  <div className="mt-2">Activation: {careerActivationDisplayStatus({
+                    paymentStatus: candidate.paymentIntents[0]?.status ?? null,
+                    subscriptionStatus: candidate.subscriptions[0]?.status ?? null,
+                    activationStatus: candidate.serviceRequests[0]?.activationStatus ?? null,
+                    handoffStatus: candidate.activationHandoffs[0]?.status ?? null,
+                  }).replaceAll('_', ' ')}</div>
                 </CardContent>
               </Card>
               <Card className="rounded-lg border-vvisa-border-subtle">

@@ -1099,6 +1099,7 @@ model CareerCandidate {
   statusEvents             CareerStatusEvent[]
   paymentIntents           CareerPaymentIntent[]
   subscriptions            CareerSubscription[]
+  activationHandoffs       CareerActivationHandoff[]
 
   @@index([userId, status])
   @@index([email])
@@ -1190,6 +1191,7 @@ model CareerServiceRequest {
   pricingSnapshots CareerPricingSnapshot[]
   paymentIntents   CareerPaymentIntent[]
   subscriptions    CareerSubscription[]
+  activationHandoffs CareerActivationHandoff[]
 
   @@index([candidateId, status])
   @@index([packageId])
@@ -1251,6 +1253,8 @@ model CareerPaymentIntent {
   createdAt        DateTime                  @default(now())
   updatedAt        DateTime                  @updatedAt
   webhookEvents    CareerPaymentWebhookEvent[]
+  activationHandoffs CareerActivationHandoff[]
+  subscription       CareerSubscription?
 
   @@index([candidateId, status])
   @@index([serviceRequestId, status])
@@ -1293,16 +1297,50 @@ model CareerSubscription {
   candidate        CareerCandidate          @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   serviceRequestId String
   serviceRequest   CareerServiceRequest     @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  paymentIntentId  String?                  @unique
+  paymentIntent    CareerPaymentIntent?     @relation(fields: [paymentIntentId], references: [id])
   status           CareerSubscriptionStatus @default(draft)
   packageCode      CareerServicePackageCode
+  packageName      String?
   currency         String
   amountMinor      Int
   startedAt        DateTime?
+  activatedAt      DateTime?
   currentPeriodEnd DateTime?
   cancelledAt      DateTime?
+  pricingSnapshotId String?
   createdAt        DateTime                 @default(now())
   updatedAt        DateTime                 @updatedAt
+  activationHandoffs CareerActivationHandoff[]
 
   @@index([candidateId, status])
   @@index([serviceRequestId, status])
+  @@index([paymentIntentId])
+}
+
+model CareerActivationHandoff {
+  id                String   @id @default(cuid())
+  candidateId       String
+  candidate         CareerCandidate      @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  serviceRequestId  String
+  serviceRequest    CareerServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  subscriptionId    String
+  subscription      CareerSubscription   @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  paymentIntentId   String
+  paymentIntent     CareerPaymentIntent  @relation(fields: [paymentIntentId], references: [id], onDelete: Cascade)
+  eventType         String   @default("career_subscription_activated")
+  status            String   @default("pending")
+  idempotencyKey    String   @unique
+  correlationId     String?
+  attemptCount      Int      @default(0)
+  nextAttemptAt     DateTime?
+  processedAt       DateTime?
+  failureCode       String?
+  failureMessageSafe String?
+  payloadVersion    Int      @default(1)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([status, nextAttemptAt])
+  @@index([paymentIntentId, status])
 }

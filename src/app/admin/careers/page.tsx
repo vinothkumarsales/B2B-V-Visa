@@ -28,6 +28,18 @@ export default async function AdminCareersPage() {
         take: 25,
       })
     : [];
+  const subscriptions = flags.CAREERS_INTERNAL_CONSOLE_ENABLED
+    ? await db.careerSubscription.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 25,
+      })
+    : [];
+  const activationHandoffs = flags.CAREERS_INTERNAL_CONSOLE_ENABLED
+    ? await db.careerActivationHandoff.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 25,
+      })
+    : [];
 
   return (
     <div className="space-y-5">
@@ -144,6 +156,72 @@ export default async function AdminCareersPage() {
               {webhookEvents.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="text-sm text-vvisa-text-muted">No Careers payment webhook events to show.</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      <Card className="rounded-lg border-vvisa-border-subtle">
+        <CardHeader><CardTitle>Subscriptions</CardTitle></CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Subscription</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Payment intent</TableHead>
+                <TableHead>Package</TableHead>
+                <TableHead>Activated</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {subscriptions.map((subscription) => (
+                <TableRow key={subscription.id}>
+                  <TableCell className="font-mono text-xs">{subscription.id}</TableCell>
+                  <TableCell><Badge variant="outline">{subscription.status}</Badge></TableCell>
+                  <TableCell className="font-mono text-xs">{subscription.paymentIntentId ?? '-'}</TableCell>
+                  <TableCell>{subscription.packageCode.replaceAll('_', ' ')}</TableCell>
+                  <TableCell>{subscription.activatedAt?.toISOString() ?? '-'}</TableCell>
+                </TableRow>
+              ))}
+              {subscriptions.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-sm text-vvisa-text-muted">No Careers subscriptions to show.</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      <Card className="rounded-lg border-vvisa-border-subtle">
+        <CardHeader><CardTitle>Activation handoffs</CardTitle></CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Handoff</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Payment intent</TableHead>
+                <TableHead>Subscription</TableHead>
+                <TableHead>Attempts</TableHead>
+                <TableHead>Created</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {activationHandoffs.map((handoff) => (
+                <TableRow key={handoff.id}>
+                  <TableCell className="font-mono text-xs">{handoff.id}</TableCell>
+                  <TableCell><Badge variant="outline">{handoff.status}</Badge></TableCell>
+                  <TableCell className="font-mono text-xs">{handoff.paymentIntentId}</TableCell>
+                  <TableCell className="font-mono text-xs">{handoff.subscriptionId}</TableCell>
+                  <TableCell>{handoff.attemptCount}</TableCell>
+                  <TableCell>{handoff.createdAt.toISOString()}</TableCell>
+                </TableRow>
+              ))}
+              {activationHandoffs.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-sm text-vvisa-text-muted">No Careers activation handoffs to show.</TableCell>
                 </TableRow>
               )}
             </TableBody>
