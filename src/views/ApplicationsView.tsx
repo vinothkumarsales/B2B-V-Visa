@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
-import { statusConfig } from '@/lib/mock-data';
+import { usePortalStatusConfig } from '@/lib/use-portal-config';
 import type { VisaApplication } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,7 +44,7 @@ function formatDateTime(dateStr: string): string {
 
 type TabFilter = 'ALL' | 'APPROVED' | 'PAYMENT_PENDING' | 'SUBMITTED' | 'DRAFT';
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, statusConfig }: { status: string; statusConfig: Record<string, { label: string; bg: string; text: string; dot: string }> }) {
   const sc = statusConfig[status];
   if (!sc) return <span className="text-xs text-vvisa-text-muted">{status}</span>;
   return (
@@ -64,6 +64,7 @@ const approvedSteps = [
 ];
 
 export default function ApplicationsView() {
+  const statusConfig = usePortalStatusConfig();
   const router = useRouter();
   const { navigate, setSelectedApplicationId, applications, agency } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -228,6 +229,7 @@ export default function ApplicationsView() {
                 <IndividualDefaultCard
                   app={app}
                   agencyId={agency?.id}
+                  statusConfig={statusConfig}
                   onView={() => {
                     setSelectedApplicationId(app.id);
                     navigate('application-detail');
@@ -438,7 +440,7 @@ function IndividualApprovedCard({ app, agencyId }: { app: VisaApplication; agenc
 }
 
 /* ─── Individual Pending / Submitted / Draft Card ─── */
-function IndividualDefaultCard({ app, agencyId, onView }: { app: VisaApplication; agencyId?: string; onView: () => void }) {
+function IndividualDefaultCard({ app, agencyId, onView, statusConfig }: { app: VisaApplication; agencyId?: string; onView: () => void; statusConfig: Record<string, { label: string; bg: string; text: string; dot: string }> }) {
   const traveler = app.travelers[0];
   if (!traveler) return null;
 
@@ -469,7 +471,7 @@ function IndividualDefaultCard({ app, agencyId, onView }: { app: VisaApplication
         {/* Status Badge */}
         <div className="mb-3">
           <span className="text-xs text-vvisa-text-muted">Status: </span>
-          <StatusBadge status={app.status} />
+              <StatusBadge status={app.status} statusConfig={statusConfig} />
         </div>
 
         {/* Client ID */}

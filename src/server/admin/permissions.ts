@@ -26,6 +26,8 @@ export type AdminPermission =
   | 'application.update'
   | 'wallet.read'
   | 'wallet.adjust'
+  | 'document.read'
+  | 'document.write'
   | 'dashboard_content.write'
   | 'audit.read'
   | 'settings.write';
@@ -54,6 +56,8 @@ export const ADMIN_PERMISSION_MATRIX: Record<AdminRole, AdminPermission[]> = {
     'application.update',
     'wallet.read',
     'wallet.adjust',
+    'document.read',
+    'document.write',
     'dashboard_content.write',
     'audit.read',
     'settings.write',
@@ -70,6 +74,8 @@ export const ADMIN_PERMISSION_MATRIX: Record<AdminRole, AdminPermission[]> = {
   operations_admin: [
     'application.read',
     'application.update',
+    'document.read',
+    'document.write',
     'application.assign',
     'application_status.read',
     'partner.read',
@@ -82,7 +88,7 @@ export const ADMIN_PERMISSION_MATRIX: Record<AdminRole, AdminPermission[]> = {
     'audit.read',
   ],
   finance_admin: ['pricing.read', 'pricing.write', 'wallet.read', 'wallet.adjust', 'partner.read', 'application.read', 'audit.read'],
-  support_admin: ['partner.read', 'partner.impersonate', 'catalog.read', 'pricing.read', 'wallet.read', 'dashboard.read', 'application_status.read', 'application.read', 'audit.read'],
+  support_admin: ['partner.read', 'partner.impersonate', 'document.read', 'document.write', 'catalog.read', 'pricing.read', 'wallet.read', 'dashboard.read', 'application_status.read', 'application.read', 'application.create_on_behalf', 'audit.read'],
 };
 
 export function hasAdminPermission(role: AdminRole, permission: AdminPermission) {

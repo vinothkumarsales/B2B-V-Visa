@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { adminFeatureSnapshot } from '@/server/admin/feature-flags';
 import { getDashboardSections } from '@/server/admin/read-preview';
+import { DashboardSectionEditor } from '@/components/admin/DashboardSectionEditor';
 
 const actions = [
   ['Edit', Eye],
@@ -22,7 +23,7 @@ export default async function DashboardEditorPage() {
     <div className="space-y-5">
       <div>
         <h2 className="text-xl font-semibold">Dashboard Editor</h2>
-        <p className="text-sm text-vvisa-text-muted">Read-only view of partner dashboard sections using the production configuration source.</p>
+        <p className="text-sm text-vvisa-text-muted">Edit versioned drafts, preview configuration, and publish without redeploying.</p>
       </div>
 
       {!flags.ADMIN_DASHBOARD_WRITES_ENABLED && (
@@ -51,7 +52,8 @@ export default async function DashboardEditorPage() {
                 <p>Published: {section.lastPublishedAt?.toLocaleDateString('en-IN') ?? 'Not published'}</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {actions.map(([label, Icon]) => (
+                {flags.ADMIN_DASHBOARD_WRITES_ENABLED && <DashboardSectionEditor section={{ key: section.key, name: section.name, displayOrder: section.displayOrder, isVisible: section.isVisible, config: section.config }} />}
+                {actions.filter(([label]) => label !== 'Edit').map(([label, Icon]) => (
                   <Button key={label} size="sm" variant="outline" disabled>
                     <Icon className="mr-1.5 size-3" />
                     {label}

@@ -148,7 +148,7 @@ export async function getPartnerAdminProfile(uid: string) {
     where: { id: uid },
     include: {
       memberships: { include: { user: true } },
-      applications: { orderBy: { createdAt: 'desc' }, take: 10, include: { visaProduct: true } },
+      applications: { orderBy: { createdAt: 'desc' }, take: 50, include: { visaProduct: true, applicants: true, documents: true, pricingDetail: { include: { lines: true } } } },
       wallets: { include: { entries: { orderBy: { createdAt: 'desc' }, take: 20 } } },
       documents: { orderBy: { createdAt: 'desc' }, take: 10 },
       priceOverrides: { orderBy: { createdAt: 'desc' }, include: { product: true } },

@@ -12,6 +12,9 @@ import { getPartnerAdminProfile, formatMoneyFromMinor, walletBalanceMinor } from
 import { db } from '@/lib/db';
 import { createPartnerPriceOverride } from './actions';
 import { PartnerSupportSessionLauncher } from '@/components/admin/PartnerSupportSessionLauncher';
+import { PartnerApplicationDraftForm, PartnerDocumentUploadForm } from '@/components/admin/PartnerOperationsPanel';
+import { AdminApplicationSubmitButton } from '@/components/admin/AdminApplicationSubmitButton';
+import { adminFeatureSnapshot } from '@/server/admin/feature-flags';
 
 export default async function AdminPartnerProfilePage({ params }: { params: Promise<{ uid: string }> }) {
   const { uid } = await params;
@@ -25,6 +28,7 @@ export default async function AdminPartnerProfilePage({ params }: { params: Prom
   });
   const balance = partner.wallets.reduce((sum, wallet) => sum + walletBalanceMinor(wallet.entries), 0);
   const owner = partner.memberships[0]?.user;
+  const flags = adminFeatureSnapshot();
 
   return (
     <div className="space-y-5">
@@ -108,7 +112,7 @@ export default async function AdminPartnerProfilePage({ params }: { params: Prom
         </TabsContent>
 
         <TabsContent value="create application">
-          <Card className="rounded-lg border-vvisa-border-subtle"><CardContent className="p-4 text-sm text-vvisa-text-muted">Application-on-behalf remains disabled in Phase 1B. The future application will be owned by UID {partner.id}, while the admin actor is retained separately.</CardContent></Card>
+          <Card className="rounded-lg border-vvisa-border-subtle"><CardHeader><CardTitle>Create Application on Behalf</CardTitle></CardHeader><CardContent>{flags.ADMIN_APPLICATION_ON_BEHALF_ENABLED ? <PartnerApplicationDraftForm partnerUid={partner.id} products={products.map(product=>({id:product.id,destination:product.destination,name:product.name,currency:product.currency,amountMinor:product.amountMinor}))}/> : <p className="text-sm text-vvisa-text-muted">Application-on-behalf is disabled by the server feature flag.</p>}</CardContent></Card>
         </TabsContent>
 
         <TabsContent value="pricing" className="grid gap-4 xl:grid-cols-[1fr_420px]">
@@ -198,6 +202,7 @@ export default async function AdminPartnerProfilePage({ params }: { params: Prom
                   <p className="text-xs text-vvisa-text-muted">{application.id} · {application.createdAt.toLocaleDateString('en-IN')}</p>
                 </div>
                 <Badge variant="outline">{application.status.replaceAll('_', ' ')}</Badge>
+                {application.status === 'DRAFT' && application.createdByAdminUid && <AdminApplicationSubmitButton application={{ id: application.id, agencyName: partner.name, partnerUid: partner.id, applicantName: `${application.applicants[0]?.firstName ?? ''} ${application.applicants[0]?.lastName ?? ''}`.trim(), destination: application.destination, visaType: application.visaType, documents: application.documents.length, currency: application.currency, totalAmountMinor: application.totalAmountMinor }} />}
               </CardContent>
             </Card>
           ))}
@@ -217,7 +222,7 @@ export default async function AdminPartnerProfilePage({ params }: { params: Prom
           </Card>
         </TabsContent>
 
-        <TabsContent value="documents"><Card className="rounded-lg border-vvisa-border-subtle"><CardHeader><CardTitle>Partner Documents</CardTitle></CardHeader><CardContent className="space-y-3">{partner.documents.map((document) => <div key={document.id} className="flex items-center justify-between rounded-md border border-vvisa-border-subtle p-3"><div><p className="text-sm font-medium">{document.fileName}</p><p className="text-xs text-vvisa-text-muted">{document.documentType} · {document.createdAt.toLocaleDateString('en-IN')}</p></div><Badge variant="outline">{document.status.replaceAll('_', ' ')}</Badge></div>)}{partner.documents.length === 0 && <p className="text-sm text-vvisa-text-muted">No uploaded documents.</p>}</CardContent></Card></TabsContent>
+        <TabsContent value="documents" className="space-y-4"><Card className="rounded-lg border-vvisa-border-subtle"><CardHeader><CardTitle>Partner Documents</CardTitle></CardHeader><CardContent className="space-y-3">{partner.documents.map((document) => <div key={document.id} className="flex items-center justify-between rounded-md border border-vvisa-border-subtle p-3"><div><p className="text-sm font-medium">{document.fileName}</p><p className="text-xs text-vvisa-text-muted">{document.documentType} · {document.createdAt.toLocaleDateString('en-IN')}</p></div><Badge variant="outline">{document.status.replaceAll('_', ' ')}</Badge></div>)}{partner.documents.length === 0 && <p className="text-sm text-vvisa-text-muted">No uploaded documents.</p>}</CardContent></Card>{flags.ADMIN_DOCUMENT_WRITES_ENABLED && <Card><CardHeader><CardTitle>Upload on Behalf</CardTitle></CardHeader><CardContent><PartnerDocumentUploadForm partnerUid={partner.id} applications={partner.applications.map(application=>({id:application.id,destination:application.destination,visaType:application.visaType}))}/></CardContent></Card>}</TabsContent>
         <TabsContent value="services"><Card className="rounded-lg border-vvisa-border-subtle"><CardContent className="p-4 text-sm text-vvisa-text-muted">Partner service assignments are read-only in this phase.</CardContent></Card></TabsContent>
         <TabsContent value="activity"><Card className="rounded-lg border-vvisa-border-subtle"><CardContent className="p-4 text-sm text-vvisa-text-muted">Recent audit records: {partner.auditLogs.length}</CardContent></Card></TabsContent>
         <TabsContent value="admin notes"><Card className="rounded-lg border-vvisa-border-subtle"><CardContent className="p-4 text-sm text-vvisa-text-muted">Admin notes require audited partner writes and remain disabled in this phase.</CardContent></Card></TabsContent>

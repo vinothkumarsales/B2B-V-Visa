@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
-import { mockVisaTypes, popularDestinations, statusConfig } from '@/lib/mock-data';
+import { mockVisaTypes, popularDestinations } from '@/lib/mock-data';
+import { usePortalDashboardSections, usePortalStatusConfig } from '@/lib/use-portal-config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,8 @@ function formatDate(dateStr: string): string {
 }
 
 export default function DashboardView() {
+  const statusConfig = usePortalStatusConfig();
+  const dashboardSections = usePortalDashboardSections();
   const router = useRouter();
   const { navigate, stats, applications, agency } = useAppStore();
   const [goingTo, setGoingTo] = useState('');
@@ -39,6 +42,7 @@ export default function DashboardView() {
   );
 
   const recentApps = applications.slice(0, 3);
+  const recentApplicationsSection = dashboardSections?.find((section) => section.key === 'recent-applications');
 
   const handleSearch = () => {
     if (!goingTo.trim()) return;
@@ -216,7 +220,7 @@ export default function DashboardView() {
           {/* Recent Applications */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-foreground">Recent Applications</h2>
+              <h2 className="text-lg font-semibold text-foreground">{String(recentApplicationsSection?.config.title ?? recentApplicationsSection?.name ?? 'Recent Applications')}</h2>
               {agency?.id && <span className="text-xs text-vvisa-border-active font-mono">{agency.id}</span>}
               <button
                 onClick={() => {

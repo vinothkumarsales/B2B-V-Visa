@@ -21,6 +21,8 @@ const envWithAliases = {
     process.env.NEXT_PUBLIC_ZOHO_PAYMENT_ACCOUNT_ID,
   ZOHO_PAYMENTS_WEBHOOK_SECRET:
     process.env.ZOHO_PAYMENTS_WEBHOOK_SECRET || process.env.ZOHO_PAYMENT_WEBHOOK_SECRET,
+  SUPABASE_STORAGE_URL: process.env.SUPABASE_STORAGE_URL || process.env.DATABASE_POSTGRES_SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.DATABASE_POSTGRES_SUPABASE_SERVICE_ROLE_KEY,
 };
 
 const aliasConflicts = [
@@ -132,8 +134,11 @@ const envSchema = z.object({
   DIGIO_BASE_URL: z.string().url().default('https://api.digio.in'),
   DIGIO_ENVIRONMENT: z.enum(['sandbox', 'production']).default('sandbox'),
 
-  STORAGE_PROVIDER: z.enum(['local', 's3', 'gcs', 'azure']).default('local'),
+  STORAGE_PROVIDER: z.enum(['local', 'supabase', 's3', 'gcs', 'azure']).default('local'),
   STORAGE_PRIVATE_ROOT: z.string().default('upload/private'),
+  STORAGE_PRIVATE_BUCKET: z.string().default('private-documents'),
+  SUPABASE_STORAGE_URL: z.string().url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
 
   CRM_SYNC_ENABLED: z.coerce.boolean().default(false),
   CRM_WRITE_ENABLED: z.coerce.boolean().default(false),

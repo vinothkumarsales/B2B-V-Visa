@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { adminFeatureSnapshot } from '@/server/admin/feature-flags';
 import { getApplicationStatusReadModel } from '@/server/admin/read-preview';
+import { ApplicationStatusEditor } from '@/components/admin/ApplicationStatusEditor';
 
 export default async function ApplicationStatusesPage() {
   const [readModel, flags] = await Promise.all([getApplicationStatusReadModel(), Promise.resolve(adminFeatureSnapshot())]);
@@ -12,7 +13,7 @@ export default async function ApplicationStatusesPage() {
     <div className="space-y-5">
       <div>
         <h2 className="text-xl font-semibold">Application Status Manager</h2>
-        <p className="text-sm text-vvisa-text-muted">Central read-only status configuration for admin labels, partner labels, milestones, and transitions.</p>
+        <p className="text-sm text-vvisa-text-muted">Versioned status drafts and controlled publishing for partner labels and progress.</p>
       </div>
 
       {!flags.ADMIN_STATUS_WRITES_ENABLED && (
@@ -55,6 +56,7 @@ export default async function ApplicationStatusesPage() {
                 <Badge variant="outline">{status.isTerminal ? 'Terminal' : 'In progress'}</Badge>
                 {status.isSuccess && <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">Success</Badge>}
                 {status.isFailure && <Badge className="bg-red-600 text-white hover:bg-red-600">Failure</Badge>}
+                {flags.ADMIN_STATUS_WRITES_ENABLED && <ApplicationStatusEditor status={status} />}
               </div>
             </CardContent>
           </Card>

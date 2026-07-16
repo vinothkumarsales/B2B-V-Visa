@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function PartnerSupportSessionLauncher({ partnerUid, agencyName }: { partnerUid: string; agencyName: string }) {
   const router = useRouter();
@@ -14,6 +15,7 @@ export function PartnerSupportSessionLauncher({ partnerUid, agencyName }: { part
   const [reason, setReason] = useState('');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState('view_only');
 
   async function startSession() {
     setPending(true);
@@ -22,7 +24,7 @@ export function PartnerSupportSessionLauncher({ partnerUid, agencyName }: { part
       const response = await fetch('/api/admin/support-session/start', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ partnerUid, mode: 'view_only', reason }),
+        body: JSON.stringify({ partnerUid, mode, reason }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error?.message ?? 'Unable to start support session.');
@@ -40,11 +42,11 @@ export function PartnerSupportSessionLauncher({ partnerUid, agencyName }: { part
       <DialogContent>
         <DialogHeader><DialogTitle>Open {agencyName}</DialogTitle><DialogDescription>Create an audited, read-only support session. Your admin identity remains active.</DialogDescription></DialogHeader>
         <div className="space-y-4">
-          <div className="rounded-md border border-vvisa-border-subtle bg-vvisa-surface-2 p-3 text-sm"><p className="font-medium">Access mode: View Only</p><p className="text-vvisa-text-muted">Support and Operations writes remain unavailable in this phase.</p></div>
+          <div className="space-y-2"><Label>Access mode</Label><Select value={mode} onValueChange={setMode}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="view_only">View Only</SelectItem><SelectItem value="support">Support</SelectItem><SelectItem value="operations">Operations</SelectItem></SelectContent></Select><p className="text-xs text-vvisa-text-muted">Operations is restricted to operations and super admins. All actions retain your admin identity.</p></div>
           <div className="space-y-2"><Label htmlFor="support-reason">Reason</Label><Textarea id="support-reason" value={reason} onChange={(event) => setReason(event.target.value)} minLength={8} placeholder="Why do you need to view this partner dashboard?" /></div>
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
-        <DialogFooter><Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button onClick={startSession} disabled={pending || reason.trim().length < 8}>{pending && <Loader2 className="mr-2 size-4 animate-spin" />}Start View-Only Session</Button></DialogFooter>
+        <DialogFooter><Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button onClick={startSession} disabled={pending || reason.trim().length < 8}>{pending && <Loader2 className="mr-2 size-4 animate-spin" />}Start Session</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );

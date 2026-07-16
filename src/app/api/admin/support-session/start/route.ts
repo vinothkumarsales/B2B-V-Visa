@@ -4,6 +4,7 @@ import { apiError, isApiResponse } from '@/lib/api-response';
 import { db } from '@/lib/db';
 import { requireAdminMutation, writeAdminAudit } from '@/server/admin/write-guard';
 import { canStartSupportMode, validSupportReason } from '@/server/admin/support-session-policy';
+import type { AdminImpersonationMode } from '@prisma/client';
 
 export async function POST(request: Request) {
   try {
@@ -11,8 +12,9 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => null) as { partnerUid?: string; mode?: string; reason?: string } | null;
     const partnerUid = body?.partnerUid?.trim();
     const reason = body?.reason?.trim();
-    if (!partnerUid || !validSupportReason(reason) || body?.mode !== 'view_only') return apiError('INVALID_INPUT', 'Partner UID, view-only mode, and a reason of 8 to 500 characters are required.', 400);
-    if (!canStartSupportMode(admin.role, 'view_only')) return apiError('FORBIDDEN', 'Your admin role cannot start this support mode.', 403);
+    const mode = body?.mode as AdminImpersonationMode;
+    if (!partnerUid || !validSupportReason(reason) || !['view_only', 'support', 'operations'].includes(mode)) return apiError('INVALID_INPUT', 'Partner UID, access mode, and a reason of 8 to 500 characters are required.', 400);
+    if (!canStartSupportMode(admin.role, mode)) return apiError('FORBIDDEN', 'Your admin role cannot start this support mode.', 403);
     const validatedReason = reason as string;
     const partner = await db.agency.findUnique({ where: { id: partnerUid }, select: { id: true } });
     if (!partner) return apiError('RESOURCE_NOT_FOUND', 'Partner not found.', 404);
@@ -22,7 +24,7 @@ export async function POST(request: Request) {
         actorAdminUid: admin.user.id,
         actorAdminEmail: admin.user.email,
         subjectAgencyId: partner.id,
-        mode: 'view_only',
+        mode,
         reason: validatedReason,
         expiresAt: new Date(Date.now() + 30 * 60 * 1000),
         ipAddress: headerStore.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null,

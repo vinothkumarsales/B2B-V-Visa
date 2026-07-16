@@ -22,7 +22,7 @@ export default async function SupportSessionDashboardPage({ params }: { params: 
   return (
     <div className="space-y-5">
       <section className="sticky top-16 z-20 flex flex-col gap-3 rounded-md border border-amber-500/40 bg-amber-50 p-4 text-amber-950 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-3"><AlertTriangle className="mt-0.5 size-5 shrink-0" /><div><p className="font-semibold">ADMIN SUPPORT SESSION</p><p className="text-sm">Viewing: {session.subjectAgency.name} · UID: {session.subjectAgencyId}</p><p className="text-xs">Mode: View Only · Admin: {session.actorAdminEmail} · Expires {session.expiresAt.toLocaleTimeString('en-IN')}</p></div></div>
+        <div className="flex gap-3"><AlertTriangle className="mt-0.5 size-5 shrink-0" /><div><p className="font-semibold">ADMIN SUPPORT SESSION</p><p className="text-sm">Viewing: {session.subjectAgency.name} · UID: {session.subjectAgencyId}</p><p className="text-xs">Mode: {session.mode.replace('_', ' ')} · Admin: {session.actorAdminEmail} · Expires {session.expiresAt.toLocaleTimeString('en-IN')}</p></div></div>
         <EndSupportSessionButton sessionId={session.id} />
       </section>
       <div><h2 className="text-xl font-semibold">Partner Dashboard</h2><p className="text-sm text-vvisa-text-muted">Read-only operational view. Partner authentication has not been replaced.</p></div>

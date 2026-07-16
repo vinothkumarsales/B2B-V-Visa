@@ -702,6 +702,12 @@ model VisaApplication {
   lastSyncedAt     DateTime?
   syncErrorCode    String?
   syncAttemptCount Int                         @default(0)
+  createdByAdminUid String?
+  submittedByAdminUid String?
+  createdOnBehalfOfUid String?
+  adminSupportSessionId String?
+  adminSubmissionReason String?
+  submittedAt      DateTime?
   createdAt        DateTime                    @default(now())
   updatedAt        DateTime                    @updatedAt
   applicants       Applicant[]
@@ -740,6 +746,22 @@ model ApplicationStatusConfig {
   transitionsTo         ApplicationStatusTransition[] @relation("TransitionTo")
   mappings              ApplicationStatusMapping[]
   slaRules              ApplicationSlaRule[]
+  versions              ApplicationStatusConfigVersion[]
+}
+
+model ApplicationStatusConfigVersion {
+  id                 String                  @id @default(cuid())
+  statusConfigId     String
+  statusConfig       ApplicationStatusConfig @relation(fields: [statusConfigId], references: [id], onDelete: Cascade)
+  version            Int
+  status             AdminContentStatus      @default(draft)
+  snapshot           Json
+  createdByUserId    String?
+  publishedAt        DateTime?
+  createdAt          DateTime                @default(now())
+
+  @@unique([statusConfigId, version])
+  @@index([status, createdAt])
 }
 
 model ApplicationMilestone {

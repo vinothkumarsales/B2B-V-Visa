@@ -24,7 +24,8 @@ test('only the primary bootstrap admin receives automatic super-admin eligibilit
 
 test('permission matrix blocks support admins from high-risk writes', () => {
   assert.equal(hasAdminPermission('support_admin', 'partner.read'), true);
-  assert.equal(hasAdminPermission('support_admin', 'application.create_on_behalf'), false);
+  assert.equal(hasAdminPermission('support_admin', 'application.create_on_behalf'), true);
+  assert.equal(hasAdminPermission('support_admin', 'application.submit_on_behalf'), false);
   assert.equal(hasAdminPermission('support_admin', 'dashboard_content.write'), false);
   assert.equal(hasAdminPermission('support_admin', 'dashboard.read'), true);
   assert.equal(hasAdminPermission('support_admin', 'dashboard.publish'), false);

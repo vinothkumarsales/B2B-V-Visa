@@ -1,0 +1,7 @@
+'use client';
+import { useEffect, useState } from 'react';
+import { fallbackStatusConfig, type StatusStyle } from './status-config';
+const colorStyles:Record<string,Omit<StatusStyle,'label'>>={neutral:{bg:'bg-zinc-900/50',text:'text-zinc-300',dot:'bg-zinc-400'},warning:{bg:'bg-amber-950/50',text:'text-amber-400',dot:'bg-amber-400'},info:{bg:'bg-sky-950/50',text:'text-sky-400',dot:'bg-sky-400'},success:{bg:'bg-emerald-950/50',text:'text-emerald-400',dot:'bg-emerald-400'},danger:{bg:'bg-red-950/50',text:'text-red-400',dot:'bg-red-400'}};
+export function usePortalStatusConfig(){const[config,setConfig]=useState(fallbackStatusConfig);useEffect(()=>{fetch('/api/portal/application-statuses').then(r=>r.ok?r.json():null).then(body=>{if(!body?.statuses?.length)return;setConfig(current=>({...current,...Object.fromEntries(body.statuses.map((status:{code:string;partnerLabel:string;colorToken:string})=>[status.code,{label:status.partnerLabel,...(colorStyles[status.colorToken]??colorStyles.neutral)}]))}))}).catch(()=>undefined)},[]);return config}
+export type PortalDashboardSection={key:string;name:string;type:string;config:Record<string,unknown>;displayOrder:number};
+export function usePortalDashboardSections(){const[sections,setSections]=useState<PortalDashboardSection[]|null>(null);useEffect(()=>{fetch('/api/portal/dashboard-sections').then(r=>r.ok?r.json():null).then(body=>{if(body?.sections)setSections(body.sections)}).catch(()=>undefined)},[]);return sections}

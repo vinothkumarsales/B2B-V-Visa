@@ -37,10 +37,39 @@ const allowedMimeTypes = new Set([
 ]);
 
 export function getPrivateDocumentStorage(): PrivateDocumentStorage {
+  if (env.STORAGE_PROVIDER === 'supabase') {
+    if (!env.SUPABASE_STORAGE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) throw new Error('Supabase private storage is not configured');
+    return new SupabasePrivateDocumentStorage(env.SUPABASE_STORAGE_URL, env.SUPABASE_SERVICE_ROLE_KEY, env.STORAGE_PRIVATE_BUCKET);
+  }
   if (env.STORAGE_PROVIDER !== 'local') {
     throw new Error(`Private storage provider ${env.STORAGE_PROVIDER} is not implemented`);
   }
   return new LocalPrivateDocumentStorage(env.STORAGE_PRIVATE_ROOT);
+}
+
+class SupabasePrivateDocumentStorage implements PrivateDocumentStorage {
+  constructor(private readonly baseUrl: string, private readonly serviceKey: string, private readonly bucket: string) {}
+  async upload(input: UploadInput): Promise<StoredDocument> {
+    validateUpload(input);
+    const checksum = createHash('sha256').update(input.bytes).digest('hex');
+    const safeFilename = sanitizeFilename(input.originalFilename);
+    const extension = extname(safeFilename);
+    const storageKey = [input.agencyId, input.applicationId ?? 'agency', input.applicantId ?? 'shared', `${Date.now()}-${randomUUID()}${extension}`].join('/');
+    const response = await fetch(`${this.baseUrl.replace(/\/$/, '')}/storage/v1/object/${encodeURIComponent(this.bucket)}/${storageKey.split('/').map(encodeURIComponent).join('/')}`, { method: 'POST', headers: { authorization: `Bearer ${this.serviceKey}`, apikey: this.serviceKey, 'content-type': input.mimeType, 'x-upsert': 'false' }, body: new Blob([new Uint8Array(input.bytes)], { type: input.mimeType }) });
+    if (!response.ok) throw new Error(`Supabase storage upload failed with status ${response.status}`);
+    return { storageProvider: 'supabase', storageKey, safeFilename, mimeType: input.mimeType, fileSize: input.bytes.byteLength, checksum };
+  }
+  async createSignedDownloadUrl(key: string): Promise<string> {
+    assertSafeStorageKey(key);
+    const response = await fetch(`${this.baseUrl.replace(/\/$/, '')}/storage/v1/object/sign/${encodeURIComponent(this.bucket)}/${key.split('/').map(encodeURIComponent).join('/')}`, { method: 'POST', headers: { authorization: `Bearer ${this.serviceKey}`, apikey: this.serviceKey, 'content-type': 'application/json' }, body: JSON.stringify({ expiresIn: 300 }) });
+    if (!response.ok) throw new Error('Unable to create signed document URL');
+    const data = await response.json() as { signedURL?: string; signedUrl?: string };
+    const signed = data.signedURL ?? data.signedUrl;
+    if (!signed) throw new Error('Supabase did not return a signed URL');
+    return signed.startsWith('http') ? signed : `${this.baseUrl.replace(/\/$/, '')}/storage/v1${signed}`;
+  }
+  async exists(key: string): Promise<boolean> { assertSafeStorageKey(key); const response = await fetch(`${this.baseUrl.replace(/\/$/, '')}/storage/v1/object/${encodeURIComponent(this.bucket)}/${key.split('/').map(encodeURIComponent).join('/')}`, { method: 'HEAD', headers: { authorization: `Bearer ${this.serviceKey}`, apikey: this.serviceKey } }); return response.ok; }
+  async delete(key: string): Promise<void> { assertSafeStorageKey(key); const response = await fetch(`${this.baseUrl.replace(/\/$/, '')}/storage/v1/object/${encodeURIComponent(this.bucket)}/${key.split('/').map(encodeURIComponent).join('/')}`, { method: 'DELETE', headers: { authorization: `Bearer ${this.serviceKey}`, apikey: this.serviceKey } }); if (!response.ok && response.status !== 404) throw new Error('Unable to delete private document'); }
 }
 
 class LocalPrivateDocumentStorage implements PrivateDocumentStorage {
@@ -127,6 +156,13 @@ function assertSafeStorageKey(key: string) {
 }
 
 export async function readLocalPrivateDocumentForCrm(key: string) {
+  if (env.STORAGE_PROVIDER === 'supabase') {
+    if (!env.SUPABASE_STORAGE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) throw new Error('Supabase private storage is not configured');
+    assertSafeStorageKey(key);
+    const response = await fetch(`${env.SUPABASE_STORAGE_URL.replace(/\/$/, '')}/storage/v1/object/authenticated/${encodeURIComponent(env.STORAGE_PRIVATE_BUCKET)}/${key.split('/').map(encodeURIComponent).join('/')}`, { headers: { authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`, apikey: env.SUPABASE_SERVICE_ROLE_KEY } });
+    if (!response.ok) throw new Error('Unable to read private Supabase document');
+    return Buffer.from(await response.arrayBuffer());
+  }
   if (env.STORAGE_PROVIDER !== 'local') {
     throw new Error('Only local private storage read is implemented');
   }
