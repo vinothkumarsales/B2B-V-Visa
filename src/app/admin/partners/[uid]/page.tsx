@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { getPartnerAdminProfile, formatMoneyFromMinor, walletBalanceMinor } from '@/server/admin/data';
 import { db } from '@/lib/db';
 import { createPartnerPriceOverride } from './actions';
+import { PartnerSupportSessionLauncher } from '@/components/admin/PartnerSupportSessionLauncher';
 
 export default async function AdminPartnerProfilePage({ params }: { params: Promise<{ uid: string }> }) {
   const { uid } = await params;
@@ -34,14 +35,15 @@ export default async function AdminPartnerProfilePage({ params }: { params: Prom
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline">{partner.status.replaceAll('_', ' ')}</Badge>
-          <Button asChild variant="outline"><Link href={`/admin/partners/${partner.id}/dashboard-preview`}>Preview Dashboard</Link></Button>
-          <Button disabled>Create Application for Partner</Button>
+          <Button asChild variant="outline"><Link href={`/admin/partners/${partner.id}/dashboard-preview`}>Dashboard Preview</Link></Button>
+          <PartnerSupportSessionLauncher partnerUid={partner.id} agencyName={partner.name} />
+          <Button disabled>Create Application</Button>
         </div>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="flex h-auto flex-wrap justify-start">
-          {['overview', 'profile', 'pricing', 'applications', 'wallet', 'documents', 'activity', 'access'].map((tab) => (
+          {['overview', 'profile', 'dashboard preview', 'applications', 'create application', 'wallet', 'documents', 'pricing', 'services', 'activity', 'admin notes'].map((tab) => (
             <TabsTrigger key={tab} value={tab} className="capitalize">{tab}</TabsTrigger>
           ))}
         </TabsList>
@@ -99,6 +101,14 @@ export default async function AdminPartnerProfilePage({ params }: { params: Prom
               </p>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="dashboard preview">
+          <Card className="rounded-lg border-vvisa-border-subtle"><CardContent className="flex items-center justify-between gap-4 p-4"><div><p className="font-medium">Partner dashboard</p><p className="text-sm text-vvisa-text-muted">Inspect the dashboard using live partner account data.</p></div><Button asChild variant="outline"><Link href={`/admin/partners/${partner.id}/dashboard-preview`}>Open Preview</Link></Button></CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="create application">
+          <Card className="rounded-lg border-vvisa-border-subtle"><CardContent className="p-4 text-sm text-vvisa-text-muted">Application-on-behalf remains disabled in Phase 1B. The future application will be owned by UID {partner.id}, while the admin actor is retained separately.</CardContent></Card>
         </TabsContent>
 
         <TabsContent value="pricing" className="grid gap-4 xl:grid-cols-[1fr_420px]">
@@ -207,9 +217,10 @@ export default async function AdminPartnerProfilePage({ params }: { params: Prom
           </Card>
         </TabsContent>
 
-        <TabsContent value="documents"><Card className="rounded-lg border-vvisa-border-subtle"><CardContent className="p-4 text-sm text-vvisa-text-muted">Recent document records: {partner.documents.length}</CardContent></Card></TabsContent>
+        <TabsContent value="documents"><Card className="rounded-lg border-vvisa-border-subtle"><CardHeader><CardTitle>Partner Documents</CardTitle></CardHeader><CardContent className="space-y-3">{partner.documents.map((document) => <div key={document.id} className="flex items-center justify-between rounded-md border border-vvisa-border-subtle p-3"><div><p className="text-sm font-medium">{document.fileName}</p><p className="text-xs text-vvisa-text-muted">{document.documentType} · {document.createdAt.toLocaleDateString('en-IN')}</p></div><Badge variant="outline">{document.status.replaceAll('_', ' ')}</Badge></div>)}{partner.documents.length === 0 && <p className="text-sm text-vvisa-text-muted">No uploaded documents.</p>}</CardContent></Card></TabsContent>
+        <TabsContent value="services"><Card className="rounded-lg border-vvisa-border-subtle"><CardContent className="p-4 text-sm text-vvisa-text-muted">Partner service assignments are read-only in this phase.</CardContent></Card></TabsContent>
         <TabsContent value="activity"><Card className="rounded-lg border-vvisa-border-subtle"><CardContent className="p-4 text-sm text-vvisa-text-muted">Recent audit records: {partner.auditLogs.length}</CardContent></Card></TabsContent>
-        <TabsContent value="access"><Card className="rounded-lg border-vvisa-border-subtle"><CardContent className="p-4 text-sm text-vvisa-text-muted">Support and operations impersonation sessions will be issued server-side in the next phase.</CardContent></Card></TabsContent>
+        <TabsContent value="admin notes"><Card className="rounded-lg border-vvisa-border-subtle"><CardContent className="p-4 text-sm text-vvisa-text-muted">Admin notes require audited partner writes and remain disabled in this phase.</CardContent></Card></TabsContent>
       </Tabs>
     </div>
   );

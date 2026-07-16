@@ -46,19 +46,19 @@ export async function getAdminOverview() {
     recentPartners,
     recentAuditLogs,
   ] = await Promise.all([
-    readMetric('agency.total.count', db.agency.count(), 0),
-    readMetric('agency.approved.count', db.agency.count({ where: { status: 'APPROVED' } }), 0),
-    readMetric('agency.pending_approval.count', db.agency.count({ where: { status: { in: ['DOCUMENTS_PENDING', 'UNDER_REVIEW'] } } }), 0),
-    readMetric('visa_application.total.count', db.visaApplication.count(), 0),
-    readMetric('visa_application.today.count', db.visaApplication.count({ where: { createdAt: { gte: today } } }), 0),
-    readMetric('application_document.pending.count', db.applicationDocument.count({ where: { status: { in: ['REQUESTED', 'MANUAL_REVIEW_REQUIRED', 'OCR_PENDING'] } } }), 0),
-    readMetric('country.active.count', db.country.count({ where: { isActive: true } }), 0),
-    readMetric('visa_product.active.count', db.visaProduct.count({ where: { isActive: true } }), 0),
-    readMetric('visa_application.payment_pending.count', db.visaApplication.count({ where: { status: 'PAYMENT_PENDING' } }), 0),
-    readMetric('visa_application.approved_month.count', db.visaApplication.count({ where: { status: 'APPROVED', updatedAt: { gte: monthStart } } }), 0),
-    readMetric('visa_application.rejected_month.count', db.visaApplication.count({ where: { status: 'REJECTED', updatedAt: { gte: monthStart } } }), 0),
-    readMetric('dashboard_section.draft.count', db.dashboardSection.count({ where: { status: 'draft' } }), 0),
-    readMetric('integration_event.failed.count', db.integrationEvent.count({ where: { status: { in: ['FAILED', 'FAILED_TERMINAL'] } } }), 0),
+    readMetric('agency.total.count', db.agency.count(), null),
+    readMetric('agency.approved.count', db.agency.count({ where: { status: 'APPROVED' } }), null),
+    readMetric('agency.pending_approval.count', db.agency.count({ where: { status: { in: ['DOCUMENTS_PENDING', 'UNDER_REVIEW'] } } }), null),
+    readMetric('visa_application.total.count', db.visaApplication.count(), null),
+    readMetric('visa_application.today.count', db.visaApplication.count({ where: { createdAt: { gte: today } } }), null),
+    readMetric('application_document.pending.count', db.applicationDocument.count({ where: { status: { in: ['REQUESTED', 'MANUAL_REVIEW_REQUIRED', 'OCR_PENDING'] } } }), null),
+    readMetric('country.active.count', db.country.count({ where: { isActive: true } }), null),
+    readMetric('visa_product.active.count', db.visaProduct.count({ where: { isActive: true } }), null),
+    readMetric('visa_application.payment_pending.count', db.visaApplication.count({ where: { status: 'PAYMENT_PENDING' } }), null),
+    readMetric('visa_application.approved_month.count', db.visaApplication.count({ where: { status: 'APPROVED', updatedAt: { gte: monthStart } } }), null),
+    readMetric('visa_application.rejected_month.count', db.visaApplication.count({ where: { status: 'REJECTED', updatedAt: { gte: monthStart } } }), null),
+    readMetric('dashboard_section.draft.count', db.dashboardSection.count({ where: { status: 'draft' } }), null),
+    readMetric('integration_event.failed.count', db.integrationEvent.count({ where: { status: { in: ['FAILED', 'FAILED_TERMINAL'] } } }), null),
     readMetric('visa_application.recent.list', db.visaApplication.findMany({
       take: 6,
       orderBy: { createdAt: 'desc' },
@@ -91,6 +91,20 @@ export async function getAdminOverview() {
 
 export async function searchPartners(query?: string) {
   const normalized = query?.trim();
+  const matchingApplications = normalized
+    ? await db.visaApplication.findMany({
+        where: {
+          OR: [
+            { id: { contains: normalized, mode: 'insensitive' } },
+            { internalId: { contains: normalized, mode: 'insensitive' } },
+            { zohoRecordId: { contains: normalized, mode: 'insensitive' } },
+          ],
+        },
+        select: { agencyId: true },
+        take: 50,
+      })
+    : [];
+  const matchingAgencyIds = [...new Set(matchingApplications.map((application) => application.agencyId))];
   return db.agency.findMany({
     take: 50,
     where: normalized
@@ -103,13 +117,27 @@ export async function searchPartners(query?: string) {
             { gstNumber: { contains: normalized, mode: 'insensitive' } },
             { city: { contains: normalized, mode: 'insensitive' } },
             { zohoRecordId: { contains: normalized, mode: 'insensitive' } },
+            { id: { in: matchingAgencyIds } },
+            {
+              memberships: {
+                some: {
+                  user: {
+                    OR: [
+                      { name: { contains: normalized, mode: 'insensitive' } },
+                      { email: { contains: normalized, mode: 'insensitive' } },
+                      { phone: { contains: normalized, mode: 'insensitive' } },
+                    ],
+                  },
+                },
+              },
+            },
           ],
         }
       : undefined,
     orderBy: { createdAt: 'desc' },
     include: {
       memberships: { include: { user: true }, take: 3 },
-      applications: { select: { id: true } },
+      applications: { select: { id: true, internalId: true, zohoRecordId: true } },
       wallets: { include: { entries: true } },
     },
   });

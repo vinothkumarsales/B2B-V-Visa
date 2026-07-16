@@ -27,7 +27,6 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useState, type ReactNode } from 'react';
-import type { AdminFeatureFlag } from '@/server/admin/feature-flags';
 
 const navItems = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
@@ -46,7 +45,7 @@ const navItems = [
   { href: '/admin/import-export', label: 'Imports & Exports', icon: FileClock },
   { href: '/admin/audit-logs', label: 'Audit Logs', icon: ShieldCheck },
   { href: '/admin/users', label: 'Admin Users', icon: Users },
-  { href: '/admin/settings', label: 'System Settings', icon: Settings },
+  { href: '/admin/system-settings', label: 'System Settings', icon: Settings },
 ];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
@@ -82,26 +81,10 @@ export function AdminShell({
   admin,
 }: {
   children: ReactNode;
-  admin: { email: string; role: string; writesEnabled?: boolean; flags?: Record<AdminFeatureFlag, boolean> };
+  admin: { email: string; role: string; writesEnabled?: boolean };
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const enabledSections = [
-    ['Catalogue', admin.flags?.ADMIN_CATALOG_WRITES_ENABLED],
-    ['Dashboard', admin.flags?.ADMIN_DASHBOARD_WRITES_ENABLED],
-    ['Statuses', admin.flags?.ADMIN_STATUS_WRITES_ENABLED],
-    ['Partners', admin.flags?.ADMIN_PARTNER_WRITES_ENABLED],
-    ['Pricing', admin.flags?.ADMIN_PRICING_WRITES_ENABLED],
-    ['Documents', admin.flags?.ADMIN_DOCUMENT_WRITES_ENABLED],
-    ['Jurisdictions', admin.flags?.ADMIN_JURISDICTION_WRITES_ENABLED],
-    ['Services', admin.flags?.ADMIN_SERVICE_WRITES_ENABLED],
-  ];
-  const disabledSensitiveSections = [
-    ['Support', admin.flags?.ADMIN_PARTNER_SUPPORT_ENABLED],
-    ['On behalf', admin.flags?.ADMIN_APPLICATION_ON_BEHALF_ENABLED],
-    ['Wallet', admin.flags?.ADMIN_WALLET_WRITES_ENABLED],
-    ['Admin roles', admin.flags?.ADMIN_ADMIN_USER_WRITES_ENABLED],
-  ];
 
   return (
     <div className="min-h-screen bg-vvisa-surface-2 text-foreground">
@@ -136,16 +119,16 @@ export function AdminShell({
               <div className="flex items-center gap-2">
                 <h1 className="truncate text-base font-semibold">Admin Console</h1>
                 <Badge className="rounded-md bg-red-600 text-white hover:bg-red-600">Production</Badge>
-                <Badge variant="outline" className="rounded-md">Global Writes: {admin.writesEnabled ? 'Enabled' : 'Disabled'}</Badge>
+                {admin.writesEnabled && <Badge variant="outline" className="hidden rounded-md sm:inline-flex">Write framework active</Badge>}
               </div>
               <p className="truncate text-xs text-vvisa-text-muted">{admin.email} · {admin.role.replace('_', ' ')}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="hidden w-72 items-center gap-2 rounded-md border border-vvisa-border-subtle bg-vvisa-surface px-3 md:flex">
+            <form action="/admin/partners" className="hidden w-80 items-center gap-2 rounded-md border border-vvisa-border-subtle bg-vvisa-surface px-3 md:flex">
               <Search className="size-4 text-vvisa-text-muted" />
-              <Input className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0" placeholder="Search UID, application, country" />
-            </div>
+              <Input name="q" className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0" placeholder="Search UID, agency, email, application" />
+            </form>
             <Button variant="ghost" size="icon" aria-label="Notifications">
               <Bell className="size-4" />
             </Button>
@@ -158,20 +141,6 @@ export function AdminShell({
             </Button>
           </div>
         </header>
-        <section className="border-b border-vvisa-border-subtle bg-vvisa-surface px-4 py-3 lg:px-6">
-          <div className="flex flex-wrap gap-2 text-xs">
-            {enabledSections.map(([label, enabled]) => (
-              <Badge key={String(label)} variant={enabled ? 'default' : 'outline'} className="rounded-md">
-                {label}: {enabled ? 'Enabled' : 'Disabled'}
-              </Badge>
-            ))}
-            {disabledSensitiveSections.map(([label, enabled]) => (
-              <Badge key={String(label)} variant={enabled ? 'destructive' : 'outline'} className="rounded-md">
-                {label}: {enabled ? 'Enabled' : 'Disabled'}
-              </Badge>
-            ))}
-          </div>
-        </section>
         <main className="mx-auto max-w-[1440px] px-4 py-5 lg:px-6">
           {children}
         </main>

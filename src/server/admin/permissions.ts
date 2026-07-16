@@ -82,7 +82,7 @@ export const ADMIN_PERMISSION_MATRIX: Record<AdminRole, AdminPermission[]> = {
     'audit.read',
   ],
   finance_admin: ['pricing.read', 'pricing.write', 'wallet.read', 'wallet.adjust', 'partner.read', 'application.read', 'audit.read'],
-  support_admin: ['partner.read', 'catalog.read', 'pricing.read', 'wallet.read', 'dashboard.read', 'application_status.read', 'application.read', 'audit.read'],
+  support_admin: ['partner.read', 'partner.impersonate', 'catalog.read', 'pricing.read', 'wallet.read', 'dashboard.read', 'application_status.read', 'application.read', 'audit.read'],
 };
 
 export function hasAdminPermission(role: AdminRole, permission: AdminPermission) {

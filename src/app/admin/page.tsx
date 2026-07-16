@@ -3,8 +3,9 @@ import { AlertTriangle, Archive, FileText, Globe2, IndianRupee, Users } from 'lu
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getAdminOverview } from '@/server/admin/data';
-import { adminFeatureSnapshot } from '@/server/admin/feature-flags';
 import { db } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 
 const cards = [
   ['Total Travel Partners', 'totalPartners', Users],
@@ -24,9 +25,8 @@ const cards = [
 ] as const;
 
 export default async function AdminOverviewPage() {
-  const [overview, flags, databaseOk] = await Promise.all([
+  const [overview, databaseOk] = await Promise.all([
     getAdminOverview(),
-    Promise.resolve(adminFeatureSnapshot()),
     db.$queryRaw`SELECT 1`.then(() => true).catch(() => false),
   ]);
   const readiness = [
@@ -35,7 +35,7 @@ export default async function AdminOverviewPage() {
     ['Admin Auth', true],
     ['CRM Sync', overview.failedIntegrations === 0],
     ['Notification Queue', true],
-    ['Dashboard Sync', overview.draftChanges >= 0],
+    ['Dashboard Sync', overview.draftChanges !== null],
     ['Application Status Sync', true],
   ] as const;
 
@@ -54,7 +54,7 @@ export default async function AdminOverviewPage() {
               <Icon className="size-4 text-vvisa-text-muted" />
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">{overview[key].toLocaleString('en-IN')}</p>
+              <p className="text-2xl font-semibold">{overview[key] === null ? <span className="text-sm font-medium text-vvisa-text-muted">Unable to load</span> : overview[key].toLocaleString('en-IN')}</p>
             </CardContent>
           </Card>
         ))}
@@ -75,14 +75,10 @@ export default async function AdminOverviewPage() {
           </CardContent>
         </Card>
         <Card className="rounded-lg border-vvisa-border-subtle">
-          <CardHeader><CardTitle>Admin Feature Flags</CardTitle></CardHeader>
-          <CardContent className="grid gap-2 sm:grid-cols-2">
-            {Object.entries(flags).map(([flag, enabled]) => (
-              <div key={flag} className="flex items-center justify-between rounded-md border border-vvisa-border-subtle p-3 text-xs">
-                <span>{flag.replace('ADMIN_', '').replaceAll('_', ' ')}</span>
-                <Badge variant="outline">{enabled ? 'Enabled' : 'Disabled'}</Badge>
-              </div>
-            ))}
+          <CardHeader><CardTitle>Partner lookup</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm text-vvisa-text-secondary">
+            <p>Open a partner workspace using their UID, agency, owner, email, phone, application ID, or CRM record ID.</p>
+            <Link href="/admin/partners" className="inline-flex h-10 items-center rounded-md bg-primary px-4 font-medium text-primary-foreground">Search partners</Link>
           </CardContent>
         </Card>
       </section>

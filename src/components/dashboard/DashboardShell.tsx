@@ -38,6 +38,7 @@ import {
   PanelLeftOpen,
   Phone,
   Mail,
+  ShieldCheck,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -349,6 +350,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
   const navigate = useAppStore((s) => s.navigate);
   const logout = useAppStore((s) => s.logout);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
   const [sidebarPreference, setSidebarPreference] = useState<'expanded' | 'collapsed' | null>(() => {
     if (typeof window === 'undefined') return null;
     const saved = sessionStorage.getItem('vvisa:sidebarPreference');
@@ -358,6 +360,18 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
     if (typeof window === 'undefined') return false;
     return sessionStorage.getItem('vvisa:workflowDetailActive') === 'true';
   });
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/admin/session', { credentials: 'same-origin' })
+      .then((response) => {
+        if (active) setHasAdminAccess(response.ok);
+      })
+      .catch(() => {
+        if (active) setHasAdminAccess(false);
+      });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     const onWorkflowDetailChange = (event: Event) => {
@@ -464,6 +478,12 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2">
+            {hasAdminAccess && (
+              <Button variant="outline" size="sm" onClick={() => router.push('/admin')}>
+                <ShieldCheck className="mr-2 size-4" />
+                Admin
+              </Button>
+            )}
             <ThemeToggle />
             <SupportPopover />
 
