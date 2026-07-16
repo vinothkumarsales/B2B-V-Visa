@@ -53,6 +53,7 @@ export const ADMIN_PERMISSION_MATRIX: Record<AdminRole, AdminPermission[]> = {
     'application.assign',
     'application.create_on_behalf',
     'application.submit_on_behalf',
+    'application.submit_on_behalf',
     'application.update',
     'wallet.read',
     'wallet.adjust',
@@ -88,7 +89,7 @@ export const ADMIN_PERMISSION_MATRIX: Record<AdminRole, AdminPermission[]> = {
     'audit.read',
   ],
   finance_admin: ['pricing.read', 'pricing.write', 'wallet.read', 'wallet.adjust', 'partner.read', 'application.read', 'audit.read'],
-  support_admin: ['partner.read', 'partner.impersonate', 'document.read', 'document.write', 'catalog.read', 'pricing.read', 'wallet.read', 'dashboard.read', 'application_status.read', 'application.read', 'application.create_on_behalf', 'audit.read'],
+  support_admin: ['partner.read', 'partner.write', 'partner.impersonate', 'document.read', 'document.write', 'catalog.read', 'pricing.read', 'wallet.read', 'dashboard.read', 'application_status.read', 'application.read', 'application.create_on_behalf', 'audit.read'],
 };
 
 export function hasAdminPermission(role: AdminRole, permission: AdminPermission) {

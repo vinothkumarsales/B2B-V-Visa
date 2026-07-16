@@ -41,7 +41,7 @@ export async function createPartnerPriceOverride(formData: FormData) {
   await auditLog({
     agencyId: parsed.partnerUid,
     actorUserId: admin.user.id,
-    action: 'PARTNER_PRICE_OVERRIDE_CREATED',
+    action: 'PRICE_OVERRIDE_CREATED',
     resourceType: 'PartnerPriceOverride',
     resourceId: override.id,
     metadata: {

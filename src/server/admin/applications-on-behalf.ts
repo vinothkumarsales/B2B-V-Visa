@@ -4,6 +4,7 @@ import { apiError } from '@/lib/api-response';
 import { queueZohoCrmEvent } from '@/server/integrations/zoho/crm-outbox';
 
 import { adminApplicationDraftSchema, adminApplicationSubmitSchema } from './workflow-schemas';
+import { requireActiveSupportSession } from './support-session';
 export { adminApplicationDraftSchema, adminApplicationSubmitSchema } from './workflow-schemas';
 
 function optionalDate(value?: string) {
@@ -53,8 +54,7 @@ export async function createApplicationDraftOnBehalf(input: { partnerUid: string
   const partner = await db.agency.findUnique({ where: { id: input.partnerUid }, select: { id: true } });
   if (!partner) throw apiError('RESOURCE_NOT_FOUND', 'Partner not found.', 404);
   if (input.payload.supportSessionId) {
-    const supportSession = await db.adminImpersonationSession.findFirst({ where: { id: input.payload.supportSessionId, actorAdminUid: input.adminUid, subjectAgencyId: partner.id, status: 'active', expiresAt: { gt: new Date() } } });
-    if (!supportSession) throw apiError('FORBIDDEN', 'The admin support session is not active for this partner.', 403);
+    await requireActiveSupportSession({ sessionId: input.payload.supportSessionId, adminUid: input.adminUid, partnerUid: partner.id, minimumMode: 'support' });
   }
   const pricing = await resolvePricing(partner.id, input.payload.visaProductId);
   return db.$transaction(async (tx) => {
@@ -88,6 +88,7 @@ export async function submitApplicationOnBehalf(input: { applicationId: string; 
   const application = await db.visaApplication.findUnique({ where: { id: input.applicationId }, include: { documents: true } });
   if (!application) throw apiError('RESOURCE_NOT_FOUND', 'Application not found.', 404);
   if (application.status !== 'DRAFT' || !application.createdOnBehalfOfUid) throw apiError('INVALID_ADMIN_MUTATION', 'Only on-behalf draft applications can be submitted here.', 409);
+  if (application.adminSupportSessionId) await requireActiveSupportSession({ sessionId: application.adminSupportSessionId, adminUid: input.adminUid, partnerUid: application.agencyId, minimumMode: 'operations' });
   const updated = await db.$transaction(async (tx) => {
     const result = await tx.visaApplication.update({ where: { id: application.id }, data: { status: 'DOCUMENTS_PENDING', submittedByAdminUid: input.adminUid, submittedAt: new Date(), adminSubmissionReason: input.payload.reason } });
     await tx.applicationStatusEvent.create({ data: { applicationId: application.id, previousStatus: 'DRAFT', nextStatus: 'DOCUMENTS_PENDING', actorUserId: input.adminUid, reason: input.payload.reason } });

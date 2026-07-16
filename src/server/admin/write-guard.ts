@@ -1,4 +1,5 @@
 import { randomBytes } from 'crypto';
+import { headers } from 'next/headers';
 import { auditLog } from '@/server/audit/audit-log';
 import { apiError } from '@/lib/api-response';
 import { adminWritesEnabled, requireAdminPermission } from './auth';
@@ -39,7 +40,9 @@ export async function writeAdminAudit(input: AdminWriteAuditInput & {
   adminRole: string;
   requestId: string;
 }) {
+  const headerStore = await headers();
   await auditLog({
+    agencyId: input.partnerUid ?? undefined,
     actorUserId: input.adminUid,
     action: input.action,
     resourceType: input.entityType,
@@ -58,5 +61,7 @@ export async function writeAdminAudit(input: AdminWriteAuditInput & {
       failureCode: input.failureCode ?? null,
       impersonationSessionId: input.impersonationSessionId ?? null,
     },
+    ipAddress: headerStore.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null,
+    userAgent: headerStore.get('user-agent') ?? null,
   });
 }

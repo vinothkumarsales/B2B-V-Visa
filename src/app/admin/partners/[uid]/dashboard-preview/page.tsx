@@ -20,7 +20,7 @@ export default async function PartnerDashboardPreviewPage({ params }: { params: 
       </div>
 
       <div className="rounded-md border border-sky-500/30 bg-sky-500/10 px-4 py-3 text-sm text-sky-100">
-        Preview mode is read-only. Support sessions and application-on-behalf actions remain disabled in Phase 1.
+        Preview mode is read-only. Use an audited support session from the partner profile for assisted actions.
       </div>
 
       <section className="grid gap-3 lg:grid-cols-4">

@@ -268,6 +268,7 @@ model Agency {
   name              String
   email             String                  @unique
   phone             String?
+  whatsapp          String?
   country           String                  @default("India")
   status            AgencyStatus            @default(DRAFT)
   gstNumber         String?
@@ -277,6 +278,9 @@ model Agency {
   city              String?
   state             String?
   zipCode           String?
+  partnerTier       String?
+  pricingPlan       String?
+  accountManager    String?
   zohoRecordId      String?
   syncStatus        IntegrationEventStatus?
   lastSyncedAt      DateTime?
@@ -296,6 +300,19 @@ model Agency {
   crmMappings       CrmEntityMapping[]
   priceOverrides    PartnerPriceOverride[]
   impersonationSessions AdminImpersonationSession[]
+  adminNotes        PartnerAdminNote[]
+}
+
+model PartnerAdminNote {
+  id          String   @id @default(cuid())
+  agencyId    String
+  agency      Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  authorUid   String
+  authorEmail String
+  note        String
+  createdAt   DateTime @default(now())
+
+  @@index([agencyId, createdAt])
 }
 
 model DashboardSection {

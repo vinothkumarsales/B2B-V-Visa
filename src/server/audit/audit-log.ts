@@ -7,6 +7,8 @@ export async function auditLog(input: {
   resourceType: string;
   resourceId?: string | null;
   metadata?: unknown;
+  ipAddress?: string | null;
+  userAgent?: string | null;
 }) {
   await db.auditLog.create({
     data: {
@@ -16,6 +18,8 @@ export async function auditLog(input: {
       resourceType: input.resourceType,
       resourceId: input.resourceId ?? null,
       metadata: input.metadata === undefined ? undefined : (input.metadata as object),
+      ipAddress: input.ipAddress ?? null,
+      userAgent: input.userAgent ?? null,
     },
   });
 }

@@ -5,3 +5,31 @@ export const dashboardDraftSchema=z.object({sectionKey:z.string().min(1).max(80)
 export const contentPublishSchema=z.object({versionId:z.string().min(1),confirmation:z.literal('PUBLISH'),reason:z.string().min(8).max(500)});
 export const contentRollbackSchema=z.object({versionId:z.string().min(1),confirmation:z.literal('ROLLBACK'),reason:z.string().min(8).max(500)});
 export const statusDraftSchema=z.object({code:z.string().min(1),reason:z.string().min(8).max(500),snapshot:z.object({adminLabel:z.string().min(1).max(160),partnerLabel:z.string().min(1).max(160),partnerDescription:z.string().max(1000).nullable().optional(),internalDescription:z.string().max(1000).nullable().optional(),icon:z.string().max(80).nullable().optional(),colorToken:z.string().min(1).max(80),displayOrder:z.number().int().min(0).max(1000),progressPercent:z.number().int().min(0).max(100),isPartnerVisible:z.boolean(),isAdminVisible:z.boolean(),isTerminal:z.boolean(),isSuccess:z.boolean(),isFailure:z.boolean(),isActive:z.boolean()})});
+
+const optionalText = (max: number) => z.string().trim().max(max).nullable().optional();
+export const partnerProfileSchema = z.object({
+  name: z.string().trim().min(2).max(160),
+  ownerName: optionalText(160),
+  email: z.string().trim().email().max(200),
+  phone: optionalText(40),
+  whatsapp: optionalText(40),
+  addressLine1: optionalText(240),
+  addressLine2: optionalText(240),
+  city: optionalText(100),
+  state: optionalText(100),
+  country: z.string().trim().min(2).max(100),
+  zipCode: optionalText(20),
+  gstNumber: optionalText(40),
+  panCard: optionalText(20),
+  status: z.enum(['DRAFT','EMAIL_VERIFICATION_PENDING','DOCUMENTS_PENDING','UNDER_REVIEW','APPROVED','REJECTED','SUSPENDED']),
+  kycStatus: z.enum(['DRAFT','EMAIL_VERIFICATION_PENDING','DOCUMENTS_PENDING','UNDER_REVIEW','APPROVED','REJECTED','SUSPENDED']).optional(),
+  partnerTier: optionalText(80),
+  pricingPlan: optionalText(120),
+  accountManager: optionalText(160),
+  supportSessionId: z.string().optional(),
+  confirmation: z.literal('UPDATE'),
+  reason: z.string().trim().min(8).max(500),
+});
+export const partnerAdminNoteSchema = z.object({ note: z.string().trim().min(3).max(2000), supportSessionId: z.string().optional(), reason: z.string().trim().min(8).max(500) });
+export const documentStatusSchema = z.object({ status: z.enum(['UPLOADED','MANUAL_REVIEW_REQUIRED','VERIFIED','REJECTED','REQUESTED']), confirmation: z.literal('UPDATE'), reason: z.string().trim().min(8).max(500), supportSessionId: z.string().optional() });
+export const applicationStatusUpdateSchema = z.object({ status: z.enum(['DOCUMENTS_PENDING','READY_FOR_REVIEW','UNDER_INTERNAL_REVIEW','PAYMENT_PENDING','PAID','SUBMISSION_PENDING','SUBMITTED','PROCESSING','ADDITIONAL_DOCUMENTS_REQUIRED','APPROVED','REJECTED','CANCELLED']), confirmation: z.literal('UPDATE'), reason: z.string().trim().min(8).max(500), supportSessionId: z.string().optional() });
