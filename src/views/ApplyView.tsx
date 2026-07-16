@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { mockVisaTypes } from '@/lib/mock-data';
+import { useVisaCatalogue } from '@/lib/use-visa-catalogue';
 import { demoModeCopy } from '@/lib/demo-data';
 import { isDemoMode } from '@/lib/app-mode';
 import { getRequiredAdditionalDocs as resolveRequiredAdditionalDocs } from '@/lib/checklist';
@@ -845,7 +846,8 @@ function ProgressStepper({ currentStep }: { currentStep: number }) {
 export default function ApplyView() {
   const router = useRouter();
   const { selectedVisaType, setSelectedVisaType, walletBalance, submitApplication, navigate } = useAppStore();
-  const activeVisaType = selectedVisaType ?? readStoredVisaType() ?? mockVisaTypes[0];
+  const { visaTypes } = useVisaCatalogue();
+  const activeVisaType = selectedVisaType ?? readStoredVisaType() ?? visaTypes[0] ?? mockVisaTypes[0];
   const demoMode = isDemoMode();
   const [appType, setAppType] = useState<'individual' | 'group'>('individual');
   const [internalId, setInternalId] = useState('');

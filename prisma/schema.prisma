@@ -400,7 +400,10 @@ model VisaProduct {
   destination                   String
   destinationCode               String?
   name                          String
+  publicTitle                   String?
+  internalCode                  String?                    @unique
   category                      String
+  subcategory                   String?
   entry                         String
   entryType                     String?
   visaKind                      String?
@@ -411,12 +414,22 @@ model VisaProduct {
   duration                      String
   maximumStayDays               Int?
   processingTime                String
+  expressProcessingTime         String?
   processingTimeMinDays         Int?
   processingTimeMaxDays         Int?
   processingTimeLabel           String?
   currency                      String                     @default("INR")
   amountMinor                   Int
   documents                     Json
+  badges                        Json?
+  shortDescription              String?
+  detailedDescription           String?
+  importantNotes                String?
+  eligibility                   String?
+  refundPolicy                  String?
+  cancellationPolicy            String?
+  isFeatured                    Boolean                    @default(false)
+  displayOrder                  Int                        @default(0)
   minimumPassportValidityMonths Int?
   passportValidityRuleCode      String?
   cutoffTime                    String?
@@ -539,6 +552,17 @@ model VisaDocumentRequirement {
   sampleAvailable          Boolean               @default(false)
   requirementStatus        CatalogueReviewStatus @default(REVIEW_REQUIRED)
   notes                    String?
+  requirementType          String                @default("required")
+  acceptedFormats          Json?
+  maximumFileSizeBytes     Int?
+  sampleDocumentUrl        String?
+  templateDocumentUrl      String?
+  translationRequired      Boolean               @default(false)
+  notarisationRequired     Boolean               @default(false)
+  apostilleRequired        Boolean               @default(false)
+  attestationRequired      Boolean               @default(false)
+  displayOrder             Int                   @default(0)
+  internalVerificationNote String?
 }
 
 model VisaProcessingOption {
@@ -565,6 +589,15 @@ model VisaPrice {
   discountMinor        Int             @default(0)
   gstMinor             Int             @default(0)
   totalAmountMinor     Int
+  adultPriceMinor      Int?
+  childPriceMinor      Int?
+  infantPriceMinor     Int?
+  supplierCostMinor    Int?
+  markupMinor          Int?
+  suggestedB2cMinor    Int?
+  entryType            String?
+  processingType       String?
+  travellerType        String?
   isActive             Boolean         @default(true)
   validFrom            DateTime        @default(now())
   validUntil           DateTime?

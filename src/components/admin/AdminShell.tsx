@@ -34,6 +34,7 @@ const navItems = [
   { href: '/admin/applications', label: 'Applications', icon: Archive },
   { href: '/admin/careers', label: 'Careers', icon: BriefcaseBusiness },
   { href: '/admin/catalogue', label: 'Countries & Visas', icon: BookOpen },
+  { href: '/admin/visa-products', label: 'Visa Product Editor', icon: ClipboardList },
   { href: '/admin/services', label: 'Services', icon: BriefcaseBusiness },
   { href: '/admin/pricing', label: 'Pricing', icon: BadgeIndianRupee },
   { href: '/admin/document-checklists', label: 'Document Checklists', icon: ClipboardList },

@@ -1,0 +1,3 @@
+'use client';
+import{useEffect,useState}from'react';import{mockVisaTypes}from'@/lib/mock-data';import{isDemoMode}from'@/lib/app-mode';import type{VisaType}from'@/types';
+export function useVisaCatalogue(){const[visaTypes,setVisaTypes]=useState<VisaType[]>(()=>mockVisaTypes),[loading,setLoading]=useState(!isDemoMode());useEffect(()=>{if(isDemoMode())return;let active=true;fetch('/api/visa-types',{credentials:'same-origin'}).then(r=>r.ok?r.json():Promise.reject()).then(body=>{if(active&&Array.isArray(body.visaTypes)&&body.visaTypes.length)setVisaTypes(body.visaTypes)}).catch(()=>{}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[]);return{visaTypes,loading}}

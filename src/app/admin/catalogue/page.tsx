@@ -1,5 +1,1 @@
-import { AdminModulePlaceholder } from '@/components/admin/AdminModulePlaceholder';
-
-export default function AdminCataloguePage() {
-  return <AdminModulePlaceholder title="Countries & Visas" />;
-}
+import{CatalogueControlPanel}from'@/components/admin/CatalogueControlPanel';import{getCataloguePageData}from'@/server/admin/catalogue-page-data';export const dynamic='force-dynamic';export default async function Page(){const data=await getCataloguePageData();return <div className="space-y-4"><div><h2 className="text-xl font-semibold">Countries & Visas</h2><p className="text-sm text-vvisa-text-muted">Select a country, category and product before editing live catalogue content.</p></div><CatalogueControlPanel {...data}/></div>}

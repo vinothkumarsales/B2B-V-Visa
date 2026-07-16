@@ -29,7 +29,11 @@ export async function GET(request: NextRequest) {
         : {}),
       OR: [{ validUntil: null }, { validUntil: { gt: new Date() } }],
     },
-    orderBy: [{ destination: 'asc' }, { name: 'asc' }],
+    orderBy: [{ displayOrder: 'asc' }, { destination: 'asc' }, { name: 'asc' }],
+    include: {
+      prices: { where: { isActive: true, validFrom: { lte: new Date() }, OR: [{ validUntil: null }, { validUntil: { gt: new Date() } }] }, orderBy: { validFrom: 'desc' }, take: 1, include: { lines: true } },
+      documentRules: { where: { requirementStatus: 'PUBLISHED' }, orderBy: { displayOrder: 'asc' } },
+    },
   });
 
   const destinations = await db.visaProduct.findMany({
@@ -40,22 +44,32 @@ export async function GET(request: NextRequest) {
   });
 
   return NextResponse.json({
-    visaTypes: visaProducts.map((product) => ({
+    visaTypes: visaProducts.map((product) => {
+      const activePrice = product.prices[0];
+      const mandatory = product.documentRules.filter((item) => item.requirementType === 'required');
+      const optional = product.documentRules.filter((item) => item.requirementType === 'optional');
+      const conditional = product.documentRules.filter((item) => item.requirementType === 'conditional');
+      const mapRequirement = (item: (typeof product.documentRules)[number]) => ({ id: item.id, label: item.documentName, requirement: item.requirementType === 'optional' ? 'OPTIONAL' : item.requirementType === 'conditional' ? 'CONDITIONAL' : 'MANDATORY', documentCode: item.documentCode, documentName: item.documentName, description: item.description ?? undefined, isMandatory: item.isMandatory, isOptional: item.isOptional, acceptedFormats: Array.isArray(item.acceptedFormats) ? item.acceptedFormats : undefined, maxFileSizeMb: item.maximumFileSizeBytes ? item.maximumFileSizeBytes / 1024 / 1024 : undefined, sortOrder: item.displayOrder });
+      return ({
       id: product.id,
       destination: product.destination,
-      name: product.name,
+      name: product.publicTitle ?? product.name,
       category: product.category,
       entry: product.entry,
       validity: product.validity,
       duration: product.duration,
       processingTime: product.processingTime,
-      price: product.amountMinor / 100,
-      amountMinor: product.amountMinor,
-      currency: product.currency,
-      documents: product.documents,
+      price: (activePrice?.totalAmountMinor ?? product.amountMinor) / 100,
+      amountMinor: activePrice?.totalAmountMinor ?? product.amountMinor,
+      currency: activePrice?.currency ?? product.currency,
+      documents: product.documentRules.length ? product.documentRules.map(item => item.documentName) : product.documents,
+      documentRequirements: { mandatory: mandatory.map(mapRequirement), optional: optional.map(mapRequirement), conditional: conditional.map(mapRequirement) },
+      pricing: activePrice ? { visaFeeMinor: activePrice.visaFeeMinor, vvisaServiceFeeMinor: activePrice.vvisaServiceFeeMinor, courierFeeMinor: activePrice.courierFeeMinor, insuranceFeeMinor: activePrice.insuranceFeeMinor, convenienceFeeMinor: activePrice.convenienceFeeMinor, otherFeeMinor: activePrice.otherFeeMinor, discountMinor: activePrice.discountMinor, gstMinor: activePrice.gstMinor, currency: activePrice.currency, totalAmountMinor: activePrice.totalAmountMinor, lines: activePrice.lines.map(line => ({ id: line.id, label: line.label, type: line.type, amount: line.amountMinor / 100, amountMinor: line.amountMinor, currency: activePrice.currency, taxable: line.taxable })) } : undefined,
+      badges: product.badges,
+      shortDescription: product.shortDescription,
       cutoffTime: product.cutoffTime,
       pricingVersion: product.pricingVersion,
-    })),
+    })}),
     destinations: destinations.map((item) => item.destination),
   });
 }

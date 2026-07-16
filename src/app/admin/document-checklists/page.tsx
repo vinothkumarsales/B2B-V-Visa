@@ -1,5 +1,1 @@
-import { AdminModulePlaceholder } from '@/components/admin/AdminModulePlaceholder';
-
-export default function AdminDocumentChecklistsPage() {
-  return <AdminModulePlaceholder title="Document Checklists" />;
-}
+import{CatalogueControlPanel}from'@/components/admin/CatalogueControlPanel';import{getCataloguePageData}from'@/server/admin/catalogue-page-data';export const dynamic='force-dynamic';export default async function Page(){const data=await getCataloguePageData();return <div className="space-y-4"><div><h2 className="text-xl font-semibold">Document Checklist Editor</h2><p className="text-sm text-vvisa-text-muted">Manage product-specific required, optional and conditional documents.</p></div><CatalogueControlPanel {...data} initialTab="documents"/></div>}

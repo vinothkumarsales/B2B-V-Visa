@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
-import { mockVisaTypes } from '@/lib/mock-data';
+import { useVisaCatalogue } from '@/lib/use-visa-catalogue';
 import { demoModeCopy } from '@/lib/demo-data';
 import { isDemoMode } from '@/lib/app-mode';
 import { resolveVisaChecklist } from '@/lib/checklist';
@@ -66,6 +66,7 @@ function getStickerRoutes(visa: VisaType): VisaStickerRoute[] {
 export default function ExploreView() {
   const router = useRouter();
   const { navigate, setSelectedVisaType } = useAppStore();
+  const { visaTypes } = useVisaCatalogue();
   const [goingTo, setGoingTo] = useState('');
   const [purposeFilter, setPurposeFilter] = useState<(typeof purposeOptions)[number]>('Tourist');
   const [travelDate, setTravelDate] = useState('');
@@ -76,8 +77,8 @@ export default function ExploreView() {
   const [selectedDocVisa, setSelectedDocVisa] = useState<VisaType | null>(null);
 
   const countries = useMemo(
-    () => [...new Set(mockVisaTypes.map((visa) => visa.destination))].sort(),
-    []
+    () => [...new Set(visaTypes.map((visa) => visa.destination))].sort(),
+    [visaTypes]
   );
 
   const filteredDestinations = countries.filter((d) =>
@@ -87,7 +88,7 @@ export default function ExploreView() {
   const filteredVisas = useMemo(() => {
     const query = goingTo.trim().toLowerCase();
 
-    return mockVisaTypes.filter((visa) => {
+    return visaTypes.filter((visa) => {
       const matchesQuery =
         !query ||
         visa.destination.toLowerCase().includes(query) ||
@@ -235,7 +236,7 @@ export default function ExploreView() {
                               {dest}
                             </span>
                             <span className="text-xs text-vvisa-text-muted">
-                              {mockVisaTypes.filter((visa) => visa.destination === dest).length} options
+                              {visaTypes.filter((visa) => visa.destination === dest).length} options
                             </span>
                           </button>
                         ))}
