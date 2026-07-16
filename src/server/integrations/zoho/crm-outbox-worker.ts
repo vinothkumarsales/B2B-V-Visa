@@ -413,17 +413,24 @@ export async function drainZohoCrmOutbox(maxEvents = 20) {
 }
 
 async function findFirstTravelAgentMatch(payload: TravelAgentPayload, uidField?: string) {
+  const phoneVariants = travelAgentPhoneVariants(payload.mobile);
   const candidates = [
     uidField ? { field: uidField, value: payload.agencyId } : null,
     payload.email ? { field: 'Email', value: payload.email.toLowerCase() } : null,
-    payload.mobile ? { field: 'Mobile', value: payload.mobile } : null,
-    payload.mobile ? { field: 'Phone', value: payload.mobile } : null,
+    ...phoneVariants.flatMap((value) => [{ field: 'Mobile', value }, { field: 'phone', value }]),
   ].filter((candidate): candidate is { field: string; value: string } => Boolean(candidate));
   for (const candidate of candidates) {
     const recordId = await findZohoCrmRecord({ moduleApiName: env.ZOHO_CRM_TRAVEL_AGENTS_MODULE, ...candidate });
     if (recordId) return recordId;
   }
   return null;
+}
+
+function travelAgentPhoneVariants(value?: string | null) {
+  const digits = value?.replace(/\D/g, '') ?? '';
+  if (!digits) return [];
+  const local = digits.length > 10 ? digits.slice(-10) : digits;
+  return [...new Set([value?.trim(), local, `+91${local}`, `91${local}`].filter((item): item is string => Boolean(item)))];
 }
 
 function sanitizeErrorCode(value: string) {

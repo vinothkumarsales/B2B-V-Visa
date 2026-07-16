@@ -124,7 +124,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const email = parsed.data.email.trim().toLowerCase();
+    const identifier = parsed.data.identifier.trim();
+    const normalizedPhone = identifier.replace(/[^0-9+]/g, '');
+    const isEmailIdentifier = identifier.includes('@');
+    const phoneDigits = normalizedPhone.replace(/\D/g, '');
+    const localPhone = phoneDigits.length > 10 ? phoneDigits.slice(-10) : phoneDigits;
+    const phoneVariants = [...new Set([normalizedPhone, localPhone, `+91${localPhone}`, `91${localPhone}`])];
+    const identity = await db.user.findFirst({
+      where: isEmailIdentifier
+        ? { email: identifier.toLowerCase() }
+        : { phone: { in: phoneVariants } },
+      select: { email: true },
+    });
+    const email = identity?.email ?? (isEmailIdentifier ? identifier.toLowerCase() : '');
     const isAdminBootstrapCandidate = isBootstrapAdminEmail(email);
 
     if (!hasRuntimeAuthConfig()) {
@@ -143,10 +155,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let user = await db.user.findUnique({
+    let user = email ? await db.user.findUnique({
       where: { email },
       include: { memberships: { include: { agency: true } } },
-    });
+    }) : null;
 
     let isAdminBootstrapLogin = false;
     if (isAdminBootstrapCandidate && !user) {

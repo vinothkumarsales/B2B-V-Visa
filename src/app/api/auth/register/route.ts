@@ -1,11 +1,13 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { after } from 'next/server';
 import { db } from '@/lib/db';
 import { apiError, isApiResponse } from '@/lib/api-response';
 import { auditLog } from '@/server/audit/audit-log';
 import { hashPassword } from '@/server/auth/password';
 import { createSession } from '@/server/auth/session';
 import { queueTravelAgentCrmSync } from '@/server/integrations/zoho/travel-agent-sync';
+import { drainZohoCrmOutbox } from '@/server/integrations/zoho/crm-outbox-worker';
 
 const registerSchema = z.object({
   phone: z.string().min(10).max(30),
@@ -68,7 +70,14 @@ export async function POST(request: NextRequest) {
       resourceId: result.agency.id,
     });
 
-    await queueTravelAgentCrmSync({ agencyId: result.agency.id });
+    after(async () => {
+      try {
+        await queueTravelAgentCrmSync({ agencyId: result.agency.id, idempotencySuffix: result.user.id });
+        await drainZohoCrmOutbox(5);
+      } catch (error) {
+        console.error('REGISTER_CRM_SYNC_FAILED', error instanceof Error ? error.message : 'CRM sync failed');
+      }
+    });
 
     return NextResponse.json({
       user: {

@@ -12,12 +12,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-  InputOTPSeparator,
-} from '@/components/ui/input-otp';
-import {
   DollarSign,
   Zap,
   Headphones,
@@ -66,14 +60,13 @@ export default function SignupView() {
   const login = useAppStore((s) => s.login);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpValue, setOtpValue] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [serverError, setServerError] = useState('');
 
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -86,40 +79,35 @@ export default function SignupView() {
     },
   });
 
-  const handleSendOtp = () => {
-    // In production this would call an API
-    setOtpSent(true);
-    setValue('otp', '');
-  };
-
   const onSubmit = async (data: SignupFormData) => {
-    const response = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        phone: data.phone,
-        agencyName: data.agencyName,
-        email: data.email,
-        password: data.password,
-      }),
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(payload.message || 'Registration failed');
+    if (!termsAccepted) return setServerError('Please accept the terms to continue.');
+    setSubmitting(true);
+    setServerError('');
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: data.phone, agencyName: data.agencyName, email: data.email, password: data.password }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) return setServerError(payload?.error?.message || 'Registration failed');
+      login(payload.agency);
+      router.push('/dashboard');
+    } catch {
+      setServerError('Unable to reach the registration service.');
+    } finally {
+      setSubmitting(false);
     }
-
-    login(payload.agency);
-    router.push('/dashboard');
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row vv-page">
+    <div className="min-h-screen bg-[#f5f7fb] lg:grid lg:grid-cols-[minmax(340px,42%)_1fr]">
       {/* Left Panel â€” Branding */}
       <motion.div
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative flex w-full flex-col justify-between overflow-hidden bg-primary p-8 text-primary-foreground md:w-[40%] md:p-12"
+        className="relative flex min-h-[230px] w-full flex-col justify-between overflow-hidden bg-[#1f5fd6] p-6 text-white sm:p-8 lg:min-h-screen lg:p-12"
       >
         {/* Decorative background circles */}
         <div className="absolute -top-24 -left-24 w-72 h-72 bg-white/5 rounded-full" />
@@ -158,7 +146,7 @@ export default function SignupView() {
           </div>
 
           {/* Feature Cards */}
-          <div className="flex flex-col gap-3">
+          <div className="hidden flex-col gap-3 lg:flex">
             {features.map((feature) => (
               <div
                 key={feature.title}
@@ -169,14 +157,15 @@ export default function SignupView() {
                     <feature.icon className="size-4 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-foreground font-medium text-sm">
+                    <h3 className="font-medium text-sm text-white">
                       {feature.title}
                     </h3>
                     <ul className="mt-1.5 space-y-0.5">
                       {feature.points.map((point) => (
                         <li
                           key={point}
-                          className="text-white/60 text-xs leading-relaxed"
+                          data-point={point}
+                          className="text-[0] leading-relaxed text-white/70 after:text-xs after:content-[attr(data-point)]"
                         >
                           â€¢ {point}
                         </li>
@@ -195,105 +184,55 @@ export default function SignupView() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="w-full md:w-[60%] bg-vvisa-bg flex items-center justify-center p-6 md:p-12 overflow-y-auto"
+        className="flex w-full items-start justify-center bg-[#f5f7fb] px-5 py-8 sm:px-8 lg:min-h-screen lg:items-center lg:px-12"
       >
-        <div className="w-full max-w-md py-8">
+        <div className="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:my-8">
           {/* Heading */}
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-white">Create your account</h2>
-            <p className="mt-1.5 text-sm text-vvisa-text-muted">
+            <h2 className="text-2xl font-semibold text-slate-950">Create your account</h2>
+            <p className="mt-1.5 text-sm text-slate-500">
               Get started with VVisa in minutes
             </p>
           </div>
 
-          {/* Tab Toggle */}
-          <div className="flex bg-vvisa-surface rounded-lg p-1 mb-6 border border-vvisa-border">
-            <button className="flex-1 h-9 rounded-md bg-indigo-600 text-foreground text-sm font-medium transition-colors cursor-pointer">
-              Sign up with Phone
-            </button>
-            <button className="flex-1 h-9 rounded-md text-vvisa-text-muted text-sm font-medium hover:text-vvisa-text-secondary transition-colors cursor-pointer">
-              Sign up with Email
-            </button>
+          <div className="mb-6 grid grid-cols-2 rounded-md border border-slate-200 bg-slate-50 p-1 text-center text-sm font-medium text-slate-600">
+            <span className="rounded bg-white px-3 py-2 text-slate-900 shadow-sm">Email</span>
+            <span className="px-3 py-2">Mobile</span>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Phone Number with India Flag */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-vvisa-text-secondary">
+              <Label className="text-sm font-medium text-slate-700">
                 Mobile Number
               </Label>
               <div className="flex gap-0">
-                <div className="flex items-center gap-2 bg-vvisa-surface border border-vvisa-border border-r-0 rounded-l-md px-3 h-11 shrink-0">
+                <div className="flex h-11 shrink-0 items-center gap-2 rounded-l-md border border-r-0 border-slate-300 bg-slate-50 px-3 [&>span:first-child]:hidden">
                   <span className="text-lg">ðŸ‡®ðŸ‡³</span>
-                  <span className="text-sm text-vvisa-text-secondary">+91</span>
+                  <span className="text-sm text-slate-700">+91</span>
                 </div>
                 <Input
                   placeholder="Enter mobile number"
-                  className="h-11 bg-vvisa-surface border-vvisa-border text-white placeholder:text-vvisa-text-muted focus:border-indigo-500 focus:ring-indigo-500/20 rounded-l-none"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  className="h-11 rounded-l-none border-slate-300 bg-white text-slate-950 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20"
                   {...register('phone')}
                 />
               </div>
               {errors.phone && (
-                <p className="text-xs text-red-400">{errors.phone.message}</p>
+                <p className="text-xs text-red-600">{errors.phone.message}</p>
               )}
             </div>
 
-            {/* Send OTP / OTP Input */}
-            {!otpSent ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleSendOtp}
-                className="w-full h-11 bg-vvisa-surface border-vvisa-border text-white hover:bg-vvisa-surface-2 hover:text-foreground font-medium transition-colors cursor-pointer"
-              >
-                Send OTP
-              </Button>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                transition={{ duration: 0.3 }}
-                className="space-y-2"
-              >
-                <Label className="text-sm font-medium text-vvisa-text-secondary">
-                  Enter OTP
-                </Label>
-                <div className="flex justify-center">
-                  <InputOTP
-                    maxLength={6}
-                    value={otpValue}
-                    onChange={(val) => {
-                      setOtpValue(val);
-                      setValue('otp', val);
-                    }}
-                  >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                    </InputOTPGroup>
-                    <InputOTPSeparator />
-                    <InputOTPGroup>
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-                <p className="text-xs text-indigo-400 text-center">
-                  OTP sent! Check your phone.
-                </p>
-              </motion.div>
-            )}
-
             {/* Agency Name */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-vvisa-text-secondary">
+              <Label className="text-sm font-medium text-slate-700">
                 Agency Name
               </Label>
               <Input
                 placeholder="e.g. Vindox Travels"
-                className="h-11 bg-vvisa-surface border-vvisa-border text-white placeholder:text-vvisa-text-muted focus:border-indigo-500 focus:ring-indigo-500/20"
+                autoComplete="organization"
+                className="h-11 border-slate-300 bg-white text-slate-950 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20"
                 {...register('agencyName')}
               />
               {errors.agencyName && (
@@ -305,13 +244,14 @@ export default function SignupView() {
 
             {/* Email */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-vvisa-text-secondary">
+              <Label className="text-sm font-medium text-slate-700">
                 Email
               </Label>
               <Input
                 type="email"
                 placeholder="you@agency.com"
-                className="h-11 bg-vvisa-surface border-vvisa-border text-white placeholder:text-vvisa-text-muted focus:border-indigo-500 focus:ring-indigo-500/20"
+                autoComplete="email"
+                className="h-11 border-slate-300 bg-white text-slate-950 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20"
                 {...register('email')}
               />
               {errors.email && (
@@ -321,20 +261,21 @@ export default function SignupView() {
 
             {/* Password */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-vvisa-text-secondary">
+              <Label className="text-sm font-medium text-slate-700">
                 Password
               </Label>
               <div className="relative">
                 <Input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Min 8 characters"
-                  className="h-11 bg-vvisa-surface border-vvisa-border text-white placeholder:text-vvisa-text-muted focus:border-indigo-500 focus:ring-indigo-500/20 pr-10"
+                  autoComplete="new-password"
+                  className="h-11 border-slate-300 bg-white pr-10 text-slate-950 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20"
                   {...register('password')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-vvisa-text-muted hover:text-vvisa-text-secondary transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-700"
                 >
                   {showPassword ? (
                     <EyeOff className="size-4" />
@@ -352,20 +293,21 @@ export default function SignupView() {
 
             {/* Confirm Password */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-vvisa-text-secondary">
+              <Label className="text-sm font-medium text-slate-700">
                 Confirm Password
               </Label>
               <div className="relative">
                 <Input
                   type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="Re-enter password"
-                  className="h-11 bg-vvisa-surface border-vvisa-border text-white placeholder:text-vvisa-text-muted focus:border-indigo-500 focus:ring-indigo-500/20 pr-10"
+                  autoComplete="new-password"
+                  className="h-11 border-slate-300 bg-white pr-10 text-slate-950 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20"
                   {...register('confirmPassword')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-vvisa-text-muted hover:text-vvisa-text-secondary transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-700"
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="size-4" />
@@ -389,11 +331,11 @@ export default function SignupView() {
                 onCheckedChange={(checked) =>
                   setTermsAccepted(checked === true)
                 }
-                className="mt-0.5 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                className="mt-0.5 data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
               />
               <label
                 htmlFor="terms"
-                className="text-xs text-vvisa-text-muted leading-relaxed cursor-pointer"
+                className="cursor-pointer text-xs leading-relaxed text-slate-500"
               >
                 I agree to the{' '}
                 <span className="text-indigo-400 hover:text-indigo-300">
@@ -409,21 +351,23 @@ export default function SignupView() {
             {/* Create Account Button */}
             <Button
               type="submit"
-              className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-foreground font-medium transition-colors cursor-pointer"
+              disabled={submitting}
+              className="h-11 w-full cursor-pointer bg-blue-600 font-medium text-white transition-colors hover:bg-blue-700"
             >
-              Create Account
+              {submitting ? 'Creating account...' : 'Create Account'}
             </Button>
           </form>
 
           {/* Sign In Link */}
-          <p className="mt-8 text-center text-sm text-vvisa-text-muted">
+          {serverError && <p className="mt-4 text-sm text-red-600">{serverError}</p>}
+          <p className="mt-6 text-center text-sm text-slate-500">
             Already have an account?{' '}
             <button
               onClick={() => {
                 navigate('login');
                 router.push('/login');
               }}
-              className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors cursor-pointer"
+              className="cursor-pointer font-medium text-blue-600 transition-colors hover:text-blue-700"
             >
               Sign in
             </button>

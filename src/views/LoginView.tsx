@@ -96,7 +96,7 @@ export default function LoginView() {
   } = useForm<LoginPayload>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      identifier: '',
       password: '',
     },
   });
@@ -109,7 +109,7 @@ export default function LoginView() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: values.email.trim().toLowerCase(),
+          identifier: values.identifier.trim(),
           password: values.password,
         }),
       });
@@ -128,13 +128,13 @@ export default function LoginView() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row vv-page">
+    <div className="min-h-screen bg-[#f5f7fb] lg:grid lg:grid-cols-[minmax(340px,42%)_1fr]">
       {/* Left Panel — Branding */}
       <motion.div
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative flex w-full flex-col justify-between overflow-hidden bg-primary p-8 text-primary-foreground md:w-[40%] md:p-12"
+        className="relative flex min-h-[230px] w-full flex-col justify-between overflow-hidden bg-[#1f5fd6] p-6 text-white sm:p-8 lg:min-h-screen lg:p-12"
       >
         {/* Decorative background circles */}
         <div className="absolute -top-24 -left-24 w-72 h-72 bg-white/5 rounded-full" />
@@ -170,7 +170,7 @@ export default function LoginView() {
           </div>
 
           {/* Feature Cards */}
-          <div className="flex flex-col gap-3">
+          <div className="hidden flex-col gap-3 lg:flex">
             {features.map((feature) => (
               <div
                 key={feature.title}
@@ -181,14 +181,15 @@ export default function LoginView() {
                     <feature.icon className="size-4 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-foreground font-medium text-sm">
+                    <h3 className="font-medium text-sm text-white">
                       {feature.title}
                     </h3>
                     <ul className="mt-1.5 space-y-0.5">
                       {feature.points.map((point) => (
                         <li
                           key={point}
-                          className="text-white/60 text-xs leading-relaxed"
+                          data-point={point}
+                          className="text-[0] leading-relaxed text-white/70 after:text-xs after:content-[attr(data-point)]"
                         >
                           • {point}
                         </li>
@@ -207,13 +208,13 @@ export default function LoginView() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="w-full md:w-[60%] bg-vvisa-bg flex items-center justify-center p-6 md:p-12"
+        className="flex w-full items-start justify-center bg-[#f5f7fb] px-5 py-8 sm:px-8 lg:min-h-screen lg:items-center lg:px-12"
       >
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           {/* Heading */}
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-white">Login to VVisa</h2>
-            <p className="mt-1.5 text-sm text-vvisa-text-muted">
+            <h2 className="text-2xl font-semibold text-slate-950">Login to VVisa</h2>
+            <p className="mt-1.5 text-sm text-slate-500">
               Enter your credentials to access your account
             </p>
           </div>
@@ -223,20 +224,21 @@ export default function LoginView() {
             {/* Email */}
             <div className="space-y-2">
               <Label
-                htmlFor="login-email"
-                className="text-sm font-medium text-vvisa-text-secondary"
+                htmlFor="login-identifier"
+                className="text-sm font-medium text-slate-700"
               >
-                Email
+                Email or mobile number
               </Label>
               <Input
-                id="login-email"
-                type="email"
-                placeholder="you@agency.com"
-                className="h-11 bg-vvisa-surface border-vvisa-border text-white placeholder:text-vvisa-text-muted focus:border-indigo-500 focus:ring-indigo-500/20"
-                {...register('email')}
+                id="login-identifier"
+                type="text"
+                autoComplete="username"
+                placeholder="you@agency.com or +91 mobile"
+                className="h-11 border-slate-300 bg-white text-slate-950 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20"
+                {...register('identifier')}
               />
-              {errors.email && (
-                <p className="text-xs text-red-400">{errors.email.message}</p>
+              {errors.identifier && (
+                <p className="text-xs text-red-600">{errors.identifier.message}</p>
               )}
             </div>
 
@@ -245,13 +247,13 @@ export default function LoginView() {
               <div className="flex items-center justify-between">
                 <Label
                   htmlFor="login-password"
-                  className="text-sm font-medium text-vvisa-text-secondary"
+                  className="text-sm font-medium text-slate-700"
                 >
                   Password
                 </Label>
                 <button
                   type="button"
-                  className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                  className="text-xs text-blue-600 transition-colors hover:text-blue-700"
                 >
                   Reset My Password
                 </button>
@@ -261,13 +263,14 @@ export default function LoginView() {
                   id="login-password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
-                  className="h-11 bg-vvisa-surface border-vvisa-border text-white placeholder:text-vvisa-text-muted focus:border-indigo-500 focus:ring-indigo-500/20 pr-10"
+                  autoComplete="current-password"
+                  className="h-11 border-slate-300 bg-white pr-10 text-slate-950 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20"
                   {...register('password')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-vvisa-text-muted hover:text-vvisa-text-secondary transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-700"
                 >
                   {showPassword ? (
                     <EyeOff className="size-4" />
@@ -290,7 +293,7 @@ export default function LoginView() {
             <Button
               type="submit"
               disabled={submitting}
-              className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-foreground font-medium transition-colors cursor-pointer"
+              className="h-11 w-full cursor-pointer bg-blue-600 font-medium text-white transition-colors hover:bg-blue-700"
             >
               {submitting ? 'Signing in...' : 'Sign In'}
             </Button>
@@ -298,9 +301,9 @@ export default function LoginView() {
 
           {/* Divider */}
           <div className="flex items-center gap-4 my-6">
-            <Separator className="flex-1 bg-vvisa-border" />
-            <span className="text-xs text-vvisa-text-muted font-medium">OR</span>
-            <Separator className="flex-1 bg-vvisa-border" />
+            <Separator className="flex-1 bg-slate-200" />
+            <span className="text-xs font-medium text-slate-400">OR</span>
+            <Separator className="flex-1 bg-slate-200" />
           </div>
 
           {/* Google Button */}
@@ -311,7 +314,7 @@ export default function LoginView() {
               setServerError('');
               window.location.href = '/api/auth/google';
             }}
-            className="w-full h-11 bg-vvisa-surface border-vvisa-border text-white hover:bg-vvisa-surface-2 hover:text-foreground font-medium transition-colors cursor-pointer"
+            className="h-11 w-full cursor-pointer border-slate-300 bg-white font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950"
           >
             <svg className="size-4 mr-2" viewBox="0 0 24 24">
               <path
@@ -335,7 +338,7 @@ export default function LoginView() {
           </Button>
 
           {/* Sign Up Link */}
-          <p className="mt-8 text-center text-sm text-vvisa-text-muted">
+          <p className="mt-8 text-center text-sm text-slate-500">
             Don&apos;t have an account?{' '}
             <button
               onClick={() => {
