@@ -131,26 +131,17 @@ export function RouteScreen({
       }
       setLoading(true);
       try {
-        const sessionResponse = await fetch('/api/auth/session', { credentials: 'include', cache: 'no-store' });
-        if (!sessionResponse.ok) throw new Error('Authentication required');
-        const session = await sessionResponse.json();
-        if (!session.agency) throw new Error('Partner profile required');
-
-        const [applicationsResponse, walletResponse] = await Promise.all([
-          fetch('/api/applications?limit=50', { credentials: 'include', cache: 'no-store' }),
-          fetch('/api/wallet?limit=50', { credentials: 'include', cache: 'no-store' }),
-        ]);
-        if (!applicationsResponse.ok || !walletResponse.ok) throw new Error('Unable to load account data');
-
-        const applicationsPayload = await applicationsResponse.json();
-        const walletPayload = await walletResponse.json();
+        const response = await fetch('/api/portal/bootstrap', { credentials: 'include', cache: 'no-store' });
+        if (!response.ok) throw new Error('Unable to load account data');
+        const payload = await response.json();
+        if (!payload.agency) throw new Error('Partner profile required');
         if (cancelled) return;
 
-        const applications = (applicationsPayload.applications ?? []).map(toPortalApplication);
-        const transactions = (walletPayload.transactions ?? []).map(toPortalTransaction);
-        const walletBalance = Number(walletPayload.balance ?? 0);
+        const applications = (payload.applications ?? []).map(toPortalApplication);
+        const transactions = (payload.transactions ?? []).map(toPortalTransaction);
+        const walletBalance = Number(payload.walletBalanceMinor ?? 0) / 100;
 
-        login(toPortalAgency({ ...session.agency, walletBalance }));
+        login(toPortalAgency({ ...payload.agency, walletBalance }));
         setApplications(applications);
         setTransactions(transactions);
         setWalletBalance(walletBalance);

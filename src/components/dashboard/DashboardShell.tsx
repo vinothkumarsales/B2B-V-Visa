@@ -341,6 +341,8 @@ const routeToPath: Record<string, string> = {
   'change-password': '/change-password',
 };
 
+let cachedAdminAccess: boolean | null = null;
+
 export default function DashboardShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const currentView = useAppStore((s) => s.currentView);
@@ -350,7 +352,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
   const navigate = useAppStore((s) => s.navigate);
   const logout = useAppStore((s) => s.logout);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [hasAdminAccess, setHasAdminAccess] = useState(false);
+  const [hasAdminAccess, setHasAdminAccess] = useState(cachedAdminAccess ?? false);
   const [sidebarPreference, setSidebarPreference] = useState<'expanded' | 'collapsed' | null>(() => {
     if (typeof window === 'undefined') return null;
     const saved = sessionStorage.getItem('vvisa:sidebarPreference');
@@ -362,12 +364,15 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
+    if (cachedAdminAccess !== null) return;
     let active = true;
     fetch('/api/admin/session', { credentials: 'same-origin' })
       .then((response) => {
-        if (active) setHasAdminAccess(response.ok);
+        cachedAdminAccess = response.ok;
+        if (active) setHasAdminAccess(cachedAdminAccess);
       })
       .catch(() => {
+        cachedAdminAccess = false;
         if (active) setHasAdminAccess(false);
       });
     return () => { active = false; };

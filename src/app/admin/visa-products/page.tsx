@@ -1,1 +1,9 @@
-import{CatalogueControlPanel}from'@/components/admin/CatalogueControlPanel';import{getCataloguePageData}from'@/server/admin/catalogue-page-data';export const dynamic='force-dynamic';export default async function Page(){const data=await getCataloguePageData();return <div className="space-y-4"><div><h2 className="text-xl font-semibold">Visa Product Editor</h2><p className="text-sm text-vvisa-text-muted">Draft, review and publish partner-facing visa card information.</p></div><CatalogueControlPanel {...data} initialTab="product"/></div>}
+import { VisaPageEditorWorkspace } from '@/components/admin/VisaPageEditorWorkspace';
+import { getCatalogueWorkspaceData } from '@/server/admin/catalogue-page-data';
+
+export const dynamic = 'force-dynamic';
+
+export default async function Page() {
+  const data = await getCatalogueWorkspaceData();
+  return <VisaPageEditorWorkspace countries={data.countries} products={data.products} />;
+}
