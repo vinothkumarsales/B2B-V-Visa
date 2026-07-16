@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/integrations/zoho/outbox",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }

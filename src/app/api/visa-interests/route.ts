@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { apiError, isApiResponse } from '@/lib/api-response';
 import { requireAgencyMembership } from '@/server/auth/session';
 import { recordVisaInterest } from '@/server/visa-interest/record-visa-interest';
+import { drainZohoCrmOutbox } from '@/server/integrations/zoho/crm-outbox-worker';
 
 const visaInterestSchema = z.object({
   countryCode: z.string().max(8).optional(),
@@ -40,6 +41,15 @@ export async function POST(request: NextRequest) {
       agencyId: session.agencyId,
       userId: session.user.id,
     });
+    if (result.leadQueued) {
+      after(async () => {
+        try {
+          await drainZohoCrmOutbox(5);
+        } catch (error) {
+          console.error('CRM_INTEREST_DRAIN_FAILED', error instanceof Error ? error.message : 'CRM drain failed');
+        }
+      });
+    }
 
     return NextResponse.json({
       success: true,

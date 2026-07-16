@@ -8,6 +8,7 @@ import { createSession } from '@/server/auth/session';
 import { hashPassword } from '@/server/auth/password';
 import { isBootstrapAdminEmail } from '@/server/admin/permissions';
 import { queueTravelAgentCrmSync } from '@/server/integrations/zoho/travel-agent-sync';
+import { drainZohoCrmOutbox } from '@/server/integrations/zoho/crm-outbox-worker';
 import {
   GOOGLE_OAUTH_STATE_COOKIE,
   exchangeGoogleCode,
@@ -264,6 +265,7 @@ export async function GET(request: NextRequest) {
         });
         if (result.agency) {
           await queueTravelAgentCrmSync({ agencyId: result.agency.id, idempotencySuffix: requestId });
+          await drainZohoCrmOutbox(5);
         }
       } catch (deferredError) {
         console.error('GOOGLE_AUTH_DEFERRED_WRITE_FAILED', {

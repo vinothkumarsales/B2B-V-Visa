@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { apiError } from '@/lib/api-response';
 import { createLedgerEntry } from '@/server/wallet/wallet-ledger';
 import { queueZohoCrmEvent } from '@/server/integrations/zoho/crm-outbox';
 import { verifyZohoPaymentsWebhook } from '@/server/integrations/zoho/payments';
+import { drainZohoCrmOutbox } from '@/server/integrations/zoho/crm-outbox-worker';
 
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
@@ -86,6 +87,13 @@ export async function POST(request: NextRequest) {
         payload: { paymentOrderId: paymentOrder.id, applicationId: paymentOrder.applicationId },
       });
     }
+    after(async () => {
+      try {
+        await drainZohoCrmOutbox(10);
+      } catch (error) {
+        console.error('CRM_PAYMENT_DRAIN_FAILED', error instanceof Error ? error.message : 'CRM drain failed');
+      }
+    });
   }
 
   return NextResponse.json({ ok: true });

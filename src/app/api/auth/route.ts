@@ -9,6 +9,7 @@ import { hashPassword, verifyPassword } from '@/server/auth/password';
 import { auditLog } from '@/server/audit/audit-log';
 import { isBootstrapAdminEmail } from '@/server/admin/permissions';
 import { queueTravelAgentCrmSync } from '@/server/integrations/zoho/travel-agent-sync';
+import { drainZohoCrmOutbox } from '@/server/integrations/zoho/crm-outbox-worker';
 
 const BOOTSTRAP_LOCKOUT_MS = 15 * 60 * 1000;
 const BOOTSTRAP_MAX_FAILURES = 5;
@@ -225,7 +226,10 @@ export async function POST(request: NextRequest) {
     after(async () => {
       try {
         await auditLog({ agencyId: membership?.agencyId, actorUserId: user.id, action: isAdminBootstrapLogin ? 'ADMIN_BOOTSTRAP_LOGIN' : 'LOGIN', resourceType: 'User', resourceId: user.id, metadata: isAdminBootstrapLogin ? { adminBootstrap: true } : undefined });
-        if (membership?.agencyId) await queueTravelAgentCrmSync({ agencyId: membership.agencyId, idempotencySuffix: randomUUID() });
+        if (membership?.agencyId) {
+          await queueTravelAgentCrmSync({ agencyId: membership.agencyId, idempotencySuffix: randomUUID() });
+          await drainZohoCrmOutbox(5);
+        }
       } catch (error) {
         console.error('LOGIN_DEFERRED_SYNC_FAILED', error instanceof Error ? error.message : 'Deferred sync failed');
       }
