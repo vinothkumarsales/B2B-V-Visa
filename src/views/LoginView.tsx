@@ -189,7 +189,7 @@ export default function LoginView() {
                         <li
                           key={point}
                           data-point={point}
-                          className="text-[0] leading-relaxed text-white/70 after:text-xs after:content-[attr(data-point)]"
+                          className="text-[0px] leading-relaxed text-white/70 after:text-xs after:content-[attr(data-point)]"
                         >
                           • {point}
                         </li>
