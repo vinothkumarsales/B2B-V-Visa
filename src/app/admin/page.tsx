@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { AlertTriangle, Archive, FileText, Globe2, IndianRupee, Users } from 'lucide-react';
+import { AlertTriangle, Archive, Globe2, IndianRupee, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getAdminOverview } from '@/server/admin/data';
@@ -9,21 +9,11 @@ export const dynamic = 'force-dynamic';
 const cards = [
   ['Total Travel Partners', 'totalPartners', Users],
   ['Active Partners', 'activePartners', Users],
-  ['New Partners Today', 'newPartnersToday', Users],
-  ['Pending Partner Approvals', 'pendingPartnerApprovals', AlertTriangle],
   ['Total Applications', 'totalApplications', Archive],
   ['Applications Submitted Today', 'applicationsSubmittedToday', Archive],
   ['Pending Payments', 'pendingPayments', IndianRupee],
-  ['Under Processing', 'underProcessing', Archive],
-  ['Documents Pending', 'documentsPending', FileText],
-  ['Applications Requiring Attention', 'applicationsRequiringAttention', AlertTriangle],
-  ['Approved This Month', 'approvedThisMonth', Archive],
-  ['Rejected This Month', 'rejectedThisMonth', AlertTriangle],
-  ['Wallet Balance Total', 'walletBalanceTotalMinor', IndianRupee],
-  ['Pending Application Drafts', 'pendingApplicationDrafts', FileText],
-  ['Countries Published', 'countriesPublished', Globe2],
+  ['Requires Attention', 'applicationsRequiringAttention', AlertTriangle],
   ['Visa Products Published', 'visaProductsPublished', Globe2],
-  ['Draft Changes', 'draftChanges', FileText],
   ['Failed Integrations', 'failedIntegrations', AlertTriangle],
 ] as const;
 
@@ -45,7 +35,7 @@ export default async function AdminOverviewPage() {
               <Icon className="size-4 text-vvisa-text-muted" />
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">{overview[key] === null ? <span className="text-sm font-medium text-vvisa-text-muted">Unable to load</span> : key === 'walletBalanceTotalMinor' ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(overview[key] / 100) : overview[key].toLocaleString('en-IN')}</p>
+              <p className="text-2xl font-semibold">{overview[key] === null ? <span className="text-sm font-medium text-vvisa-text-muted">Unable to load</span> : overview[key].toLocaleString('en-IN')}</p>
             </CardContent>
           </Card>
         ))}
