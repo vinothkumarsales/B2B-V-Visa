@@ -16,6 +16,8 @@
     "supplier:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/supplier-catalogue/run-supplier-import.ts",
     "catalogue:review": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/supplier-catalogue/catalogue-review.ts",
     "catalogue:publish": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/supplier-catalogue/catalogue-publish.ts",
+    "catalogue:bootstrap-approved": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/supplier-catalogue/bootstrap-approved-products.ts",
+    "catalogue:import-live": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/supplier-catalogue/import-live-portal-catalogue.ts",
     "probe:zoho-auth": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/zoho-auth.ts",
     "probe:zoho-modules": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/zoho-modules.ts",
     "probe:zoho-fields": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probes/zoho-fields.ts",
