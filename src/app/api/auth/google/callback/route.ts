@@ -262,8 +262,8 @@ export async function GET(request: NextRequest) {
           resourceId: result.user.id,
           metadata: { emailVerified: true, adminEmail: isAdminEmail },
         });
-        if (result.created && result.agency) {
-          await queueTravelAgentCrmSync({ agencyId: result.agency.id });
+        if (result.agency) {
+          await queueTravelAgentCrmSync({ agencyId: result.agency.id, idempotencySuffix: requestId });
         }
       } catch (deferredError) {
         console.error('GOOGLE_AUTH_DEFERRED_WRITE_FAILED', {

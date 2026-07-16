@@ -87,6 +87,10 @@ export async function recordVisaInterest(input: RecordVisaInterestInput) {
     (timing === 'DELAYED' && env.CRM_ABANDONED_LEAD_ENABLED);
 
   if (shouldQueueLead && !interest.crmLeadId) {
+    const [agency, user] = await Promise.all([
+      db.agency.findUnique({ where: { id: input.agencyId }, select: { name: true, email: true, phone: true } }),
+      input.userId ? db.user.findUnique({ where: { id: input.userId }, select: { name: true, email: true, phone: true } }) : null,
+    ]);
     await queueZohoCrmEvent({
       agencyId: input.agencyId,
       eventType: 'VISA_INTEREST_LEAD_CREATE',
@@ -101,9 +105,9 @@ export async function recordVisaInterest(input: RecordVisaInterestInput) {
         countryName: interest.countryName,
         visaTypeName: interest.visaTypeName,
         category: interest.category,
-        applicantName: interest.applicantName,
-        applicantMobilePresent: Boolean(interest.applicantMobile),
-        applicantEmailPresent: Boolean(interest.applicantEmail),
+        applicantName: interest.applicantName ?? user?.name ?? agency?.name,
+        applicantMobile: interest.applicantMobile ?? user?.phone ?? agency?.phone,
+        applicantEmail: interest.applicantEmail ?? user?.email ?? agency?.email,
         sourceRoute: interest.sourceRoute,
         leadEligibleAt: interest.leadEligibleAt?.toISOString() ?? null,
       },

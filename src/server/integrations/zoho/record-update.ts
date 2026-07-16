@@ -75,6 +75,36 @@ export async function updateZohoCrmRecord(input: {
   };
 }
 
+export async function findZohoCrmRecord(input: { moduleApiName: string; field: string; value: string }) {
+  const criteria = `(${input.field}:equals:${input.value})`;
+  const response = await zohoCrmFetch(`/${input.moduleApiName}/search?criteria=${encodeURIComponent(criteria)}`);
+  if (response.status === 204 || response.status === 404) return null;
+  const payload = await response.json().catch(() => ({})) as { data?: Array<{ id?: string }> };
+  if (!response.ok) {
+    const error = new Error(`ZOHO_CRM_SEARCH_${response.status}`);
+    error.name = 'ZohoCrmRecordUpdateError';
+    throw error;
+  }
+  return payload.data?.[0]?.id ?? null;
+}
+
+export async function convertZohoCrmLead(leadId: string) {
+  const response = await zohoCrmFetch(`/Leads/${leadId}/actions/convert`, {
+    method: 'POST',
+    body: JSON.stringify({ data: [{ overwrite: true, notify_lead_owner: false, notify_new_entity_owner: false }] }),
+  });
+  const payload = await response.json().catch(() => ({})) as { data?: Array<{ Contacts?: string; details?: { Contacts?: string } }> };
+  if (!response.ok) {
+    const error = new Error(`ZOHO_LEAD_CONVERT_${response.status}`);
+    error.name = 'ZohoCrmRecordUpdateError';
+    throw error;
+  }
+  const first = payload.data?.[0];
+  const contactId = first?.Contacts ?? first?.details?.Contacts;
+  if (!contactId) throw validationError('ZOHO_CONTACT_ID_MISSING');
+  return { contactId };
+}
+
 export function buildConfiguredPassportCrmUpdateFields(input: {
   module: PassportCrmModule;
   passportFields: PassportCrmFields;
@@ -115,8 +145,8 @@ export function getPassportCustomFieldMap(module: PassportCrmModule): PassportCr
 export function buildConfiguredVisaInterestLeadCreateFields(fields: VisaLeadFields): Record<string, string> {
   const values = env as unknown as Record<string, string | undefined>;
   const customFieldMap: VisaLeadCustomFieldMap = {
-    countryName: values.ZOHO_CRM_LEAD_COUNTRY_FIELD,
-    visaTypeName: values.ZOHO_CRM_LEAD_VISA_TYPE_FIELD,
+    countryName: values.ZOHO_CRM_LEAD_COUNTRY_FIELD ?? 'Destination_Country',
+    visaTypeName: values.ZOHO_CRM_LEAD_VISA_TYPE_FIELD ?? 'Visa_Type',
     category: values.ZOHO_CRM_LEAD_CATEGORY_FIELD,
     portalVisaInterestId: values.ZOHO_CRM_LEAD_PORTAL_VISA_INTEREST_ID_FIELD,
   };
@@ -127,7 +157,7 @@ export function buildConfiguredVisaInterestLeadCreateFields(fields: VisaLeadFiel
 export function buildConfiguredTravelAgentCrmFields(fields: TravelAgentCrmFields): Record<string, string> {
   const values = env as unknown as Record<string, string | undefined>;
   const customFieldMap: TravelAgentCustomFieldMap = {
-    portalTravelAgentId: values.ZOHO_CRM_TRAVEL_AGENT_PORTAL_ID_FIELD,
+    portalTravelAgentId: values.ZOHO_CRM_TRAVEL_AGENT_PORTAL_ID_FIELD ?? 'UID',
     gstNumber: values.ZOHO_CRM_TRAVEL_AGENT_GST_FIELD,
     panCard: values.ZOHO_CRM_TRAVEL_AGENT_PAN_FIELD,
     postalCode: values.ZOHO_CRM_TRAVEL_AGENT_POSTAL_CODE_FIELD,

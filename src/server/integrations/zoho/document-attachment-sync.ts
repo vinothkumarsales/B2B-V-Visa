@@ -121,6 +121,9 @@ async function resolveAttachmentTarget(input: {
     };
   }
 
+  const agencyContact = await findMapping(input.agencyId, 'Agency', input.agencyId, 'Contacts');
+  if (agencyContact) return { module: 'Contacts', recordId: agencyContact.zohoRecordId, eventType: 'CONTACT_ATTACHMENT_UPLOAD' };
+
   return null;
 }
 

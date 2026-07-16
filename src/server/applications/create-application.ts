@@ -118,5 +118,25 @@ export async function createIndividualApplication(input: {
     payload: { applicationId: application.id, agencyId: input.agencyId },
   });
 
+  const interest = await db.visaInterest.findFirst({
+    where: {
+      agencyId: input.agencyId,
+      visaTypeId: visaProduct.id,
+      status: { notIn: ['PAID', 'CONVERTED', 'EXPIRED', 'CANCELLED'] },
+    },
+    orderBy: { lastActivityAt: 'desc' },
+  });
+
+  if (interest) {
+    await db.visaInterest.update({
+      where: { id: interest.id },
+      data: {
+        applicationId: application.id,
+        status: 'APPLICATION_CREATED',
+        lastActivityAt: new Date(),
+      },
+    });
+  }
+
   return application;
 }

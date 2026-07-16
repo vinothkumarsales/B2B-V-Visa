@@ -78,6 +78,34 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    if (application) {
+      const interest = await db.visaInterest.findFirst({
+        where: {
+          agencyId: session.agencyId,
+          OR: [
+            { applicationId: application.id },
+            {
+              applicationId: null,
+              visaTypeId: application.visaProductId,
+              status: { notIn: ['PAID', 'CONVERTED', 'EXPIRED', 'CANCELLED'] },
+            },
+          ],
+        },
+        orderBy: { lastActivityAt: 'desc' },
+      });
+      if (interest) {
+        await db.visaInterest.update({
+          where: { id: interest.id },
+          data: {
+            applicationId: application.id,
+            paymentOrderId: updated.id,
+            status: 'PAYMENT_STARTED',
+            lastActivityAt: new Date(),
+          },
+        });
+      }
+    }
+
     await auditLog({
       agencyId: session.agencyId,
       actorUserId: session.user.id,

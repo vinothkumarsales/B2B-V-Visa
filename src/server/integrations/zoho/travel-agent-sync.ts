@@ -4,6 +4,7 @@ import { queueZohoCrmEvent } from './crm-outbox';
 export async function queueTravelAgentCrmSync(input: {
   agencyId: string;
   eventType?: 'TRAVEL_AGENT_UPSERT' | 'TRAVEL_AGENT_PROFILE_UPDATED';
+  idempotencySuffix?: string;
 }) {
   const agency = await db.agency.findUnique({ where: { id: input.agencyId } });
   if (!agency) return { queued: false, reason: 'agency_not_found' as const };
@@ -14,7 +15,7 @@ export async function queueTravelAgentCrmSync(input: {
     entityType: 'Agency',
     entityId: agency.id,
     aggregateId: agency.id,
-    idempotencyKey: `travel-agent:${input.eventType ?? 'TRAVEL_AGENT_UPSERT'}:${agency.id}`,
+    idempotencyKey: `travel-agent:${input.eventType ?? 'TRAVEL_AGENT_UPSERT'}:${agency.id}:${input.idempotencySuffix ?? agency.updatedAt.toISOString()}`,
     payloadVersion: 1,
     payload: {
       agencyId: agency.id,

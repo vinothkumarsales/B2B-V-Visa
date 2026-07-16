@@ -109,6 +109,9 @@ async function resolveOcrDataTarget(input: {
     };
   }
 
+  const agencyContact = await findMapping(input.agencyId, 'Agency', input.agencyId, 'Contacts');
+  if (agencyContact) return { module: 'Contacts', recordId: agencyContact.zohoRecordId, eventType: 'CONTACT_OCR_DATA_UPDATE' };
+
   return null;
 }
 

@@ -63,6 +63,28 @@ function getStickerRoutes(visa: VisaType): VisaStickerRoute[] {
   return visa.stickerRoutes?.length ? visa.stickerRoutes : visa.courierRules?.routes ?? [];
 }
 
+function trackVisaInterest(visa: VisaType, intent: 'VISA_SELECTED' | 'CHECKLIST_VIEWED') {
+  if (isDemoMode()) return;
+  const key = 'vvisa:crmSearchSessionId';
+  const searchSessionId = sessionStorage.getItem(key) ?? crypto.randomUUID();
+  sessionStorage.setItem(key, searchSessionId);
+  void fetch('/api/visa-interests', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({
+      countryCode: visa.destinationCode,
+      countryName: visa.destination,
+      visaTypeId: visa.id,
+      visaTypeName: visa.name,
+      category: visa.category,
+      sourceRoute: '/explore',
+      searchSessionId,
+      intent,
+    }),
+  }).catch(() => undefined);
+}
+
 export default function ExploreView() {
   const router = useRouter();
   const { navigate, setSelectedVisaType } = useAppStore();
@@ -133,6 +155,7 @@ export default function ExploreView() {
   };
 
   const handleSelectVisa = (visa: VisaType) => {
+    trackVisaInterest(visa, 'VISA_SELECTED');
     setSelectedVisaType(visa);
     sessionStorage.setItem('vvisa:selectedVisaType', JSON.stringify(visa));
     navigate('apply');
@@ -140,6 +163,7 @@ export default function ExploreView() {
   };
 
   const handleViewDocs = (visa: VisaType) => {
+    trackVisaInterest(visa, 'CHECKLIST_VIEWED');
     setSelectedDocVisa(visa);
     setDocDialogOpen(true);
   };

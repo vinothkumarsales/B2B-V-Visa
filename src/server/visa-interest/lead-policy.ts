@@ -10,23 +10,7 @@ export type VisaInterestIntent =
 export type LeadTiming = 'NONE' | 'DELAYED' | 'IMMEDIATE';
 
 export function getVisaInterestLeadTiming(intent: VisaInterestIntent): LeadTiming {
-  if (
-    intent === 'APPLICATION_STARTED' ||
-    intent === 'APPLICANT_DETAILS_ENTERED' ||
-    intent === 'PAYMENT_INITIATED'
-  ) {
-    return 'IMMEDIATE';
-  }
-
-  if (
-    intent === 'VISA_SELECTED' ||
-    intent === 'PRICE_VIEWED' ||
-    intent === 'CHECKLIST_VIEWED'
-  ) {
-    return 'DELAYED';
-  }
-
-  return 'NONE';
+  return intent === 'BROWSE' || intent === 'VISA_SELECTED' || intent === 'PRICE_VIEWED' || intent === 'CHECKLIST_VIEWED' || intent === 'APPLICATION_STARTED' || intent === 'APPLICANT_DETAILS_ENTERED' || intent === 'PAYMENT_INITIATED' ? 'IMMEDIATE' : 'NONE';
 }
 
 export function isMeaningfulVisaIntent(intent: VisaInterestIntent) {

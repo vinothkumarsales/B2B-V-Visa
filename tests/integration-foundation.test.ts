@@ -40,12 +40,12 @@ test('builds deterministic Travel Agent matching order without company-name-only
   ]);
 });
 
-test('keeps unknown required Zoho custom fields as explicit blockers', () => {
+test('keeps unresolved required Zoho custom fields as explicit blockers', () => {
   const unresolved = getUnresolvedRequiredCrmFields()
     .map((field) => `${field.moduleKey}.${field.portalField}`)
     .sort();
 
-  assert.ok(unresolved.includes('Travel_Agents.portalTravelAgentId'));
+  assert.ok(!unresolved.includes('Travel_Agents.portalTravelAgentId'));
   assert.ok(unresolved.includes('Leads.countryName'));
   assert.ok(unresolved.includes('Contacts.portalApplicantId'));
 });

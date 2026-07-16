@@ -33,10 +33,7 @@ export function buildTravelAgentCrmFields(input: {
 
   assign(mapped, 'Name', fields.agencyName);
   assign(mapped, 'Email', fields.email);
-  assign(mapped, 'Phone', fields.mobile);
-  assign(mapped, 'City', fields.city);
-  assign(mapped, 'State', fields.state);
-  assign(mapped, 'Country', fields.country);
+  assign(mapped, 'Mobile', fields.mobile);
 
   assignCustom(mapped, customMap.portalTravelAgentId, fields.portalTravelAgentId);
   assignCustom(mapped, customMap.gstNumber, fields.gstNumber);

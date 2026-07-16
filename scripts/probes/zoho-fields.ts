@@ -31,6 +31,7 @@ if (!token.ok || !('token' in token) || !token.token) {
   const confirmed: string[] = [];
   const missing: string[] = [];
   const candidatePassportFields: Record<string, Array<{ api_name: string; display_label?: string; data_type?: string }>> = {};
+  const candidateTravelAgentFields: Array<{ api_name: string; display_label?: string; data_type?: string }> = [];
   const candidateNeedles = ['passport', 'document', 'dob', 'birth', 'expiry', 'expiration', 'issue', 'nationality', 'gender', 'sex', 'marital', 'service', 'destination', 'father', 'mother', 'address', 'description'];
 
   for (const [mappingKey, moduleName] of Object.entries(moduleEnv)) {
@@ -46,6 +47,16 @@ if (!token.ok || !('token' in token) || !token.token) {
       fields?: Array<{ api_name?: string; display_label?: string; data_type?: string }>;
     };
     const fields = payload.fields ?? [];
+    if (mappingKey === 'Travel_Agents') {
+      const travelAgentNeedles = ['uid', 'portal', 'email', 'phone', 'mobile', 'agency', 'agent', 'source', 'city', 'state', 'country', 'zip', 'postal', 'gst', 'pan'];
+      candidateTravelAgentFields.push(...fields
+        .filter((field) => {
+          const haystack = `${field.api_name ?? ''} ${field.display_label ?? ''}`.toLowerCase();
+          return travelAgentNeedles.some((needle) => haystack.includes(needle));
+        })
+        .map((field) => ({ api_name: field.api_name ?? '', display_label: field.display_label, data_type: field.data_type }))
+        .filter((field) => field.api_name));
+    }
     if (mappingKey === 'Leads' || mappingKey === 'Contacts') {
       candidatePassportFields[mappingKey] = fields
         .filter((field) => {
@@ -84,6 +95,7 @@ if (!token.ok || !('token' in token) || !token.token) {
     checked_field_count: checked.length,
     missing_or_unconfirmed_fields: missing,
     unresolved_required_fields: unresolved,
+    candidate_travel_agent_fields: candidateTravelAgentFields,
     candidate_passport_fields: candidatePassportFields,
   });
 }

@@ -75,6 +75,17 @@ export async function POST(request: NextRequest) {
       aggregateId: paymentOrder.applicationId ?? paymentOrder.id,
       payload: { paymentOrderId: paymentOrder.id, applicationId: paymentOrder.applicationId },
     });
+    if (paymentOrder.applicationId) {
+      await queueZohoCrmEvent({
+        agencyId: paymentOrder.agencyId,
+        eventType: 'LEAD_CONVERT',
+        idempotencyKey: `zoho-crm:lead-convert:${paymentOrder.id}`,
+        entityType: 'VisaApplication',
+        entityId: paymentOrder.applicationId,
+        aggregateId: paymentOrder.applicationId,
+        payload: { paymentOrderId: paymentOrder.id, applicationId: paymentOrder.applicationId },
+      });
+    }
   }
 
   return NextResponse.json({ ok: true });

@@ -29,10 +29,7 @@ test('builds conservative Travel_Agents fields with optional custom mappings', (
   assert.deepEqual(fields, {
     Name: 'V Visa Travels',
     Email: 'owner@example.com',
-    Phone: '+918151861062',
-    City: 'Bengaluru',
-    State: 'Karnataka',
-    Country: 'India',
+    Mobile: '+918151861062',
     Portal_Agency_ID: 'agency_123',
     GST_Number: '29AABCV1234F1ZG',
     PAN_Number: 'AABCV1234F',
