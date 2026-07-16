@@ -19,8 +19,19 @@ function adminReadFallback<T>(stage: string, fallback: T) {
   };
 }
 
-async function readMetric<T>(stage: string, read: Promise<T>, fallback: T) {
-  return read.catch(adminReadFallback(stage, fallback));
+const ADMIN_READ_CONCURRENCY = 3;
+let activeAdminReads = 0;
+const pendingAdminReads: Array<() => void> = [];
+
+async function withAdminReadSlot<T>(read: () => Promise<T>) {
+  if (activeAdminReads >= ADMIN_READ_CONCURRENCY) await new Promise<void>((resolve) => pendingAdminReads.push(resolve));
+  activeAdminReads += 1;
+  try { return await read(); }
+  finally { activeAdminReads -= 1; pendingAdminReads.shift()?.(); }
+}
+
+async function readMetric<T>(stage: string, read: () => Promise<T>, fallback: T) {
+  return withAdminReadSlot(read).catch(adminReadFallback(stage, fallback));
 }
 
 export async function getAdminOverview() {
@@ -50,30 +61,30 @@ export async function getAdminOverview() {
     recentPartners,
     recentAuditLogs,
   ] = await Promise.all([
-    readMetric('agency.total.count', db.agency.count(), null),
-    readMetric('agency.approved.count', db.agency.count({ where: { status: 'APPROVED' } }), null),
-    readMetric('agency.today.count', db.agency.count({ where: { createdAt: { gte: today } } }), null),
-    readMetric('agency.pending_approval.count', db.agency.count({ where: { status: { in: ['DOCUMENTS_PENDING', 'UNDER_REVIEW'] } } }), null),
-    readMetric('visa_application.total.count', db.visaApplication.count(), null),
-    readMetric('visa_application.today.count', db.visaApplication.count({ where: { createdAt: { gte: today } } }), null),
-    readMetric('application_document.pending.count', db.applicationDocument.count({ where: { status: { in: ['REQUESTED', 'MANUAL_REVIEW_REQUIRED', 'OCR_PENDING'] } } }), null),
-    readMetric('country.active.count', db.country.count({ where: { isActive: true } }), null),
-    readMetric('visa_product.active.count', db.visaProduct.count({ where: { isActive: true } }), null),
-    readMetric('visa_application.payment_pending.count', db.visaApplication.count({ where: { status: 'PAYMENT_PENDING' } }), null),
-    readMetric('visa_application.processing.count', db.visaApplication.count({ where: { status: 'PROCESSING' } }), null),
-    readMetric('wallet.balance.sum', db.walletLedgerEntry.aggregate({ _sum: { amountMinor: true } }).then((result) => result._sum.amountMinor ?? 0), null),
-    readMetric('visa_application.draft.count', db.visaApplication.count({ where: { status: 'DRAFT' } }), null),
-    readMetric('visa_application.approved_month.count', db.visaApplication.count({ where: { status: 'APPROVED', updatedAt: { gte: monthStart } } }), null),
-    readMetric('visa_application.rejected_month.count', db.visaApplication.count({ where: { status: 'REJECTED', updatedAt: { gte: monthStart } } }), null),
-    readMetric('dashboard_section.draft.count', db.dashboardSection.count({ where: { status: 'draft' } }), null),
-    readMetric('integration_event.failed.count', db.integrationEvent.count({ where: { status: { in: ['FAILED', 'FAILED_TERMINAL'] } } }), null),
-    readMetric('visa_application.recent.list', db.visaApplication.findMany({
+    readMetric('agency.total.count', () => db.agency.count(), null),
+    readMetric('agency.approved.count', () => db.agency.count({ where: { status: 'APPROVED' } }), null),
+    readMetric('agency.today.count', () => db.agency.count({ where: { createdAt: { gte: today } } }), null),
+    readMetric('agency.pending_approval.count', () => db.agency.count({ where: { status: { in: ['DOCUMENTS_PENDING', 'UNDER_REVIEW'] } } }), null),
+    readMetric('visa_application.total.count', () => db.visaApplication.count(), null),
+    readMetric('visa_application.today.count', () => db.visaApplication.count({ where: { createdAt: { gte: today } } }), null),
+    readMetric('application_document.pending.count', () => db.applicationDocument.count({ where: { status: { in: ['REQUESTED', 'MANUAL_REVIEW_REQUIRED', 'OCR_PENDING'] } } }), null),
+    readMetric('country.active.count', () => db.country.count({ where: { isActive: true } }), null),
+    readMetric('visa_product.active.count', () => db.visaProduct.count({ where: { isActive: true } }), null),
+    readMetric('visa_application.payment_pending.count', () => db.visaApplication.count({ where: { status: 'PAYMENT_PENDING' } }), null),
+    readMetric('visa_application.processing.count', () => db.visaApplication.count({ where: { status: 'PROCESSING' } }), null),
+    readMetric('wallet.balance.sum', () => db.walletLedgerEntry.aggregate({ _sum: { amountMinor: true } }).then((result) => result._sum.amountMinor ?? 0), null),
+    readMetric('visa_application.draft.count', () => db.visaApplication.count({ where: { status: 'DRAFT' } }), null),
+    readMetric('visa_application.approved_month.count', () => db.visaApplication.count({ where: { status: 'APPROVED', updatedAt: { gte: monthStart } } }), null),
+    readMetric('visa_application.rejected_month.count', () => db.visaApplication.count({ where: { status: 'REJECTED', updatedAt: { gte: monthStart } } }), null),
+    readMetric('dashboard_section.draft.count', () => db.dashboardSection.count({ where: { status: 'draft' } }), null),
+    readMetric('integration_event.failed.count', () => db.integrationEvent.count({ where: { status: { in: ['FAILED', 'FAILED_TERMINAL'] } } }), null),
+    readMetric('visa_application.recent.list', () => db.visaApplication.findMany({
       take: 6,
       orderBy: { createdAt: 'desc' },
       include: { agency: true },
     }), []),
-    readMetric('agency.recent.list', db.agency.findMany({ take: 6, orderBy: { createdAt: 'desc' } }), []),
-    readMetric('audit_log.recent.list', db.auditLog.findMany({ take: 8, orderBy: { createdAt: 'desc' }, include: { actorUser: true, agency: true } }), []),
+    readMetric('agency.recent.list', () => db.agency.findMany({ take: 6, orderBy: { createdAt: 'desc' } }), []),
+    readMetric('audit_log.recent.list', () => db.auditLog.findMany({ take: 8, orderBy: { createdAt: 'desc' }, include: { actorUser: true, agency: true } }), []),
   ]);
 
   return {
