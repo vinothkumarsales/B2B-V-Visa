@@ -374,6 +374,10 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    Object.values(routeToPath).forEach((path) => router.prefetch(path));
+  }, [router]);
+
+  useEffect(() => {
     const onWorkflowDetailChange = (event: Event) => {
       const customEvent = event as CustomEvent<boolean>;
       setWorkflowDetailActive(Boolean(customEvent.detail));

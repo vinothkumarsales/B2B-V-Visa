@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { after } from 'next/server';
 import { db } from '@/lib/db';
 import { apiError, isApiResponse } from '@/lib/api-response';
 import { loginSchema } from '@/lib/auth/login-schema';
@@ -190,17 +191,43 @@ export async function POST(request: NextRequest) {
     }
     if (isAdminBootstrapLogin) clearBootstrapFailures(email);
 
+    if (isAdminBootstrapCandidate && !user.memberships[0]) {
+      const adminUserId = user.id;
+      const adminUserName = user.name;
+      await db.$transaction(async (tx) => {
+        const existingAgency = await tx.agency.findUnique({ where: { email } });
+        const portalAgency = existingAgency ?? await tx.agency.create({
+          data: { name: adminUserName ? `${adminUserName}'s Agency` : 'VVisa Admin Agency', email, status: 'DRAFT' },
+        });
+        await tx.agencyMembership.upsert({
+          where: { userId_agencyId: { userId: adminUserId, agencyId: portalAgency.id } },
+          update: { isDefault: true },
+          create: { userId: adminUserId, agencyId: portalAgency.id, role: 'AGENCY_OWNER', isDefault: true },
+        });
+        await tx.wallet.upsert({
+          where: { agencyId_currency: { agencyId: portalAgency.id, currency: 'INR' } },
+          update: {},
+          create: { agencyId: portalAgency.id, currency: 'INR' },
+        });
+      });
+      const refreshedUser = await db.user.findUnique({
+        where: { id: user.id },
+        include: { memberships: { include: { agency: true }, orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }] } },
+      });
+      if (refreshedUser) user = refreshedUser;
+    }
+
     await createSession(user.id);
     const membership = user.memberships[0] ?? null;
 
-    await auditLog({
+    after(() => auditLog({
       agencyId: membership?.agencyId,
       actorUserId: user.id,
       action: isAdminBootstrapLogin ? 'ADMIN_BOOTSTRAP_LOGIN' : 'LOGIN',
       resourceType: 'User',
       resourceId: user.id,
       metadata: isAdminBootstrapLogin ? { adminBootstrap: true } : undefined,
-    });
+    }).catch((error) => console.error('LOGIN_AUDIT_FAILED', error instanceof Error ? error.message : 'Audit write failed')));
 
     return NextResponse.json({
       user: {

@@ -118,12 +118,8 @@ export default function LoginView() {
         setServerError(loginErrorMessage(data?.error?.code));
         return;
       }
-      if (data.agency) {
-        login(data.agency);
-        router.push('/dashboard');
-      } else {
-        router.push('/admin');
-      }
+      if (data.agency) login(data.agency);
+      router.push('/dashboard');
     } catch {
       setServerError('Unable to reach the login service');
     } finally {

@@ -1,6 +1,7 @@
 import { randomBytes } from 'crypto';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+import { after } from 'next/server';
 import { db } from '@/lib/db';
 import { auditLog } from '@/server/audit/audit-log';
 import { createSession } from '@/server/auth/session';
@@ -90,7 +91,6 @@ async function ensureGoogleIdentity(input: {
   tx: Prisma.TransactionClient;
   email: string;
   profile: GoogleProfile;
-  isAdminEmail: boolean;
   setStage: (stage: GoogleCallbackStage) => void;
 }) {
   input.setStage('user_bootstrap');
@@ -112,10 +112,6 @@ async function ensureGoogleIdentity(input: {
       },
     },
   });
-
-  if (input.isAdminEmail) {
-    return { user, agency: user.memberships[0]?.agency ?? null, created: user.createdAt.getTime() === user.updatedAt.getTime() };
-  }
 
   input.setStage('agency_bootstrap');
   const existingAgency = user.memberships[0]?.agency ?? await input.tx.agency.findUnique({
@@ -163,7 +159,7 @@ async function ensureGoogleIdentity(input: {
     },
   });
 
-  return { user, agency, created: false };
+  return { user, agency };
 }
 
 export async function GET(request: NextRequest) {
@@ -230,16 +226,21 @@ export async function GET(request: NextRequest) {
 
     const isAdminEmail = isBootstrapAdminEmail(email);
     logGoogleStage('database_user_lookup_started', { isAdminEmail });
-    setStage('identity_transaction');
-    const result = await db.$transaction(async (tx) => {
-      return ensureGoogleIdentity({
-        tx,
-        email,
-        profile,
-        isAdminEmail,
-        setStage,
-      });
+    const existingUser = await db.user.findUnique({
+      where: { email },
+      include: {
+        memberships: {
+          include: { agency: true },
+          orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }],
+        },
+      },
     });
+    const needsBootstrap = !existingUser || !existingUser.memberships[0]?.agency;
+    setStage('identity_transaction');
+    const identity = needsBootstrap
+      ? await db.$transaction((tx) => ensureGoogleIdentity({ tx, email, profile, setStage }))
+      : { user: existingUser, agency: existingUser.memberships[0].agency };
+    const result = { ...identity, created: !existingUser };
     logGoogleStage('database_user_lookup_succeeded', {
       created: result.created,
       hasAgency: Boolean(result.agency),
@@ -251,26 +252,31 @@ export async function GET(request: NextRequest) {
     await createSession(result.user.id);
     logGoogleStage('session_creation_succeeded');
 
-    setStage('audit_write');
-    await auditLog({
-      agencyId: result.agency?.id,
-      actorUserId: result.user.id,
-      action: result.created ? 'GOOGLE_SIGNUP' : 'GOOGLE_LOGIN',
-      resourceType: 'User',
-      resourceId: result.user.id,
-      metadata: { emailVerified: true, adminEmail: isAdminEmail },
+    after(async () => {
+      try {
+        await auditLog({
+          agencyId: result.agency?.id,
+          actorUserId: result.user.id,
+          action: result.created ? 'GOOGLE_SIGNUP' : 'GOOGLE_LOGIN',
+          resourceType: 'User',
+          resourceId: result.user.id,
+          metadata: { emailVerified: true, adminEmail: isAdminEmail },
+        });
+        if (result.created && result.agency) {
+          await queueTravelAgentCrmSync({ agencyId: result.agency.id });
+        }
+      } catch (deferredError) {
+        console.error('GOOGLE_AUTH_DEFERRED_WRITE_FAILED', {
+          requestId,
+          message: deferredError instanceof Error ? deferredError.message : 'Deferred write failed',
+          prismaCode: prismaErrorCode(deferredError),
+        });
+      }
     });
 
-    if (result.created && result.agency) {
-      setStage('crm_sync_queue');
-      logGoogleStage('crm_sync_queue_started');
-      await queueTravelAgentCrmSync({ agencyId: result.agency.id });
-      logGoogleStage('crm_sync_queue_succeeded');
-    }
-
     setStage('final_redirect');
-    logGoogleStage('final_redirect', { destination: isAdminEmail ? '/admin' : '/dashboard' });
-    return NextResponse.redirect(new URL(isAdminEmail ? '/admin' : '/dashboard', request.url));
+    logGoogleStage('final_redirect', { destination: '/dashboard', hasAdminAccess: isAdminEmail });
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   } catch (error) {
     const code = googleErrorCode(error, stage);
     const meta = prismaErrorMeta(error);

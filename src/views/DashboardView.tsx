@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
-import { mockVisaTypes, popularDestinations } from '@/lib/mock-data';
+import { popularDestinations } from '@/lib/mock-data';
+import { useVisaCatalogue } from '@/lib/use-visa-catalogue';
 import { usePortalDashboardSections, usePortalStatusConfig } from '@/lib/use-portal-config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +28,7 @@ function formatDate(dateStr: string): string {
 }
 
 export default function DashboardView() {
+  const { visaTypes } = useVisaCatalogue();
   const statusConfig = usePortalStatusConfig();
   const dashboardSections = usePortalDashboardSections();
   const router = useRouter();
@@ -47,7 +49,7 @@ export default function DashboardView() {
   const handleSearch = () => {
     if (!goingTo.trim()) return;
     const dest = goingTo.trim();
-    const matchingVisas = mockVisaTypes.filter(
+    const matchingVisas = visaTypes.filter(
       (v) => v.destination.toLowerCase() === dest.toLowerCase()
     );
     if (matchingVisas.length > 0) {

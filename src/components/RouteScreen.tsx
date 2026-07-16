@@ -109,6 +109,8 @@ export function RouteScreen({
   children: ReactNode;
 }) {
   const router = useRouter();
+  const isAuthenticated = useAppStore((s) => s.isAuthenticated);
+  const agency = useAppStore((s) => s.agency);
   const setApplications = useAppStore((s) => s.setApplications);
   const setTransactions = useAppStore((s) => s.setTransactions);
   const setWalletBalance = useAppStore((s) => s.setWalletBalance);
@@ -122,8 +124,12 @@ export function RouteScreen({
     let cancelled = false;
 
     async function hydrateAuthenticatedRoute() {
+      if (isAuthenticated && agency) {
+        navigate(view);
+        setLoading(false);
+        return;
+      }
       setLoading(true);
-      clearUserScopedState();
       try {
         const sessionResponse = await fetch('/api/auth/session', { credentials: 'include', cache: 'no-store' });
         if (!sessionResponse.ok) throw new Error('Authentication required');
@@ -174,7 +180,7 @@ export function RouteScreen({
     return () => {
       cancelled = true;
     };
-  }, [authenticated, clearUserScopedState, login, navigate, router, setApplications, setStats, setTransactions, setWalletBalance, view]);
+  }, [agency, authenticated, clearUserScopedState, isAuthenticated, login, navigate, router, setApplications, setStats, setTransactions, setWalletBalance, view]);
 
   if (loading) {
     return (
