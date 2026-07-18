@@ -369,8 +369,9 @@ function TravelerCard({
         });
         const data = await res.json().catch(() => ({}));
 
-        if (data.success && data.fields) {
+        if (data.success && Array.isArray(data.fields)) {
           for (const f of data.fields) {
+            if (!f || typeof f !== 'object') continue;
             if (!f.value) continue;
             const key = resolvePassportAutofillField(f.field);
             if (!key) continue;
@@ -605,7 +606,7 @@ function TravelerCard({
                       <p className="text-sm text-primary font-medium mb-1">Scanning with V-Visa AI...</p>
                       <p className="text-xs text-vvisa-text-muted">Extracting passport data</p>
                     </>
-                  ) : traveler.ocrStatus === 'done' ? (
+                  ) : traveler.ocrStatus === 'done' && traveler.passportFileName ? (
                     <>
                       <div className="w-10 h-10 rounded-full bg-emerald-600/20 flex items-center justify-center mb-2">
                         <Check className="h-5 w-5 text-emerald-400" />
@@ -883,12 +884,20 @@ function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
-      const result = reader.result as string;
+      if (typeof reader.result !== 'string') {
+        reject(new Error('Unable to read file'));
+        return;
+      }
+      const result = reader.result;
       // Remove the data URL prefix
-      const base64 = result.split(',')[1];
+      const base64 = result.includes(',') ? result.split(',')[1] : result;
+      if (!base64) {
+        reject(new Error('Unable to read file'));
+        return;
+      }
       resolve(base64);
     };
-    reader.onerror = reject;
+    reader.onerror = () => reject(reader.error ?? new Error('Unable to read file'));
     reader.readAsDataURL(file);
   });
 }
