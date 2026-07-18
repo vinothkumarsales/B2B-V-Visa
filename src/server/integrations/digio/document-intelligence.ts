@@ -120,7 +120,16 @@ async function callDigio(input: {
     });
     const data = (await response.json().catch(() => ({}))) as Record<string, unknown>;
     if (!response.ok) {
-      throw new Error(String(data.error_code || data.error || data.message || 'DIGIO_PROVIDER_ERROR'));
+      const code = String(data.error_code || data.error || data.code || 'DIGIO_PROVIDER_ERROR');
+      const message = String(data.message || data.error_description || data.error || response.statusText || 'Digio provider error');
+      console.error('Digio OCR provider rejected request', {
+        status: response.status,
+        code,
+        message: message.slice(0, 180),
+        documentType: input.documentType,
+        baseUrlHost: safeHost(env.DIGIO_BASE_URL),
+      });
+      throw new Error(code);
     }
     return data;
   } finally {
@@ -131,24 +140,68 @@ async function callDigio(input: {
 function normalizeDigioFields(raw: Record<string, unknown>): Record<string, string> {
   const source = flattenDigioPassportPayload(raw);
   return {
-    passportNumber: stringField(source.passport_number ?? source.passportNumber ?? source.document_id ?? source.id_number),
-    firstName: stringField(source.first_name ?? source.firstName ?? source.given_name ?? source.givenName),
-    lastName: stringField(source.last_name ?? source.lastName ?? source.surname),
-    nationality: stringField(source.nationality ?? source.country_code ?? source.countryCode),
-    sex: stringField(source.sex ?? source.gender),
-    dateOfBirth: dateField(source.date_of_birth ?? source.dateOfBirth ?? source.dob),
-    fatherFirstName: stringField(source.father_first_name ?? source.fatherFirstName),
-    fatherLastName: stringField(source.father_last_name ?? source.fatherLastName),
-    motherName: stringField(source.mother_name ?? source.motherName),
-    addressLine1: stringField(source.address_line_1 ?? source.addressLine1 ?? source.address1),
-    addressLine2: stringField(source.address_line_2 ?? source.addressLine2 ?? source.address2),
-    placeOfBirth: stringField(source.place_of_birth ?? source.placeOfBirth),
-    placeOfIssue: stringField(source.place_of_issue ?? source.placeOfIssue),
-    dateOfIssue: dateField(source.date_of_issue ?? source.dateOfIssue ?? source.issue_date ?? source.issueDate),
-    dateOfExpiry: dateField(source.date_of_expiry ?? source.dateOfExpiry ?? source.expiry_date ?? source.expiryDate),
+    passportNumber: upperField(pickField(source, 'passport_number', 'passportNumber', 'document_id', 'id_number', 'id no')),
+    firstName: stringField(pickField(source, 'first_name', 'firstName', 'given_name', 'givenName', 'given name', 'name')),
+    lastName: stringField(pickField(source, 'last_name', 'lastName', 'surname', 'surname_name')),
+    nationality: stringField(pickField(source, 'nationality', 'country_code', 'countryCode')),
+    sex: normalizeSex(pickField(source, 'sex', 'gender')),
+    dateOfBirth: dateField(pickField(source, 'date_of_birth', 'dateOfBirth', 'date of birth', 'dob')),
+    fatherFirstName: stringField(pickField(source, 'father_first_name', 'fatherFirstName', 'fathers name', 'fathers_name', 'father_name', 'father')),
+    fatherLastName: stringField(pickField(source, 'father_last_name', 'fatherLastName')),
+    motherName: stringField(pickField(source, 'mother_name', 'motherName', 'mothers name', 'mothers_name', 'mother_name', 'mother')),
+    addressLine1: stringField(pickField(source, 'address_line_1', 'addressLine1', 'address1', 'address', 'permanent address', 'present address')),
+    addressLine2: stringField(pickField(source, 'address_line_2', 'addressLine2', 'address2')),
+    placeOfBirth: stringField(pickField(source, 'place_of_birth', 'placeOfBirth', 'place of birth', 'birth_place')),
+    placeOfIssue: stringField(pickField(source, 'place_of_issue', 'placeOfIssue', 'place of issue', 'issue_place')),
+    dateOfIssue: dateField(pickField(source, 'date_of_issue', 'dateOfIssue', 'date of issue', 'issue_date', 'issueDate', 'doi')),
+    dateOfExpiry: dateField(pickField(source, 'date_of_expiry', 'dateOfExpiry', 'date of expiry', 'expiry_date', 'expiryDate', 'doe')),
   };
 }
 
+function pickField(source: Record<string, unknown>, ...keys: string[]) {
+  const normalized = normalizeSourceKeys(source);
+  for (const key of keys) {
+    const direct = source[key];
+    if (hasValue(direct)) return direct;
+    const normalizedValue = normalized[normalizeKey(key)];
+    if (hasValue(normalizedValue)) return normalizedValue;
+  }
+  return '';
+}
+
+function normalizeSourceKeys(source: Record<string, unknown>) {
+  return Object.fromEntries(
+    Object.entries(source).map(([key, value]) => [normalizeKey(key), value]),
+  );
+}
+
+function normalizeKey(key: string) {
+  return key.toLowerCase().replace(/[._-]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function hasValue(value: unknown) {
+  return typeof value === 'string' ? value.trim().length > 0 : value !== undefined && value !== null;
+}
+
+function upperField(value: unknown) {
+  return stringField(value).toUpperCase();
+}
+
+function normalizeSex(value: unknown) {
+  const raw = stringField(value);
+  const normalized = raw.toUpperCase();
+  if (normalized.startsWith('M')) return 'Male';
+  if (normalized.startsWith('F')) return 'Female';
+  return raw;
+}
+
+function safeHost(value: string) {
+  try {
+    return new URL(value).host;
+  } catch {
+    return 'invalid-url';
+  }
+}
 function stringField(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
 }
@@ -200,3 +253,5 @@ function recordField(value: unknown) {
     ? (value as Record<string, unknown>)
     : undefined;
 }
+
+
