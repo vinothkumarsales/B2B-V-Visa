@@ -49,6 +49,20 @@ export async function POST(request: NextRequest) {
         data: { status: 'OCR_COMPLETE' },
       });
 
+      if (document.applicationId) {
+        await db.visaInterest.updateMany({
+          where: {
+            agencyId: session.agencyId,
+            applicationId: document.applicationId,
+            status: { notIn: ['PAID', 'CONVERTED', 'EXPIRED', 'CANCELLED'] },
+          },
+          data: {
+            status: 'DETAILS_STARTED',
+            lastActivityAt: new Date(),
+          },
+        });
+      }
+
       await auditLog({
         agencyId: session.agencyId,
         actorUserId: session.user.id,

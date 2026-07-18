@@ -267,12 +267,47 @@ function readStoredVisaType() {
   }
 }
 
+function getApplySearchSessionId(visa?: VisaType) {
+  if (typeof window === 'undefined') return undefined;
+  const key = 'vvisa:crmSearchSessionId';
+  const existing = sessionStorage.getItem(key);
+  if (existing) return existing;
+
+  const searchSessionId = `apply:${visa?.id ?? 'unknown'}:${crypto.randomUUID()}`;
+  sessionStorage.setItem(key, searchSessionId);
+  return searchSessionId;
+}
+
+function trackApplyProductIntent(input: {
+  eventType: 'APPLICATION_STARTED' | 'DOCUMENT_UPLOADED' | 'PAYMENT_SCREEN_OPENED' | 'PAYMENT_ABANDONED';
+  visa?: VisaType | null;
+}) {
+  if (isDemoMode() || !input.visa) return;
+
+  void fetch('/api/events/product-intent', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({
+      eventType: input.eventType,
+      country: input.visa.destination,
+      countryCode: input.visa.destinationCode,
+      productId: input.visa.id,
+      productName: input.visa.name,
+      category: input.visa.category,
+      sourcePage: '/apply',
+      searchSessionId: getApplySearchSessionId(input.visa),
+    }),
+  }).catch(() => undefined);
+}
+
 /* --- Traveler Card Component --- */
 function TravelerCard({
   traveler,
   index,
   onUpdate,
   onRemove,
+  onDocumentUploaded,
   canRemove,
   requiredDocs,
   travelers,
@@ -282,6 +317,7 @@ function TravelerCard({
   index: number;
   onUpdate: (id: string, field: keyof TravelerData, value: TravelerData[keyof TravelerData]) => void;
   onRemove: (id: string) => void;
+  onDocumentUploaded: () => void;
   canRemove: boolean;
   requiredDocs: { key: string; title: string; helper: string }[];
   travelers: TravelerData[];
@@ -326,6 +362,7 @@ function TravelerCard({
             if (value) onUpdate(traveler.id, key, value);
           }
           onUpdate(traveler.id, 'ocrStatus', 'done');
+          onDocumentUploaded();
         } else {
           onUpdate(traveler.id, 'ocrError', data.error || 'OCR failed. Please enter details manually.');
           onUpdate(traveler.id, 'ocrStatus', 'error');
@@ -339,7 +376,7 @@ function TravelerCard({
       // Reset file input
       if (passportInputRef.current) passportInputRef.current.value = '';
     },
-    [traveler.id, onUpdate]
+    [traveler.id, onUpdate, onDocumentUploaded]
   );
 
   const handleDocUpload = useCallback(
@@ -359,6 +396,7 @@ function TravelerCard({
         const data = await res.json();
         if (data.success) {
           onUpdate(traveler.id, 'additionalDocs', { ...traveler.additionalDocs, [docKey]: file.name });
+          onDocumentUploaded();
         }
       } catch {
         // Silently fail for additional docs
@@ -366,7 +404,7 @@ function TravelerCard({
 
       if (docInputRefs.current[docKey]) docInputRefs.current[docKey]!.value = '';
     },
-    [traveler.id, traveler.additionalDocs, onUpdate]
+    [traveler.id, traveler.additionalDocs, onUpdate, onDocumentUploaded]
   );
 
   const toggleExpand = () => {
@@ -899,6 +937,10 @@ export default function ApplyView() {
     }
   }, [activeVisaType, selectedVisaType, setSelectedVisaType]);
 
+  useEffect(() => {
+    trackApplyProductIntent({ eventType: 'APPLICATION_STARTED', visa: activeVisaType });
+  }, [activeVisaType?.id]);
+
   const pricePerTraveler = Math.round(singleTravelerPricingResult.visibleTotalMinor / 100);
   const total = Math.round(pricingResult.visibleTotalMinor / 100);
 
@@ -986,12 +1028,17 @@ export default function ApplyView() {
     setTravelers((prev) => [...prev, createEmptyTraveler(prev.length, requiredDocKeys)]);
   };
 
+  const handleDocumentUploaded = useCallback(() => {
+    trackApplyProductIntent({ eventType: 'DOCUMENT_UPLOADED', visa: activeVisaType });
+  }, [activeVisaType]);
+
   const handleSubmit = useCallback(() => {
     if (!activeVisaType || submitting) return;
     if (blockingValidationIssues.length > 0) {
       setSubmitResult({ txnId: '', appId: '', error: blockingValidationIssues.map((issue) => issue.message).join(' ') });
       return;
     }
+    trackApplyProductIntent({ eventType: 'APPLICATION_STARTED', visa: activeVisaType });
     setSubmitting(true);
 
     // Build travelers array for submission
@@ -1265,6 +1312,7 @@ export default function ApplyView() {
                   index={i}
                   onUpdate={handleUpdateTraveler}
                   onRemove={handleRemoveTraveler}
+                  onDocumentUploaded={handleDocumentUploaded}
                   canRemove={travelers.length > 1}
                   requiredDocs={requiredDocs}
                   travelers={travelers}

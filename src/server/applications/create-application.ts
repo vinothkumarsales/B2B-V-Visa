@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { apiError } from '@/lib/api-response';
 import { auditLog } from '@/server/audit/audit-log';
 import { queueZohoCrmEvent } from '@/server/integrations/zoho/crm-outbox';
+import { recordVisaInterest } from '@/server/visa-interest/record-visa-interest';
 
 export const createApplicationSchema = z.object({
   visaProductId: z.string().min(1),
@@ -130,6 +131,28 @@ export async function createIndividualApplication(input: {
   if (interest) {
     await db.visaInterest.update({
       where: { id: interest.id },
+      data: {
+        applicationId: application.id,
+        status: 'APPLICATION_CREATED',
+        lastActivityAt: new Date(),
+      },
+    });
+  } else {
+    const recorded = await recordVisaInterest({
+      agencyId: input.agencyId,
+      userId: input.actorUserId,
+      countryCode: visaProduct.destinationCode ?? undefined,
+      countryName: visaProduct.destination,
+      visaTypeId: visaProduct.id,
+      visaTypeName: visaProduct.name,
+      category: visaProduct.category,
+      sourceRoute: '/apply',
+      searchSessionId: `application:${application.id}`,
+      intent: 'APPLICATION_STARTED',
+    });
+
+    await db.visaInterest.update({
+      where: { id: recorded.interest.id },
       data: {
         applicationId: application.id,
         status: 'APPLICATION_CREATED',
