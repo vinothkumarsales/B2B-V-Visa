@@ -41,6 +41,7 @@ export default async function AdminPartnerProfilePage({ params }: { params: Prom
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline">{partner.status.replaceAll('_', ' ')}</Badge>
           <Button asChild variant="outline"><Link href={`/admin/partners/${partner.id}/dashboard-preview`}>Dashboard Preview</Link></Button>
+          <Button asChild><Link href={`/admin/${partner.id}`}>Open Partner Dashboard</Link></Button>
           <PartnerSupportSessionLauncher partnerUid={partner.id} agencyName={partner.name} />
           <Button asChild><Link href="#create-application">Create Application</Link></Button>
         </div>

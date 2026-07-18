@@ -76,7 +76,7 @@ export default async function AdminPartnersPage({
                     <TableCell>{partner.createdAt.toLocaleDateString('en-IN')}</TableCell>
                     <TableCell>
                       <Button asChild size="sm" variant="outline">
-                        <Link href={`/admin/partners/${partner.id}`}>Open</Link>
+                        <Link href={`/admin/partner/${partner.id}`}>Open</Link>
                       </Button>
                     </TableCell>
                   </TableRow>

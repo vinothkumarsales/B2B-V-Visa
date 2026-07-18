@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
         ownerName: partner.memberships[0]?.user.name ?? null,
         ownerEmail: partner.memberships[0]?.user.email ?? null,
         applicationIds: partner.applications.map((application) => application.id),
-        href: `/admin/partners/${partner.id}`,
+        href: `/admin/partner/${partner.id}`,
       })),
     });
   } catch (error) {
