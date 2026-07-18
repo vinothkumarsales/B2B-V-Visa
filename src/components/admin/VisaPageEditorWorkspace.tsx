@@ -164,7 +164,7 @@ export function VisaPageEditorWorkspace({ countries, products }: { countries: Co
         <div className="flex items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-semibold">V-VISAS production import</h3>
-            <p className="text-xs text-vvisa-text-muted">Import the approved in-repo catalogue snapshot into the active database. This action is admin-only, audited, and feature-flag guarded.</p>
+            <p className="text-xs text-vvisa-text-muted">Import the approved in-repo catalogue snapshot into the active database. Default mode adds missing products and skips existing product details.</p>
           </div>
           <Badge variant="outline">148 products ready</Badge>
         </div>
@@ -173,9 +173,9 @@ export function VisaPageEditorWorkspace({ countries, products }: { countries: Co
             <option value="true">Publish live</option>
             <option value="false">Draft only</option>
           </select>
-          <select name="updateExisting" defaultValue="true" className="h-10 rounded-md border border-vvisa-border-subtle bg-vvisa-surface px-3 text-sm">
+          <select name="updateExisting" defaultValue="false" className="h-10 rounded-md border border-vvisa-border-subtle bg-vvisa-surface px-3 text-sm">
+            <option value="false">Add missing only</option>
             <option value="true">Update existing</option>
-            <option value="false">Skip existing</option>
           </select>
           <Input name="limit" inputMode="numeric" placeholder="Limit" />
           <Input name="country" placeholder="Country filter optional" />

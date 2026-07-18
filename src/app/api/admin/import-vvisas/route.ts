@@ -6,7 +6,7 @@ import { importVVisasProducts } from '../../../../../scripts/supplier-catalogue/
 
 const importRequestSchema = z.object({
   publish: z.boolean().default(true),
-  updateExisting: z.boolean().default(true),
+  updateExisting: z.boolean().default(false),
   limit: z.number().int().positive().max(500).optional(),
   country: z.string().trim().min(2).max(80).optional(),
   reason: z.string().trim().min(8, 'Reason must be at least 8 characters.'),
