@@ -103,20 +103,19 @@ async function callDigio(input: {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15_000);
   try {
-    const response = await fetch(`${env.DIGIO_BASE_URL.replace(/\/$/, '')}/client/kyc/async_response`, {
+    const fileType = input.mimeType || mimeTypeFromDataUrl(input.imageBase64) || 'application/octet-stream';
+    const form = new FormData();
+    form.set('front_part', new Blob([base64ToBuffer(input.imageBase64)], { type: fileType }), fileNameFor(input.documentType, fileType));
+    form.set('unique_request_id', input.providerRequestId);
+    form.set('should_verify', 'false');
+
+    const response = await fetch(`${env.DIGIO_BASE_URL.replace(/\/$/, '')}/v3/client/kyc/analyze/file/idcard`, {
       method: 'POST',
       signal: controller.signal,
       headers: {
         Authorization: `Basic ${auth}`,
-        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        id: input.providerRequestId,
-        document_type: input.documentType.toUpperCase(),
-        file_data: stripDataUrl(input.imageBase64),
-        file_type: input.mimeType || mimeTypeFromDataUrl(input.imageBase64) || 'application/octet-stream',
-        environment: env.DIGIO_ENVIRONMENT,
-      }),
+      body: form,
     });
     const data = (await response.json().catch(() => ({}))) as Record<string, unknown>;
     if (!response.ok) {
@@ -219,6 +218,14 @@ function confidenceFromRaw(raw: Record<string, unknown>): 'low' | 'medium' | 'hi
   return 'low';
 }
 
+function base64ToBuffer(value: string) {
+  return Buffer.from(stripDataUrl(value), 'base64');
+}
+
+function fileNameFor(documentType: string, mimeType: string) {
+  const ext = mimeType.includes('png') ? 'png' : mimeType.includes('pdf') ? 'pdf' : 'jpg';
+  return `${documentType || 'document'}-front.${ext}`;
+}
 function stripDataUrl(value: string) {
   const marker = ';base64,';
   const index = value.indexOf(marker);
