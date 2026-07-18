@@ -381,7 +381,7 @@ function TravelerCard({
           onUpdate(traveler.id, 'ocrStatus', 'done');
           onDocumentUploaded();
         } else {
-          onUpdate(traveler.id, 'ocrError', data.error || (res.ok ? 'OCR failed. Please enter details manually.' : 'V-Visa AI scan is unavailable. Please enter details manually.'));
+          onUpdate(traveler.id, 'ocrError', getOcrErrorMessage(data, res.ok ? 'OCR failed. Please enter details manually.' : 'V-Visa AI scan is unavailable. Please enter details manually.'));
           onUpdate(traveler.id, 'ocrStatus', 'error');
         }
       } catch (err) {
@@ -880,6 +880,18 @@ function TravelerCard({
 }
 
 /* --- Helper: Convert File to Base64 --- */
+function getOcrErrorMessage(data: unknown, fallback: string) {
+  if (!data || typeof data !== 'object') return fallback;
+  const payload = data as { error?: unknown; message?: unknown };
+  if (typeof payload.error === 'string') return payload.error;
+  if (payload.error && typeof payload.error === 'object') {
+    const error = payload.error as { message?: unknown; code?: unknown };
+    if (typeof error.message === 'string' && error.message.trim()) return error.message;
+    if (typeof error.code === 'string' && error.code.trim()) return error.code;
+  }
+  if (typeof payload.message === 'string' && payload.message.trim()) return payload.message;
+  return fallback;
+}
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -1635,3 +1647,4 @@ export default function ApplyView() {
     </motion.div>
   );
 }
+
