@@ -53,8 +53,6 @@ interface TravelerData {
   dateOfIssue: string;
   dateOfExpiry: string;
   passportFileName: string;
-  passportPreviewUrl: string;
-  passportPreviewType: 'image' | 'pdf' | '';
   ocrStatus: 'idle' | 'scanning' | 'done' | 'error';
   ocrError: string;
   additionalDocs: { [key: string]: string | null };
@@ -191,8 +189,6 @@ function createEmptyTraveler(index: number, requiredDocKeys: string[]): Traveler
     dateOfIssue: '',
     dateOfExpiry: '',
     passportFileName: '',
-    passportPreviewUrl: '',
-    passportPreviewType: '',
     ocrStatus: 'idle',
     ocrError: '',
     additionalDocs: Object.fromEntries(requiredDocKeys.map((k) => [k, null])),
@@ -328,7 +324,16 @@ function TravelerCard({
 }) {
   const passportInputRef = useRef<HTMLInputElement>(null);
   const [showAddDocs, setShowAddDocs] = useState(false);
+  const [passportPreview, setPassportPreview] = useState<{ url: string; type: 'image' | 'pdf' | ''; name: string } | null>(null);
+  const [lensPosition, setLensPosition] = useState({ x: 50, y: 50 });
+  const [showLens, setShowLens] = useState(false);
   const docInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  useEffect(() => {
+    return () => {
+      if (passportPreview?.url) URL.revokeObjectURL(passportPreview.url);
+    };
+  }, [passportPreview?.url]);
 
   const handlePassportUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -344,9 +349,14 @@ function TravelerCard({
 
       // Update file name
       onUpdate(traveler.id, 'passportFileName', file.name);
-      if (traveler.passportPreviewUrl) URL.revokeObjectURL(traveler.passportPreviewUrl);
-      onUpdate(traveler.id, 'passportPreviewUrl', URL.createObjectURL(file));
-      onUpdate(traveler.id, 'passportPreviewType', file.type === 'application/pdf' ? 'pdf' : file.type.startsWith('image/') ? 'image' : '');
+      setPassportPreview((current) => {
+        if (current?.url) URL.revokeObjectURL(current.url);
+        return {
+          url: URL.createObjectURL(file),
+          type: file.type === 'application/pdf' ? 'pdf' : file.type.startsWith('image/') ? 'image' : '',
+          name: file.name,
+        };
+      });
       onUpdate(traveler.id, 'ocrStatus', 'scanning');
       onUpdate(traveler.id, 'ocrError', '');
 
@@ -357,7 +367,7 @@ function TravelerCard({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ imageBase64: base64, documentType: 'passport', mimeType: file.type }),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
 
         if (data.success && data.fields) {
           for (const f of data.fields) {
@@ -370,7 +380,7 @@ function TravelerCard({
           onUpdate(traveler.id, 'ocrStatus', 'done');
           onDocumentUploaded();
         } else {
-          onUpdate(traveler.id, 'ocrError', data.error || 'OCR failed. Please enter details manually.');
+          onUpdate(traveler.id, 'ocrError', data.error || (res.ok ? 'OCR failed. Please enter details manually.' : 'V-Visa AI scan is unavailable. Please enter details manually.'));
           onUpdate(traveler.id, 'ocrStatus', 'error');
         }
       } catch (err) {
@@ -382,8 +392,15 @@ function TravelerCard({
       // Reset file input
       if (passportInputRef.current) passportInputRef.current.value = '';
     },
-    [traveler.id, traveler.passportPreviewUrl, onUpdate, onDocumentUploaded]
+    [traveler.id, onUpdate, onDocumentUploaded]
   );
+
+  const handlePreviewPointerMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100));
+    setLensPosition({ x, y });
+  }, []);
 
   const handleDocUpload = useCallback(
     async (docKey: string, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -543,24 +560,43 @@ function TravelerCard({
                     onChange={handlePassportUpload}
                   />
 
-                  {traveler.passportPreviewUrl && traveler.passportPreviewType === 'image' && traveler.ocrStatus !== 'scanning' ? (
+                  {passportPreview?.url && passportPreview.type === 'image' && traveler.ocrStatus !== 'scanning' ? (
                     <>
-                      <div className="mb-3 w-full max-w-[280px] overflow-hidden rounded-lg border border-vvisa-border bg-vvisa-bg">
+                      <div
+                        className="relative mb-3 w-full max-w-[280px] overflow-hidden rounded-lg border border-vvisa-border bg-vvisa-bg"
+                        onMouseEnter={() => setShowLens(true)}
+                        onMouseLeave={() => setShowLens(false)}
+                        onMouseMove={handlePreviewPointerMove}
+                      >
                         <img
-                          src={traveler.passportPreviewUrl}
-                          alt={`${traveler.passportFileName || 'Passport'} preview`}
+                          src={passportPreview.url}
+                          alt={`${passportPreview.name || 'Passport'} preview`}
                           className="h-40 w-full object-contain"
                         />
+                        {showLens && (
+                          <div
+                            className="pointer-events-none absolute h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/90 shadow-2xl ring-2 ring-primary/40"
+                            style={{
+                              left: `${lensPosition.x}%`,
+                              top: `${lensPosition.y}%`,
+                              backgroundImage: `url(${passportPreview.url})`,
+                              backgroundRepeat: 'no-repeat',
+                              backgroundSize: '280% 280%',
+                              backgroundPosition: `${lensPosition.x}% ${lensPosition.y}%`,
+                            }}
+                            aria-hidden="true"
+                          />
+                        )}
                       </div>
-                      <p className="max-w-full truncate text-sm font-medium text-foreground">{traveler.passportFileName}</p>
-                      <p className="text-xs text-vvisa-text-muted">{traveler.ocrStatus === 'done' ? 'Preview ready. Click to replace.' : 'Preview ready. Review details.'}</p>
+                      <p className="max-w-full truncate text-sm font-medium text-foreground">{passportPreview.name}</p>
+                      <p className="text-xs text-vvisa-text-muted">{traveler.ocrStatus === 'done' ? 'Preview ready. Hover to magnify, click to replace.' : 'Preview ready. Hover to magnify and review details.'}</p>
                     </>
-                  ) : traveler.passportPreviewUrl && traveler.passportPreviewType === 'pdf' && traveler.ocrStatus !== 'scanning' ? (
+                  ) : passportPreview?.url && passportPreview.type === 'pdf' && traveler.ocrStatus !== 'scanning' ? (
                     <>
                       <div className="mb-3 flex h-24 w-24 items-center justify-center rounded-xl border border-vvisa-border bg-vvisa-bg">
                         <FileText className="h-10 w-10 text-primary" />
                       </div>
-                      <p className="max-w-full truncate text-sm font-medium text-foreground">{traveler.passportFileName}</p>
+                      <p className="max-w-full truncate text-sm font-medium text-foreground">{passportPreview.name}</p>
                       <p className="text-xs text-vvisa-text-muted">PDF uploaded. Click to replace.</p>
                     </>
                   ) : traveler.ocrStatus === 'scanning' ? (

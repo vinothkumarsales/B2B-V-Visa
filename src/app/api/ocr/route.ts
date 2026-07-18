@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       return apiError('INVALID_INPUT', 'Invalid OCR request', 400);
     }
 
-    const session = isDemoMode ? null : await requireAgencyMembership();
+    const session = !isDemoMode && parsed.data.documentId ? await requireAgencyMembership() : null;
     const result = await extractDocumentFields(parsed.data);
 
     if (!isDemoMode && session && parsed.data.documentId) {
