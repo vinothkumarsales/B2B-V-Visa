@@ -63,8 +63,17 @@ export interface ZohoPaymentProvider {
   verifyWebhookSignature(rawBody: string, signature: string | null): boolean;
 }
 
+export function isZohoPaymentsLiveConfigured() {
+  return Boolean(
+    env.ZOHO_PAYMENTS_CLIENT_ID &&
+      env.ZOHO_PAYMENTS_CLIENT_SECRET &&
+      env.ZOHO_PAYMENTS_REFRESH_TOKEN &&
+      env.ZOHO_PAYMENTS_ACCOUNT_ID,
+  );
+}
+
 export function getZohoPaymentProvider(): ZohoPaymentProvider {
-  return isDemoMode ? demoZohoPaymentProvider : liveZohoPaymentProvider;
+  return !isDemoMode || isZohoPaymentsLiveConfigured() ? liveZohoPaymentProvider : demoZohoPaymentProvider;
 }
 
 export async function createZohoPaymentSession(input: ZohoPaymentSessionInput) {

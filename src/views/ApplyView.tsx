@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { mockVisaTypes } from '@/lib/mock-data';
 import { useVisaCatalogue } from '@/lib/use-visa-catalogue';
-import { demoModeCopy } from '@/lib/demo-data';
 import { isDemoMode } from '@/lib/app-mode';
 import { getRequiredAdditionalDocs as resolveRequiredAdditionalDocs } from '@/lib/checklist';
 import { resolveVisaJurisdiction } from '@/lib/jurisdiction';
@@ -54,6 +53,8 @@ interface TravelerData {
   dateOfIssue: string;
   dateOfExpiry: string;
   passportFileName: string;
+  passportPreviewUrl: string;
+  passportPreviewType: 'image' | 'pdf' | '';
   ocrStatus: 'idle' | 'scanning' | 'done' | 'error';
   ocrError: string;
   additionalDocs: { [key: string]: string | null };
@@ -190,6 +191,8 @@ function createEmptyTraveler(index: number, requiredDocKeys: string[]): Traveler
     dateOfIssue: '',
     dateOfExpiry: '',
     passportFileName: '',
+    passportPreviewUrl: '',
+    passportPreviewType: '',
     ocrStatus: 'idle',
     ocrError: '',
     additionalDocs: Object.fromEntries(requiredDocKeys.map((k) => [k, null])),
@@ -341,6 +344,9 @@ function TravelerCard({
 
       // Update file name
       onUpdate(traveler.id, 'passportFileName', file.name);
+      if (traveler.passportPreviewUrl) URL.revokeObjectURL(traveler.passportPreviewUrl);
+      onUpdate(traveler.id, 'passportPreviewUrl', URL.createObjectURL(file));
+      onUpdate(traveler.id, 'passportPreviewType', file.type === 'application/pdf' ? 'pdf' : file.type.startsWith('image/') ? 'image' : '');
       onUpdate(traveler.id, 'ocrStatus', 'scanning');
       onUpdate(traveler.id, 'ocrError', '');
 
@@ -376,7 +382,7 @@ function TravelerCard({
       // Reset file input
       if (passportInputRef.current) passportInputRef.current.value = '';
     },
-    [traveler.id, onUpdate, onDocumentUploaded]
+    [traveler.id, traveler.passportPreviewUrl, onUpdate, onDocumentUploaded]
   );
 
   const handleDocUpload = useCallback(
@@ -451,7 +457,7 @@ function TravelerCard({
                 )}
                 {traveler.ocrStatus === 'scanning' && (
                   <span className="inline-flex items-center gap-1 text-[10px] text-primary">
-                    <Loader2 className="h-3 w-3 animate-spin" /> Scanning with Digio OCR...
+                    <Loader2 className="h-3 w-3 animate-spin" /> Scanning with V-Visa AI...
                   </span>
                 )}
                 {traveler.ocrStatus === 'error' && (
@@ -505,7 +511,7 @@ function TravelerCard({
               <div className="flex items-center justify-between mt-4 mb-1">
                 <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
                   <Scan className="h-4 w-4 text-primary" />
-                  Passport Upload & OCR Scan
+                  Passport Upload & V-Visa AI Scan
                 </h4>
               </div>
 
@@ -513,8 +519,7 @@ function TravelerCard({
               <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
                 <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-700/80 dark:text-amber-200/80">
-                  VVisa uses <span className="text-primary font-medium">Digio OCR</span> for passport scanning. Upload a clear passport image and details will be filled automatically. However, it is mandatory to review the information before submitting.
-                  {isDemoMode() ? ` ${demoModeCopy.documentNotice}` : ''}
+                  VVisa uses <span className="text-primary font-medium">V-Visa AI</span> for passport scanning. Upload a clear passport image and details will be filled automatically. However, it is mandatory to review the information before submitting.
                 </p>
               </div>
 
@@ -538,10 +543,30 @@ function TravelerCard({
                     onChange={handlePassportUpload}
                   />
 
-                  {traveler.ocrStatus === 'scanning' ? (
+                  {traveler.passportPreviewUrl && traveler.passportPreviewType === 'image' && traveler.ocrStatus !== 'scanning' ? (
+                    <>
+                      <div className="mb-3 w-full max-w-[280px] overflow-hidden rounded-lg border border-vvisa-border bg-vvisa-bg">
+                        <img
+                          src={traveler.passportPreviewUrl}
+                          alt={`${traveler.passportFileName || 'Passport'} preview`}
+                          className="h-40 w-full object-contain"
+                        />
+                      </div>
+                      <p className="max-w-full truncate text-sm font-medium text-foreground">{traveler.passportFileName}</p>
+                      <p className="text-xs text-vvisa-text-muted">{traveler.ocrStatus === 'done' ? 'Preview ready. Click to replace.' : 'Preview ready. Review details.'}</p>
+                    </>
+                  ) : traveler.passportPreviewUrl && traveler.passportPreviewType === 'pdf' && traveler.ocrStatus !== 'scanning' ? (
+                    <>
+                      <div className="mb-3 flex h-24 w-24 items-center justify-center rounded-xl border border-vvisa-border bg-vvisa-bg">
+                        <FileText className="h-10 w-10 text-primary" />
+                      </div>
+                      <p className="max-w-full truncate text-sm font-medium text-foreground">{traveler.passportFileName}</p>
+                      <p className="text-xs text-vvisa-text-muted">PDF uploaded. Click to replace.</p>
+                    </>
+                  ) : traveler.ocrStatus === 'scanning' ? (
                     <>
                       <Loader2 className="h-8 w-8 text-primary animate-spin mb-3" />
-                      <p className="text-sm text-primary font-medium mb-1">Scanning with Digio OCR...</p>
+                      <p className="text-sm text-primary font-medium mb-1">Scanning with V-Visa AI...</p>
                       <p className="text-xs text-vvisa-text-muted">Extracting passport data</p>
                     </>
                   ) : traveler.ocrStatus === 'done' ? (
@@ -558,7 +583,7 @@ function TravelerCard({
                       <p className="text-sm text-vvisa-text-secondary mb-1">Drag & drop passport image</p>
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] text-primary font-medium">
                         <Scan className="h-3 w-3" />
-                        Powered by Digio OCR
+                        Powered by V-Visa AI
                       </span>
                       <p className="text-xs text-vvisa-text-muted mt-2">JPG, PNG or PDF - max 5 MB</p>
                       <Button
@@ -796,7 +821,7 @@ function TravelerCard({
                                   <Scan className="h-3.5 w-3.5 text-vvisa-text-muted mb-1" />
                                   <p className="text-xs text-vvisa-text-muted">Click to upload</p>
                                   <span className="inline-flex items-center gap-0.5 text-[9px] text-primary mt-0.5">
-                                    <Scan className="h-2.5 w-2.5" /> Digio OCR ready
+                                    <Scan className="h-2.5 w-2.5" /> V-Visa AI ready
                                   </span>
                                 </>
                               )}
@@ -886,7 +911,6 @@ export default function ApplyView() {
   const { selectedVisaType, setSelectedVisaType, walletBalance, submitApplication, navigate } = useAppStore();
   const { visaTypes } = useVisaCatalogue();
   const activeVisaType = selectedVisaType ?? readStoredVisaType() ?? visaTypes[0] ?? mockVisaTypes[0];
-  const demoMode = isDemoMode();
   const [appType, setAppType] = useState<'individual' | 'group'>('individual');
   const [internalId, setInternalId] = useState('');
   const [groupName, setGroupName] = useState('');
@@ -1356,7 +1380,7 @@ export default function ApplyView() {
               className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-11 flex items-center justify-center gap-2"
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              {submitting ? 'Submitting...' : demoMode ? 'Review Demo Application' : 'Review and Save'} <ArrowRight className="h-4 w-4" />
+              {submitting ? 'Submitting...' : 'Review and Save'} <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -1420,12 +1444,12 @@ export default function ApplyView() {
                 )}
 
                 <div className="flex justify-between items-center mb-5">
-                  <span className="text-xs text-vvisa-text-muted">{demoMode ? 'Demo Wallet Balance' : 'Current Wallet Balance'}</span>
+                  <span className="text-xs text-vvisa-text-muted">Current Wallet Balance</span>
                   <span className="vv-tabular text-sm text-primary">{formatINR(walletBalance)}</span>
                 </div>
 
                 <div className="flex justify-between items-center mb-5">
-                  <span className="text-xs text-vvisa-text-muted">{demoMode ? 'Demo balance after preview' : 'After Payment'}</span>
+                  <span className="text-xs text-vvisa-text-muted">After Payment</span>
                   <span className={`vv-tabular text-sm ${walletBalance - total >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                     {formatINR(walletBalance - total)}
                   </span>
@@ -1437,7 +1461,7 @@ export default function ApplyView() {
                   className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-10 flex items-center justify-center gap-2 text-sm"
                 >
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  {submitting ? 'Submitting...' : demoMode ? 'Review Demo Application' : 'Review and Save'} <ArrowRight className="h-4 w-4" />
+                  {submitting ? 'Submitting...' : 'Review and Save'} <ArrowRight className="h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>
@@ -1483,10 +1507,10 @@ export default function ApplyView() {
                     </div>
                   </div>
                   <h3 className="text-lg font-semibold text-foreground text-center mb-1">
-                    {demoMode ? 'Demo Application Saved' : 'Application Submitted'}
+                    Application Submitted
                   </h3>
                   <p className="text-xs text-vvisa-text-muted text-center mb-5">
-                    {demoMode ? `${demoModeCopy.applicationNotice} ${demoModeCopy.paymentNotice}` : 'Your wallet has been debited. Track status in Applications.'}
+                    Your application has been saved. Track status in Applications.
                   </p>
 
                   {/* Transaction ID */}
@@ -1518,7 +1542,7 @@ export default function ApplyView() {
                       <p className="text-foreground font-medium mt-0.5">{activeVisaType?.destination}</p>
                     </div>
                     <div className="bg-vvisa-bg rounded-lg p-3">
-                      <p className="text-vvisa-text-muted">{demoMode ? 'Amount Preview' : 'Amount Debited'}</p>
+                      <p className="text-vvisa-text-muted">Amount Payable</p>
                       <div className="mt-0.5 flex items-center gap-1.5">
                         <p className="vv-tabular font-medium text-foreground">{formatMoneyMinor(pricingResult.visibleTotalMinor, pricingResult.currency)}</p>
                         <PriceBreakdownPopover
@@ -1534,7 +1558,7 @@ export default function ApplyView() {
                       <p className="text-foreground font-medium mt-0.5">{travelers.length}</p>
                     </div>
                     <div className="bg-vvisa-bg rounded-lg p-3">
-                      <p className="text-vvisa-text-muted">{demoMode ? 'Demo Balance Preview' : 'Remaining Balance'}</p>
+                      <p className="text-vvisa-text-muted">Remaining Balance</p>
                       <p className="vv-tabular mt-0.5 font-medium text-emerald-500">{formatINR(walletBalance - total)}</p>
                     </div>
                   </div>

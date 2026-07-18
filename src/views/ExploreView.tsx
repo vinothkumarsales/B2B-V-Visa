@@ -5,7 +5,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { useVisaCatalogue } from '@/lib/use-visa-catalogue';
-import { demoModeCopy } from '@/lib/demo-data';
 import { isDemoMode } from '@/lib/app-mode';
 import { resolveVisaChecklist } from '@/lib/checklist';
 import { formatMoneyMinor, resolveVisaPricing } from '@/lib/pricing';
@@ -359,15 +358,10 @@ export default function ExploreView() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">Explore Visas</h1>
             <p className="text-sm text-vvisa-text-muted mt-1">
-              Showing {visibleVisas.length} of {filteredVisas.length} demo visa option{filteredVisas.length !== 1 ? 's' : ''}
+              Showing {visibleVisas.length} of {filteredVisas.length} visa option{filteredVisas.length !== 1 ? 's' : ''}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {isDemoMode() && (
-              <Badge className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary/10">
-                {demoModeCopy.badge}
-              </Badge>
-            )}
             {hasActiveFilters && (
               <Button
                 variant="outline"
@@ -379,9 +373,6 @@ export default function ExploreView() {
             )}
           </div>
         </div>
-        <p className="text-xs text-vvisa-text-muted mt-2">
-          {demoModeCopy.priceLabel}. Verified B2B pricing will require approved-agent access in production.
-        </p>
       </div>
 
       {/* Visa Result Cards */}

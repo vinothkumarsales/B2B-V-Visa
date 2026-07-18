@@ -1,50 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { isDemoMode } from '@/lib/env';
 import { mockVisaTypes } from '@/lib/mock-data';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const destination = searchParams.get('destination') || '';
 
-  if (isDemoMode) {
-    const filtered = destination
-      ? mockVisaTypes.filter((visa) =>
-          visa.destination.toLowerCase().includes(destination.toLowerCase())
-        )
-      : mockVisaTypes;
-
-    return NextResponse.json({
-      visaTypes: filtered,
-      destinations: [...new Set(mockVisaTypes.map((v) => v.destination))],
-      mode: 'demo',
+  try {
+    const visaProducts = await db.visaProduct.findMany({
+      where: {
+        isActive: true,
+        ...(destination
+          ? { destination: { contains: destination, mode: 'insensitive' as const } }
+          : {}),
+        OR: [{ validUntil: null }, { validUntil: { gt: new Date() } }],
+      },
+      orderBy: [{ displayOrder: 'asc' }, { destination: 'asc' }, { name: 'asc' }],
+      include: {
+        prices: { where: { isActive: true, validFrom: { lte: new Date() }, OR: [{ validUntil: null }, { validUntil: { gt: new Date() } }] }, orderBy: { validFrom: 'desc' }, take: 1, include: { lines: true } },
+        documentRules: { where: { requirementStatus: 'PUBLISHED' }, orderBy: { displayOrder: 'asc' } },
+      },
     });
-  }
 
-  const visaProducts = await db.visaProduct.findMany({
-    where: {
-      isActive: true,
-      ...(destination
-        ? { destination: { contains: destination, mode: 'insensitive' as const } }
-        : {}),
-      OR: [{ validUntil: null }, { validUntil: { gt: new Date() } }],
-    },
-    orderBy: [{ displayOrder: 'asc' }, { destination: 'asc' }, { name: 'asc' }],
-    include: {
-      prices: { where: { isActive: true, validFrom: { lte: new Date() }, OR: [{ validUntil: null }, { validUntil: { gt: new Date() } }] }, orderBy: { validFrom: 'desc' }, take: 1, include: { lines: true } },
-      documentRules: { where: { requirementStatus: 'PUBLISHED' }, orderBy: { displayOrder: 'asc' } },
-    },
-  });
+    const destinations = await db.visaProduct.findMany({
+      where: { isActive: true },
+      distinct: ['destination'],
+      select: { destination: true },
+      orderBy: { destination: 'asc' },
+    });
 
-  const destinations = await db.visaProduct.findMany({
-    where: { isActive: true },
-    distinct: ['destination'],
-    select: { destination: true },
-    orderBy: { destination: 'asc' },
-  });
-
-  return NextResponse.json({
-    visaTypes: visaProducts.map((product) => {
+    if (visaProducts.length) {
+      return NextResponse.json({
+        visaTypes: visaProducts.map((product) => {
       const activePrice = product.prices[0];
       const mandatory = product.documentRules.filter((item) => item.requirementType === 'required');
       const optional = product.documentRules.filter((item) => item.requirementType === 'optional');
@@ -70,6 +57,21 @@ export async function GET(request: NextRequest) {
       cutoffTime: product.cutoffTime,
       pricingVersion: product.pricingVersion,
     })}),
-    destinations: destinations.map((item) => item.destination),
+        destinations: destinations.map((item) => item.destination),
+        mode: 'published',
+      });
+    }
+  } catch {
+    // Fall through to bundled products so Explore remains usable if the DB is unavailable.
+  }
+
+  const filtered = destination
+    ? mockVisaTypes.filter((visa) => visa.destination.toLowerCase().includes(destination.toLowerCase()))
+    : mockVisaTypes;
+
+  return NextResponse.json({
+    visaTypes: filtered,
+    destinations: [...new Set(mockVisaTypes.map((v) => v.destination))],
+    mode: 'fallback',
   });
 }

@@ -5,7 +5,7 @@ import { apiError, isApiResponse } from '@/lib/api-response';
 import { isDemoMode } from '@/lib/env';
 import { requireAgencyMembership } from '@/server/auth/session';
 import { auditLog } from '@/server/audit/audit-log';
-import { createZohoPaymentSession } from '@/server/integrations/zoho/payments';
+import { createZohoPaymentSession, isZohoPaymentsLiveConfigured } from '@/server/integrations/zoho/payments';
 
 const paymentOrderSchema = z.object({
   applicationId: z.string().optional(),
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     const parsed = paymentOrderSchema.safeParse(await request.json());
     if (!parsed.success) return apiError('INVALID_INPUT', 'Invalid payment order request', 400);
 
-    if (isDemoMode) {
+    if (isDemoMode && !isZohoPaymentsLiveConfigured()) {
       return NextResponse.json({
         paymentOrder: {
           id: `demo-payment-${Date.now()}`,
