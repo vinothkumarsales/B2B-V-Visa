@@ -1,9 +1,15 @@
 import { after, NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 import { apiError } from '@/lib/api-response';
 import { createLedgerEntry } from '@/server/wallet/wallet-ledger';
 import { queueZohoCrmEvent } from '@/server/integrations/zoho/crm-outbox';
-import { verifyZohoPaymentsWebhook } from '@/server/integrations/zoho/payments';
+import {
+  isSuccessfulZohoPaymentStatus,
+  parseZohoPaymentsWebhook,
+  verifyZohoPaymentSuccess,
+  verifyZohoPaymentsWebhook,
+} from '@/server/integrations/zoho/payments';
 import { drainZohoCrmOutbox } from '@/server/integrations/zoho/crm-outbox-worker';
 
 export async function POST(request: NextRequest) {
@@ -14,48 +20,78 @@ export async function POST(request: NextRequest) {
     return apiError('FORBIDDEN', 'Invalid webhook signature', 403);
   }
 
-  const payload = JSON.parse(rawBody || '{}');
-  const webhookEventId = String(payload.event_id ?? payload.id ?? '');
-  const providerOrderId = String(payload.order_id ?? payload.providerOrderId ?? '');
-  const providerPaymentId = String(payload.payment_id ?? payload.providerPaymentId ?? '');
-  const status = String(payload.status ?? '').toUpperCase();
-
-  if (!webhookEventId || !providerOrderId) {
-    return apiError('INVALID_INPUT', 'Webhook is missing identifiers', 400);
-  }
+  const event = parseZohoPaymentsWebhook(rawBody);
 
   const paymentOrder = await db.paymentOrder.findFirst({
-    where: { providerOrderId },
+    where: { providerOrderId: event.providerOrderId },
     include: { agency: true },
   });
 
   if (!paymentOrder) return apiError('RESOURCE_NOT_FOUND', 'Payment order not found', 404);
 
-  const existing = await db.paymentTransaction.findUnique({ where: { webhookEventId } });
+  const existing = await db.paymentTransaction.findUnique({ where: { webhookEventId: event.webhookEventId } });
   if (existing) return NextResponse.json({ ok: true, duplicate: true });
+
+  const successfulWebhook = isSuccessfulZohoPaymentStatus(event.status);
+  const verification = successfulWebhook
+    ? await verifyZohoPaymentSuccess({
+        paymentOrderId: paymentOrder.id,
+        providerOrderId: event.providerOrderId,
+        providerPaymentId: event.providerPaymentId,
+        amountMinor: paymentOrder.amountMinor,
+        currency: paymentOrder.currency,
+      })
+    : { verified: false, status: event.status, raw: event.raw };
+  const confirmed = successfulWebhook && verification.verified;
 
   await db.$transaction(async (tx) => {
     await tx.paymentTransaction.create({
       data: {
         paymentOrderId: paymentOrder.id,
-        providerPaymentId,
-        webhookEventId,
+        providerPaymentId: event.providerPaymentId ?? verification.providerReference,
+        webhookEventId: event.webhookEventId,
         amountMinor: paymentOrder.amountMinor,
         currency: paymentOrder.currency,
-        status,
-        rawWebhook: payload,
+        status: confirmed ? verification.status : event.status || verification.status,
+        rawWebhook: toJsonValue({
+          webhook: event.raw,
+          verification,
+        }),
       },
     });
 
-    if (status === 'SUCCESS' || status === 'CONFIRMED' || status === 'PAID') {
+    if (confirmed) {
       await tx.paymentOrder.update({
         where: { id: paymentOrder.id },
         data: { status: 'CONFIRMED' },
       });
+      if (paymentOrder.applicationId) {
+        await tx.visaApplication.update({
+          where: { id: paymentOrder.applicationId },
+          data: { status: 'PAID' },
+        });
+        await tx.visaInterest.updateMany({
+          where: {
+            agencyId: paymentOrder.agencyId,
+            applicationId: paymentOrder.applicationId,
+            status: { notIn: ['CONVERTED', 'EXPIRED', 'CANCELLED'] },
+          },
+          data: {
+            status: 'PAID',
+            paymentOrderId: paymentOrder.id,
+            lastActivityAt: new Date(),
+          },
+        });
+      }
+    } else if (successfulWebhook) {
+      await tx.paymentOrder.update({
+        where: { id: paymentOrder.id },
+        data: { status: 'FAILED' },
+      });
     }
   });
 
-  if (status === 'SUCCESS' || status === 'CONFIRMED' || status === 'PAID') {
+  if (confirmed) {
     await createLedgerEntry({
       agencyId: paymentOrder.agencyId,
       paymentOrderId: paymentOrder.id,
@@ -63,7 +99,7 @@ export async function POST(request: NextRequest) {
       type: paymentOrder.applicationId ? 'APPLICATION_DEBIT' : 'DEPOSIT_CONFIRMED',
       amountMinor: paymentOrder.applicationId ? -paymentOrder.amountMinor : paymentOrder.amountMinor,
       currency: paymentOrder.currency,
-      idempotencyKey: `wallet:zoho-payment:${webhookEventId}`,
+      idempotencyKey: `wallet:zoho-payment:${event.webhookEventId}`,
       description: paymentOrder.applicationId ? 'Application payment confirmed' : 'Wallet top-up confirmed',
     });
 
@@ -96,5 +132,14 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({
+    ok: true,
+    confirmed,
+    status: confirmed ? verification.status : event.status,
+    verificationReason: verification.reason,
+  });
+}
+
+function toJsonValue(value: unknown): Prisma.InputJsonValue {
+  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 }

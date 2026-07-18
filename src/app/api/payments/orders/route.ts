@@ -67,6 +67,8 @@ export async function POST(request: NextRequest) {
       currency: paymentOrder.currency,
       agencyName: session.agency.name,
       agencyEmail: session.agency.email,
+      successUrl: `${request.nextUrl.origin}/wallet?payment=success`,
+      failureUrl: `${request.nextUrl.origin}/wallet?payment=failed`,
     });
 
     const updated = await db.paymentOrder.update({
