@@ -22,6 +22,7 @@ export async function queueTravelAgentCrmSync(input: {
       agencyName: agency.name,
       email: agency.email,
       mobile: agency.phone,
+      alternativeNumber: agency.whatsapp,
       gstNumber: agency.gstNumber,
       panCard: agency.panCard,
       city: agency.city,

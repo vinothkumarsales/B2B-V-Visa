@@ -167,6 +167,7 @@ export async function processZohoCrmOutboxEvent(event: ClaimedCrmOutboxEvent) {
         agencyName: payload.agencyName,
         email: payload.email,
         mobile: payload.mobile,
+        alternativeNumber: payload.alternativeNumber,
         gstNumber: payload.gstNumber,
         panCard: payload.panCard,
         city: payload.city,
@@ -417,7 +418,8 @@ async function findFirstTravelAgentMatch(payload: TravelAgentPayload, uidField?:
   const candidates = [
     uidField ? { field: uidField, value: payload.agencyId } : null,
     payload.email ? { field: 'Email', value: payload.email.toLowerCase() } : null,
-    ...phoneVariants.flatMap((value) => [{ field: 'Mobile', value }, { field: 'phone', value }]),
+    ...phoneVariants.flatMap((value) => [{ field: 'Phone', value }, { field: 'Mobile', value }]),
+    ...travelAgentPhoneVariants(payload.alternativeNumber).flatMap((value) => [{ field: 'Mobile', value }, { field: 'Phone', value }]),
   ].filter((candidate): candidate is { field: string; value: string } => Boolean(candidate));
   for (const candidate of candidates) {
     const recordId = await findZohoCrmRecord({ moduleApiName: env.ZOHO_CRM_TRAVEL_AGENTS_MODULE, ...candidate });
@@ -452,6 +454,7 @@ type TravelAgentPayload = {
   agencyName: string;
   email?: string | null;
   mobile?: string | null;
+  alternativeNumber?: string | null;
   gstNumber?: string | null;
   panCard?: string | null;
   city?: string | null;
@@ -531,6 +534,7 @@ function parseTravelAgentPayload(value: unknown): TravelAgentPayload {
     agencyName: payload.agencyName,
     email: stringOrNull(payload.email),
     mobile: stringOrNull(payload.mobile),
+    alternativeNumber: stringOrNull(payload.alternativeNumber),
     gstNumber: stringOrNull(payload.gstNumber),
     panCard: stringOrNull(payload.panCard),
     city: stringOrNull(payload.city),

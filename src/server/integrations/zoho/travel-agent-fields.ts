@@ -3,6 +3,7 @@
   agencyName: string;
   email?: string | null;
   mobile?: string | null;
+  alternativeNumber?: string | null;
   gstNumber?: string | null;
   panCard?: string | null;
   city?: string | null;
@@ -33,7 +34,8 @@ export function buildTravelAgentCrmFields(input: {
 
   assign(mapped, 'Name', fields.agencyName);
   assign(mapped, 'Email', fields.email);
-  assign(mapped, 'Mobile', fields.mobile);
+  assign(mapped, 'Phone', fields.mobile);
+  assign(mapped, 'Mobile', fields.alternativeNumber);
 
   assignCustom(mapped, customMap.portalTravelAgentId, fields.portalTravelAgentId);
   assignCustom(mapped, customMap.gstNumber, fields.gstNumber);

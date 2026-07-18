@@ -6,6 +6,8 @@ import { listPublicCareerPackages } from '@/server/careers/packages';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
+export const dynamic = 'force-dynamic';
+
 export default async function CareersOnboardingPage() {
   const flags = careersFeatureSnapshot();
   const packages = await listPublicCareerPackages('INR');

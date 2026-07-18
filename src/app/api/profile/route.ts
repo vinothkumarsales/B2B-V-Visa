@@ -10,6 +10,7 @@ import { queueTravelAgentCrmSync } from '@/server/integrations/zoho/travel-agent
 
 const profileSchema = z.object({
   phone: z.string().max(30).optional(),
+  whatsapp: z.string().max(30).optional(),
   country: z.string().max(80).optional(),
   gstNumber: z.string().max(40).optional(),
   panCard: z.string().max(40).optional(),
@@ -43,6 +44,7 @@ export async function PATCH(request: NextRequest) {
       where: { id: session.agencyId },
       data: {
         phone: nullableTrim(parsed.data.phone),
+        whatsapp: nullableTrim(parsed.data.whatsapp),
         country: nullableTrim(parsed.data.country) ?? 'India',
         gstNumber: nullableTrim(parsed.data.gstNumber),
         panCard: nullableTrim(parsed.data.panCard),

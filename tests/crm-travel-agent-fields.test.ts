@@ -9,6 +9,7 @@ test('builds conservative Travel_Agents fields with optional custom mappings', (
       agencyName: 'V Visa Travels',
       email: 'owner@example.com',
       mobile: '+918151861062',
+      alternativeNumber: '+919876543210',
       gstNumber: '29AABCV1234F1ZG',
       panCard: 'AABCV1234F',
       city: 'Bengaluru',
@@ -29,7 +30,8 @@ test('builds conservative Travel_Agents fields with optional custom mappings', (
   assert.deepEqual(fields, {
     Name: 'V Visa Travels',
     Email: 'owner@example.com',
-    Mobile: '+918151861062',
+    Phone: '+918151861062',
+    Mobile: '+919876543210',
     Portal_Agency_ID: 'agency_123',
     GST_Number: '29AABCV1234F1ZG',
     PAN_Number: 'AABCV1234F',

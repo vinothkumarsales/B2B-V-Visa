@@ -121,6 +121,7 @@ export default function ProfileView() {
   const [country, setCountry] = useState(profileAgency?.country || 'India');
   const [state, setState] = useState(profileAgency?.state || 'Karnataka');
   const [phone, setPhone] = useState(profileAgency?.phone || '');
+  const [whatsapp, setWhatsapp] = useState(profileAgency?.whatsapp || '');
   const [gstNumber, setGstNumber] = useState(profileAgency?.gstNumber || '');
   const [panCard, setPanCard] = useState(profileAgency?.panCard || '');
   const [addressLine1, setAddressLine1] = useState(profileAgency?.addressLine1 || '');
@@ -172,6 +173,7 @@ export default function ProfileView() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phone,
+          whatsapp,
           country,
           gstNumber,
           panCard,
@@ -287,7 +289,7 @@ export default function ProfileView() {
           {/* Basic Details */}
           <div>
             <h4 className="text-sm font-medium text-foreground mb-3">Basic Details</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <div>
                 <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Country</Label>
                 <Select value={country} onValueChange={setCountry}>
@@ -312,6 +314,14 @@ export default function ProfileView() {
                 <Input
                   value={phone}
                   onChange={(event) => setPhone(event.target.value)}
+                  className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Alternative Number</Label>
+                <Input
+                  value={whatsapp}
+                  onChange={(event) => setWhatsapp(event.target.value)}
                   className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                 />
               </div>

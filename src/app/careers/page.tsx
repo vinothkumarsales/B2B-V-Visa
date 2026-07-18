@@ -30,6 +30,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { careersFeatureSnapshot } from '@/server/careers/feature-flags';
 import { listPublicCareerPackages, type CareerPackageOption } from '@/server/careers/packages';
 
+export const dynamic = 'force-dynamic';
+
 const europeBenefits = [
   {
     title: 'Demand across skilled roles',

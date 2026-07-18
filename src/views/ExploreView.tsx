@@ -63,11 +63,15 @@ function getStickerRoutes(visa: VisaType): VisaStickerRoute[] {
   return visa.stickerRoutes?.length ? visa.stickerRoutes : visa.courierRules?.routes ?? [];
 }
 
-function trackVisaInterest(visa: VisaType, intent: 'VISA_SELECTED' | 'CHECKLIST_VIEWED') {
-  if (isDemoMode()) return;
+function getSearchSessionId() {
   const key = 'vvisa:crmSearchSessionId';
   const searchSessionId = sessionStorage.getItem(key) ?? crypto.randomUUID();
   sessionStorage.setItem(key, searchSessionId);
+  return searchSessionId;
+}
+
+function trackVisaInterest(visa: VisaType, intent: 'VISA_SELECTED' | 'CHECKLIST_VIEWED') {
+  if (isDemoMode()) return;
   void fetch('/api/visa-interests', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -79,8 +83,36 @@ function trackVisaInterest(visa: VisaType, intent: 'VISA_SELECTED' | 'CHECKLIST_
       visaTypeName: visa.name,
       category: visa.category,
       sourceRoute: '/explore',
-      searchSessionId,
+      searchSessionId: getSearchSessionId(),
       intent,
+    }),
+  }).catch(() => undefined);
+}
+
+function trackProductIntent(input: {
+  eventType: 'COUNTRY_CARD_CLICKED' | 'VISA_PRODUCT_CLICKED' | 'PRODUCT_ENGAGED_3_MIN';
+  country: string;
+  visa?: VisaType;
+}) {
+  if (isDemoMode()) return;
+  const eventDay = new Date().toISOString().slice(0, 10);
+  const searchSessionId =
+    input.eventType === 'PRODUCT_ENGAGED_3_MIN' && input.visa
+      ? `engaged:${input.visa.id}:${eventDay}`
+      : getSearchSessionId();
+  void fetch('/api/events/product-intent', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({
+      eventType: input.eventType,
+      country: input.country,
+      countryCode: input.visa?.destinationCode,
+      productId: input.visa?.id,
+      productName: input.visa?.name,
+      category: input.visa?.category,
+      sourcePage: '/explore',
+      searchSessionId,
     }),
   }).catch(() => undefined);
 }
@@ -142,6 +174,7 @@ export default function ExploreView() {
     setGoingTo(dest);
     setVisibleCount(PAGE_SIZE);
     setShowDropdown(false);
+    trackProductIntent({ eventType: 'COUNTRY_CARD_CLICKED', country: dest });
   };
 
   const clearFilters = () => {
@@ -155,6 +188,7 @@ export default function ExploreView() {
   };
 
   const handleSelectVisa = (visa: VisaType) => {
+    trackProductIntent({ eventType: 'VISA_PRODUCT_CLICKED', country: visa.destination, visa });
     trackVisaInterest(visa, 'VISA_SELECTED');
     setSelectedVisaType(visa);
     sessionStorage.setItem('vvisa:selectedVisaType', JSON.stringify(visa));
@@ -167,6 +201,18 @@ export default function ExploreView() {
     setSelectedDocVisa(visa);
     setDocDialogOpen(true);
   };
+
+  useEffect(() => {
+    if (!selectedDocVisa || isDemoMode()) return;
+    const timer = window.setTimeout(() => {
+      trackProductIntent({
+        eventType: 'PRODUCT_ENGAGED_3_MIN',
+        country: selectedDocVisa.destination,
+        visa: selectedDocVisa,
+      });
+    }, 180000);
+    return () => window.clearTimeout(timer);
+  }, [selectedDocVisa]);
 
   return (
     <motion.div

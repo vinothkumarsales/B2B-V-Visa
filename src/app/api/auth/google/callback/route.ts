@@ -277,8 +277,9 @@ export async function GET(request: NextRequest) {
     });
 
     setStage('final_redirect');
-    logGoogleStage('final_redirect', { destination: '/dashboard', hasAdminAccess: isAdminEmail });
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const destination = result.agency?.id ? `/${result.agency.id}` : '/dashboard';
+    logGoogleStage('final_redirect', { destination, hasAdminAccess: isAdminEmail });
+    return NextResponse.redirect(new URL(destination, request.url));
   } catch (error) {
     const code = googleErrorCode(error, stage);
     const meta = prismaErrorMeta(error);
