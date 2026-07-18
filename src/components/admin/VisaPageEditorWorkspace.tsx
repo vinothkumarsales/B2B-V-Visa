@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { FormEvent, useMemo, useState } from 'react';
-import { Eye, FilePenLine, Globe2, Plus, Search } from 'lucide-react';
+import { Eye, FilePenLine, Globe2, Plus, Search, UploadCloud } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,7 @@ export function VisaPageEditorWorkspace({ countries, products }: { countries: Co
   const [category, setCategory] = useState('');
   const [query, setQuery] = useState('');
   const [message, setMessage] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
   const selectedCountry = countries.find((country) => country.id === countryId);
   const categories = useMemo(() => [...new Set(products.filter((product) => !countryId || product.countryId === countryId).map((product) => product.category))].sort(), [countryId, products]);
   const countryProducts = useMemo(() => products.filter((product) => {
@@ -57,6 +58,35 @@ export function VisaPageEditorWorkspace({ countries, products }: { countries: Co
     }
     setMessage(`Country saved: ${body.country.name}. Refreshing editor...`);
     setTimeout(() => location.reload(), 700);
+  }
+
+  async function importVVisas(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setMessage('');
+    setIsImporting(true);
+    const limit = String(form.get('limit') ?? '').trim();
+    const country = String(form.get('country') ?? '').trim();
+    const response = await fetch('/api/admin/import-vvisas', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        publish: form.get('publish') === 'true',
+        updateExisting: form.get('updateExisting') === 'true',
+        limit: limit ? Number(limit) : undefined,
+        country: country || undefined,
+        reason: form.get('reason'),
+      }),
+    });
+    const body = await response.json().catch(() => ({}));
+    setIsImporting(false);
+    if (!response.ok) {
+      setMessage(body.error?.message ?? 'V-VISAS import failed.');
+      return;
+    }
+    const result = body.result;
+    setMessage(`V-VISAS import complete: ${result.importedProducts} products, ${result.documents} documents, ${result.created} created, ${result.updated} updated.`);
+    setTimeout(() => location.reload(), 900);
   }
 
   return (
@@ -127,6 +157,33 @@ export function VisaPageEditorWorkspace({ countries, products }: { countries: Co
           </select>
           <Input name="reason" placeholder="Reason for country update" required minLength={8} />
           <Button type="submit">Save</Button>
+        </form>
+      </section>
+
+      <section className="border-y border-vvisa-border-subtle bg-vvisa-surface px-4 py-5 sm:px-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold">V-VISAS production import</h3>
+            <p className="text-xs text-vvisa-text-muted">Import the approved in-repo catalogue snapshot into the active database. This action is admin-only, audited, and feature-flag guarded.</p>
+          </div>
+          <Badge variant="outline">148 products ready</Badge>
+        </div>
+        <form onSubmit={importVVisas} className="mt-4 grid gap-3 lg:grid-cols-[140px_150px_120px_1fr_1fr_auto]">
+          <select name="publish" defaultValue="true" className="h-10 rounded-md border border-vvisa-border-subtle bg-vvisa-surface px-3 text-sm">
+            <option value="true">Publish live</option>
+            <option value="false">Draft only</option>
+          </select>
+          <select name="updateExisting" defaultValue="true" className="h-10 rounded-md border border-vvisa-border-subtle bg-vvisa-surface px-3 text-sm">
+            <option value="true">Update existing</option>
+            <option value="false">Skip existing</option>
+          </select>
+          <Input name="limit" inputMode="numeric" placeholder="Limit" />
+          <Input name="country" placeholder="Country filter optional" />
+          <Input name="reason" placeholder="Reason for production import" required minLength={8} />
+          <Button type="submit" disabled={isImporting}>
+            <UploadCloud className="size-4" />
+            {isImporting ? 'Importing...' : 'Import'}
+          </Button>
         </form>
       </section>
 

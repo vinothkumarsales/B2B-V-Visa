@@ -1,8 +1,10 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { PrismaClient, type Prisma } from '@prisma/client';
 
-const db = new PrismaClient();
+const defaultDb = new PrismaClient();
+const REPO_SNAPSHOT_PATH = resolve('data/supplier-imports/approved/vvisas-source-products.json');
 
 type SourceVisa = {
   id?: string;
@@ -31,11 +33,26 @@ type SourceCountry = {
 };
 
 type ImportOptions = {
-  sourceDir: string;
+  sourceDir?: string;
+  sourceFile?: string;
   publish: boolean;
   updateExisting: boolean;
   limit?: number;
   country?: string;
+};
+
+type ImportSummary = {
+  source: string;
+  mode: 'published' | 'draft';
+  updateExisting: boolean;
+  countries: number;
+  sourceProducts: number;
+  importedProducts: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  prices: number;
+  documents: number;
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -48,17 +65,23 @@ const CATEGORY_LABELS: Record<string, string> = {
   'job-seeker': 'Job Seeker',
 };
 
-async function main() {
-  const options = parseArgs(process.argv.slice(2));
-  const sourceFile = await findCountryDataBundle(options.sourceDir);
-  const countries = extractCountries(await readFile(sourceFile, 'utf8'));
+export async function importVVisasProducts(options: Partial<ImportOptions> = {}, db: PrismaClient = defaultDb): Promise<ImportSummary> {
+  const resolvedOptions: ImportOptions = {
+    sourceDir: options.sourceDir,
+    sourceFile: options.sourceFile,
+    publish: options.publish ?? false,
+    updateExisting: options.updateExisting ?? false,
+    limit: options.limit,
+    country: options.country,
+  };
+  const { source, countries } = await loadSourceCountries(resolvedOptions);
   const selected = countries.filter((country) => {
-    if (!options.country) return true;
-    const needle = options.country.toLowerCase();
+    if (!resolvedOptions.country) return true;
+    const needle = resolvedOptions.country.toLowerCase();
     return country.name.toLowerCase().includes(needle) || country.id.toLowerCase() === needle;
   });
   const products = selected.flatMap((country) => normalizeCountryProducts(country));
-  const limited = options.limit ? products.slice(0, options.limit) : products;
+  const limited = resolvedOptions.limit ? products.slice(0, resolvedOptions.limit) : products;
 
   let created = 0;
   let updated = 0;
@@ -69,9 +92,9 @@ async function main() {
   for (const [index, product] of limited.entries()) {
     const result = await importProduct(product, {
       displayOrder: index + 5000,
-      publish: options.publish,
-      updateExisting: options.updateExisting,
-    });
+      publish: resolvedOptions.publish,
+      updateExisting: resolvedOptions.updateExisting,
+    }, db);
     created += result.created ? 1 : 0;
     updated += result.updated ? 1 : 0;
     skipped += result.skipped ? 1 : 0;
@@ -79,10 +102,10 @@ async function main() {
     prices += result.price ? 1 : 0;
   }
 
-  console.log(JSON.stringify({
-    source: sourceFile,
-    mode: options.publish ? 'published' : 'draft',
-    updateExisting: options.updateExisting,
+  return {
+    source,
+    mode: resolvedOptions.publish ? 'published' : 'draft',
+    updateExisting: resolvedOptions.updateExisting,
     countries: selected.length,
     sourceProducts: products.length,
     importedProducts: limited.length,
@@ -91,7 +114,12 @@ async function main() {
     skipped,
     prices,
     documents,
-  }, null, 2));
+  };
+}
+
+async function main() {
+  const summary = await importVVisasProducts(parseArgs(process.argv.slice(2)));
+  console.log(JSON.stringify(summary, null, 2));
 }
 
 function normalizeCountryProducts(country: SourceCountry) {
@@ -141,7 +169,7 @@ async function importProduct(source: ReturnType<typeof normalizeCountryProducts>
   displayOrder: number;
   publish: boolean;
   updateExisting: boolean;
-}) {
+}, db: PrismaClient) {
   const country = await db.country.upsert({
     where: { code: source.countryCode },
     update: { name: source.destination, isActive: true },
@@ -265,6 +293,28 @@ async function findCountryDataBundle(sourceDir: string) {
   return join(assetsDir, countryData);
 }
 
+async function loadSourceCountries(options: ImportOptions): Promise<{ source: string; countries: SourceCountry[] }> {
+  if (options.sourceFile) {
+    const sourceFile = resolve(options.sourceFile);
+    return { source: sourceFile, countries: await readSnapshot(sourceFile) };
+  }
+  if (options.sourceDir) {
+    const sourceFile = await findCountryDataBundle(resolve(options.sourceDir));
+    return { source: sourceFile, countries: extractCountries(await readFile(sourceFile, 'utf8')) };
+  }
+  try {
+    return { source: REPO_SNAPSHOT_PATH, countries: await readSnapshot(REPO_SNAPSHOT_PATH) };
+  } catch {
+    const sourceFile = await findCountryDataBundle(resolve('C:/vvisas-ai/_imports/V-VISAS'));
+    return { source: sourceFile, countries: extractCountries(await readFile(sourceFile, 'utf8')) };
+  }
+}
+
+async function readSnapshot(sourceFile: string): Promise<SourceCountry[]> {
+  const parsed = JSON.parse(await readFile(sourceFile, 'utf8')) as { countries?: SourceCountry[] } | SourceCountry[];
+  return Array.isArray(parsed) ? parsed : parsed.countries ?? [];
+}
+
 function extractCountries(bundle: string): SourceCountry[] {
   const marker = 'M=';
   const start = bundle.indexOf(marker);
@@ -314,7 +364,8 @@ function parseArgs(args: string[]): ImportOptions {
     return index >= 0 ? args[index + 1] : undefined;
   };
   return {
-    sourceDir: resolve(get('source') ?? 'C:/vvisas-ai/_imports/V-VISAS'),
+    sourceDir: get('source') ? resolve(get('source') as string) : undefined,
+    sourceFile: get('source-file') ? resolve(get('source-file') as string) : undefined,
     publish: args.includes('--publish'),
     updateExisting: args.includes('--update-existing'),
     limit: get('limit') ? Number(get('limit')) : undefined,
@@ -351,4 +402,6 @@ function slug(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-main().finally(() => db.$disconnect());
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  main().finally(() => defaultDb.$disconnect());
+}
