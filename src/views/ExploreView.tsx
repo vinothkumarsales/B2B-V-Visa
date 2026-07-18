@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { useVisaCatalogue } from '@/lib/use-visa-catalogue';
@@ -119,6 +119,7 @@ function trackProductIntent(input: {
 
 export default function ExploreView() {
   const router = useRouter();
+  const pathname = usePathname();
   const { navigate, setSelectedVisaType } = useAppStore();
   const { visaTypes } = useVisaCatalogue();
   const [goingTo, setGoingTo] = useState('');
@@ -193,7 +194,8 @@ export default function ExploreView() {
     setSelectedVisaType(visa);
     sessionStorage.setItem('vvisa:selectedVisaType', JSON.stringify(visa));
     navigate('apply');
-    router.push('/apply');
+    const adminUidMatch = pathname.match(/^\/admin\/([^/]+)/);
+    router.push(adminUidMatch ? `/admin/${adminUidMatch[1]}/apply` : '/apply');
   };
 
   const handleViewDocs = (visa: VisaType) => {

@@ -102,10 +102,12 @@ function toPortalTransaction(entry: ApiWalletEntry): WalletTransaction {
 export function RouteScreen({
   view,
   authenticated = false,
+  bootstrapUrl = '/api/portal/bootstrap',
   children,
 }: {
   view: ViewRoute;
   authenticated?: boolean;
+  bootstrapUrl?: string;
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -124,14 +126,14 @@ export function RouteScreen({
     let cancelled = false;
 
     async function hydrateAuthenticatedRoute() {
-      if (isAuthenticated && agency) {
+      if (isAuthenticated && agency && bootstrapUrl === '/api/portal/bootstrap') {
         navigate(view);
         setLoading(false);
         return;
       }
       setLoading(true);
       try {
-        const response = await fetch('/api/portal/bootstrap', { credentials: 'include', cache: 'no-store' });
+        const response = await fetch(bootstrapUrl, { credentials: 'include', cache: 'no-store' });
         if (!response.ok) throw new Error('Unable to load account data');
         const payload = await response.json();
         if (!payload.agency) throw new Error('Partner profile required');
@@ -171,7 +173,7 @@ export function RouteScreen({
     return () => {
       cancelled = true;
     };
-  }, [agency, authenticated, clearUserScopedState, isAuthenticated, login, navigate, router, setApplications, setStats, setTransactions, setWalletBalance, view]);
+  }, [agency, authenticated, bootstrapUrl, clearUserScopedState, isAuthenticated, login, navigate, router, setApplications, setStats, setTransactions, setWalletBalance, view]);
 
   if (loading) {
     return (

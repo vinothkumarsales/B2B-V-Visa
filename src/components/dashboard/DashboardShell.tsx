@@ -343,7 +343,7 @@ const routeToPath: Record<string, string> = {
 
 let cachedAdminAccess: boolean | null = null;
 
-export default function DashboardShell({ children }: { children: ReactNode }) {
+export default function DashboardShell({ children, basePath = '' }: { children: ReactNode; basePath?: string }) {
   const router = useRouter();
   const currentView = useAppStore((s) => s.currentView);
   const agency = useAppStore((s) => s.agency);
@@ -379,8 +379,8 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    Object.values(routeToPath).forEach((path) => router.prefetch(path));
-  }, [router]);
+    Object.values(routeToPath).forEach((path) => router.prefetch(`${basePath}${path}`));
+  }, [basePath, router]);
 
   useEffect(() => {
     const onWorkflowDetailChange = (event: Event) => {
@@ -395,10 +395,10 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
   const handleNavigate = (route: ViewRoute) => {
     if (route === 'landing') {
       logout();
-      router.push('/');
+      router.push(basePath || '/');
     } else {
       navigate(route);
-      router.push(routeToPath[route] ?? '/dashboard');
+      router.push(`${basePath}${routeToPath[route] ?? '/dashboard'}`);
     }
     setMobileOpen(false);
   };
