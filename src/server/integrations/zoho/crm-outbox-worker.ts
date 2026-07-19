@@ -3,6 +3,7 @@ import type { IntegrationEvent, IntegrationEventStatus } from '@prisma/client';
 import { db } from '@/lib/db';
 import { readLocalPrivateDocumentForCrm } from '@/server/storage/private-document-storage';
 import { uploadZohoCrmAttachment } from './attachments';
+import { isZohoBooksConfigured, syncPaidApplicationToZohoBooks } from './books';
 import { buildConfiguredPassportCrmUpdateFields, buildConfiguredTravelAgentCrmFields, buildConfiguredVisaInterestLeadCreateFields, convertZohoCrmLead, createZohoCrmRecord, findZohoCrmRecord, updateZohoCrmRecord } from './record-update';
 import { env } from '@/lib/env';
 import { queueDocumentAttachmentSync } from './document-attachment-sync';
@@ -358,6 +359,26 @@ export async function processZohoCrmOutboxEvent(event: ClaimedCrmOutboxEvent) {
       return markZohoCrmEventCompleted({ eventId: event.id, providerRecordId: converted.contactId });
     }
 
+    if (event.eventType === 'ZOHO_BOOKS_PAYMENT_SYNC') {
+      if (!isZohoBooksConfigured()) {
+        return markZohoCrmEventManualReview({
+          eventId: event.id,
+          reasonCode: 'ZOHO_BOOKS_NOT_CONFIGURED',
+        });
+      }
+      const payload = parseBooksPaymentPayload(event.payload);
+      const result = await syncPaidApplicationToZohoBooks({
+        agencyId: event.agencyId,
+        applicationId: payload.applicationId,
+        paymentOrderId: payload.paymentOrderId,
+      });
+      return markZohoCrmEventCompleted({
+        eventId: event.id,
+        providerRecordId: result.paymentId ?? result.invoiceId,
+        externalRecordId: result.invoiceId,
+      });
+    }
+
     if (
       event.eventType === 'LEAD_OCR_DATA_UPDATE' ||
       event.eventType === 'CONTACT_OCR_DATA_UPDATE'
@@ -482,6 +503,7 @@ type OcrDataPayload = {
   passportFields: Record<string, string>;
 };
 type LeadConversionPayload = { applicationId: string; paymentOrderId: string };
+type BooksPaymentPayload = { applicationId?: string | null; paymentOrderId: string };
 
 function parseLeadConversionPayload(value: unknown): LeadConversionPayload {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw validationError('INVALID_LEAD_CONVERSION_PAYLOAD');
@@ -489,6 +511,16 @@ function parseLeadConversionPayload(value: unknown): LeadConversionPayload {
   if (typeof payload.applicationId !== 'string' || !payload.applicationId) throw validationError('MISSING_APPLICATION_ID');
   if (typeof payload.paymentOrderId !== 'string' || !payload.paymentOrderId) throw validationError('MISSING_PAYMENT_ORDER_ID');
   return { applicationId: payload.applicationId, paymentOrderId: payload.paymentOrderId };
+}
+
+function parseBooksPaymentPayload(value: unknown): BooksPaymentPayload {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw validationError('INVALID_BOOKS_PAYMENT_PAYLOAD');
+  const payload = value as Record<string, unknown>;
+  if (typeof payload.paymentOrderId !== 'string' || !payload.paymentOrderId) throw validationError('MISSING_PAYMENT_ORDER_ID');
+  return {
+    paymentOrderId: payload.paymentOrderId,
+    applicationId: typeof payload.applicationId === 'string' ? payload.applicationId : null,
+  };
 }
 
 function parseAttachmentPayload(value: unknown): AttachmentPayload {

@@ -83,7 +83,7 @@ export async function createIndividualApplication(input: {
       internalId: input.payload.internalId,
       destination: visaProduct.destination,
       visaType: visaProduct.name,
-      status: 'DOCUMENTS_PENDING',
+      status: 'PAYMENT_PENDING',
       pricingSnapshot,
       totalAmountMinor,
       currency: visaProduct.currency,
@@ -105,7 +105,7 @@ export async function createIndividualApplication(input: {
       },
       statusEvents: {
         create: {
-          nextStatus: 'DOCUMENTS_PENDING',
+          nextStatus: 'PAYMENT_PENDING',
           actorUserId: input.actorUserId,
           reason: 'Application created from B2B portal',
         },

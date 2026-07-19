@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
+import { fetchPortalApplications } from '@/lib/application-api';
 import { usePortalStatusConfig } from '@/lib/use-portal-config';
 import type { VisaApplication } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -66,11 +67,15 @@ const approvedSteps = [
 export default function ApplicationsView() {
   const statusConfig = usePortalStatusConfig();
   const router = useRouter();
-  const { navigate, setSelectedApplicationId, applications, agency } = useAppStore();
+  const { navigate, setSelectedApplicationId, applications, agency, setApplications } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [travelDate, setTravelDate] = useState('');
   const [destination, setDestination] = useState('all');
   const [activeTab, setActiveTab] = useState<TabFilter>('ALL');
+
+  useEffect(() => {
+    fetchPortalApplications().then(setApplications).catch(() => undefined);
+  }, [setApplications]);
 
   const allDestinations = useMemo(
     () => [...new Set(applications.map((a) => a.destination))],

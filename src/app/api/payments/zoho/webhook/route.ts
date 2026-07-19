@@ -112,6 +112,15 @@ export async function POST(request: NextRequest) {
       aggregateId: paymentOrder.applicationId ?? paymentOrder.id,
       payload: { paymentOrderId: paymentOrder.id, applicationId: paymentOrder.applicationId },
     });
+    await queueZohoCrmEvent({
+      agencyId: paymentOrder.agencyId,
+      eventType: 'ZOHO_BOOKS_PAYMENT_SYNC',
+      idempotencyKey: `zoho-books:payment-confirmed:${paymentOrder.id}`,
+      entityType: 'PaymentOrder',
+      entityId: paymentOrder.id,
+      aggregateId: paymentOrder.applicationId ?? paymentOrder.id,
+      payload: { paymentOrderId: paymentOrder.id, applicationId: paymentOrder.applicationId, source: 'zoho_payments' },
+    });
     if (paymentOrder.applicationId) {
       await queueZohoCrmEvent({
         agencyId: paymentOrder.agencyId,

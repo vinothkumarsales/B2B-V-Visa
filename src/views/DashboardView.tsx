@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { popularDestinations } from '@/lib/mock-data';
+import { fetchPortalApplications } from '@/lib/application-api';
 import { useVisaCatalogue } from '@/lib/use-visa-catalogue';
 import { usePortalDashboardSections, usePortalStatusConfig } from '@/lib/use-portal-config';
 import { Button } from '@/components/ui/button';
@@ -32,7 +33,7 @@ export default function DashboardView() {
   const statusConfig = usePortalStatusConfig();
   const dashboardSections = usePortalDashboardSections();
   const router = useRouter();
-  const { navigate, stats, applications, agency } = useAppStore();
+  const { navigate, stats, applications, agency, setApplications } = useAppStore();
   const [goingTo, setGoingTo] = useState('');
   const [travelDate, setTravelDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
@@ -45,6 +46,10 @@ export default function DashboardView() {
 
   const recentApps = applications.slice(0, 3);
   const recentApplicationsSection = dashboardSections?.find((section) => section.key === 'recent-applications');
+
+  useEffect(() => {
+    fetchPortalApplications().then(setApplications).catch(() => undefined);
+  }, [setApplications]);
 
   const handleSearch = () => {
     if (!goingTo.trim()) return;

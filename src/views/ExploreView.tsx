@@ -26,7 +26,7 @@ const pageVariants = {
 };
 
 const PAGE_SIZE = 12;
-const purposeOptions = ['Tourist', 'Business', 'Transit'] as const;
+const purposeOptions = ['All', 'Tourist', 'Business', 'Transit'] as const;
 
 const categoryConfig: Record<string, { icon: React.ReactNode; color: string; bgColor: string; borderColor: string }> = {
   LIGHTNING_FAST: {
@@ -122,7 +122,7 @@ export default function ExploreView() {
   const { navigate, setSelectedVisaType } = useAppStore();
   const { visaTypes } = useVisaCatalogue();
   const [goingTo, setGoingTo] = useState('');
-  const [purposeFilter, setPurposeFilter] = useState<(typeof purposeOptions)[number]>('Tourist');
+  const [purposeFilter, setPurposeFilter] = useState<(typeof purposeOptions)[number]>('All');
   const [travelDate, setTravelDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -149,15 +149,16 @@ export default function ExploreView() {
         visa.name.toLowerCase().includes(query);
       const purposeText = `${visa.purpose ?? ''} ${visa.name}`.toLowerCase();
       const matchesPurpose =
+        purposeFilter === 'All' ||
         purposeText.includes(purposeFilter.toLowerCase()) ||
         (purposeFilter === 'Tourist' && !purposeText.includes('business') && !purposeText.includes('transit'));
 
       return matchesQuery && matchesPurpose;
     });
-  }, [goingTo, purposeFilter]);
+  }, [goingTo, purposeFilter, visaTypes]);
 
   const visibleVisas = filteredVisas.slice(0, visibleCount);
-  const hasActiveFilters = Boolean(goingTo.trim()) || purposeFilter !== 'Tourist';
+  const hasActiveFilters = Boolean(goingTo.trim()) || purposeFilter !== 'All';
 
   useEffect(() => {
     const hasDestinationContext = Boolean(goingTo.trim());
@@ -179,7 +180,7 @@ export default function ExploreView() {
 
   const clearFilters = () => {
     setGoingTo('');
-    setPurposeFilter('Tourist');
+    setPurposeFilter('All');
     setVisibleCount(PAGE_SIZE);
   };
 
@@ -229,7 +230,7 @@ export default function ExploreView() {
           <CardContent className="p-4">
             <div className="mb-4">
               <label className="block text-xs text-vvisa-text-secondary mb-2 font-semibold">Select Travel Purpose</label>
-              <div className="grid max-w-[520px] grid-cols-3 rounded-full border border-vvisa-border-subtle bg-white p-1 shadow-[var(--vvisa-shadow-sm)] dark:bg-vvisa-surface-2">
+              <div className="grid max-w-[640px] grid-cols-4 rounded-full border border-vvisa-border-subtle bg-white p-1 shadow-[var(--vvisa-shadow-sm)] dark:bg-vvisa-surface-2">
                 {purposeOptions.map((purpose) => {
                   const selected = purposeFilter === purpose;
                   return (

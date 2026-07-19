@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { mockVisaTypes } from '@/lib/mock-data';
+import { fetchPortalApplications } from '@/lib/application-api';
 import { useVisaCatalogue } from '@/lib/use-visa-catalogue';
 import { isDemoMode } from '@/lib/app-mode';
 import { getRequiredAdditionalDocs as resolveRequiredAdditionalDocs } from '@/lib/checklist';
@@ -26,6 +27,14 @@ import {
   Trash2, FileText, Copy, CheckCircle2, Receipt,
 } from 'lucide-react';
 import type { Traveler, VisaDocumentRequirement, VisaPricingLineItem, VisaStickerRoute, VisaType } from '@/types';
+
+type PassportPreviewState = {
+  url: string;
+  type: 'image' | 'pdf' | '';
+  name: string;
+  renderedUrl?: string;
+  renderError?: string;
+};
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -351,7 +360,7 @@ function TravelerCard({
 }) {
   const passportInputRef = useRef<HTMLInputElement>(null);
   const [showAddDocs, setShowAddDocs] = useState(false);
-  const [passportPreview, setPassportPreview] = useState<{ url: string; type: 'image' | 'pdf' | ''; name: string } | null>(null);
+  const [passportPreview, setPassportPreview] = useState<PassportPreviewState | null>(null);
   const [lensPosition, setLensPosition] = useState({ x: 50, y: 50 });
   const [showLens, setShowLens] = useState(false);
   const docInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -359,8 +368,9 @@ function TravelerCard({
   useEffect(() => {
     return () => {
       if (passportPreview?.url) URL.revokeObjectURL(passportPreview.url);
+      if (passportPreview?.renderedUrl) URL.revokeObjectURL(passportPreview.renderedUrl);
     };
-  }, [passportPreview?.url]);
+  }, [passportPreview?.url, passportPreview?.renderedUrl]);
 
   const handlePassportUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -379,6 +389,7 @@ function TravelerCard({
       onUpdate(traveler.id, 'passportMimeType', file.type);
       setPassportPreview((current) => {
         if (current?.url) URL.revokeObjectURL(current.url);
+        if (current?.renderedUrl) URL.revokeObjectURL(current.renderedUrl);
         return {
           url: URL.createObjectURL(file),
           type: file.type === 'application/pdf' ? 'pdf' : file.type.startsWith('image/') ? 'image' : '',
@@ -389,6 +400,15 @@ function TravelerCard({
       onUpdate(traveler.id, 'ocrError', '');
 
       try {
+        if (file.type === 'application/pdf') {
+          renderPdfFirstPage(file)
+            .then((renderedUrl) => {
+              setPassportPreview((current) => current?.name === file.name ? { ...current, renderedUrl } : current);
+            })
+            .catch(() => {
+              setPassportPreview((current) => current?.name === file.name ? { ...current, renderError: 'PDF preview unavailable' } : current);
+            });
+        }
         const base64 = await fileToBase64(file);
         onUpdate(traveler.id, 'passportFileBase64', base64);
         const res = await fetch('/api/ocr', {
@@ -478,6 +498,9 @@ function TravelerCard({
     travelDate: travelDate || undefined,
     rule: 'UNKNOWN',
   });
+  const passportPreviewImageUrl = passportPreview?.type === 'image'
+    ? passportPreview.url
+    : passportPreview?.renderedUrl;
 
   return (
     <Card className="vv-surface overflow-hidden rounded-xl border">
@@ -592,7 +615,7 @@ function TravelerCard({
                     onChange={handlePassportUpload}
                   />
 
-                  {passportPreview?.url && passportPreview.type === 'image' && traveler.ocrStatus !== 'scanning' ? (
+                  {passportPreviewImageUrl && traveler.ocrStatus !== 'scanning' ? (
                     <>
                       <div
                         className="relative mb-3 w-full max-w-[280px] overflow-hidden rounded-lg border border-vvisa-border bg-vvisa-bg"
@@ -601,8 +624,8 @@ function TravelerCard({
                         onMouseMove={handlePreviewPointerMove}
                       >
                         <img
-                          src={passportPreview.url}
-                          alt={`${passportPreview.name || 'Passport'} preview`}
+                          src={passportPreviewImageUrl}
+                          alt={`${passportPreview?.name || 'Passport'} preview`}
                           className="h-40 w-full object-contain"
                         />
                         {showLens && (
@@ -611,7 +634,7 @@ function TravelerCard({
                             style={{
                               left: `${lensPosition.x}%`,
                               top: `${lensPosition.y}%`,
-                              backgroundImage: `url(${passportPreview.url})`,
+                              backgroundImage: `url(${passportPreviewImageUrl})`,
                               backgroundRepeat: 'no-repeat',
                               backgroundSize: '280% 280%',
                               backgroundPosition: `${lensPosition.x}% ${lensPosition.y}%`,
@@ -620,7 +643,7 @@ function TravelerCard({
                           />
                         )}
                       </div>
-                      <p className="max-w-full truncate text-sm font-medium text-foreground">{passportPreview.name}</p>
+                      <p className="max-w-full truncate text-sm font-medium text-foreground">{passportPreview?.name}</p>
                       <p className="text-xs text-vvisa-text-muted">{traveler.ocrStatus === 'done' ? 'Preview ready. Hover to magnify, click to replace.' : 'Preview ready. Hover to magnify and review details.'}</p>
                     </>
                   ) : passportPreview?.url && passportPreview.type === 'pdf' && traveler.ocrStatus !== 'scanning' ? (
@@ -628,8 +651,8 @@ function TravelerCard({
                       <div className="mb-3 flex h-24 w-24 items-center justify-center rounded-xl border border-vvisa-border bg-vvisa-bg">
                         <FileText className="h-10 w-10 text-primary" />
                       </div>
-                      <p className="max-w-full truncate text-sm font-medium text-foreground">{passportPreview.name}</p>
-                      <p className="text-xs text-vvisa-text-muted">PDF uploaded. Click to replace.</p>
+                      <p className="max-w-full truncate text-sm font-medium text-foreground">{passportPreview?.name}</p>
+                      <p className="text-xs text-vvisa-text-muted">{passportPreview.renderError ?? 'Preparing PDF preview. Click to replace.'}</p>
                     </>
                   ) : traveler.ocrStatus === 'scanning' ? (
                     <>
@@ -945,6 +968,21 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+async function renderPdfFirstPage(file: File): Promise<string> {
+  const pdfjs = await import('pdfjs-dist');
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url).toString();
+  const pdf = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
+  const page = await pdf.getPage(1);
+  const viewport = page.getViewport({ scale: 1.7 });
+  const canvas = window.document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('PDF preview unavailable');
+  canvas.width = Math.floor(viewport.width);
+  canvas.height = Math.floor(viewport.height);
+  await page.render({ canvas, canvasContext: context, viewport }).promise;
+  return canvas.toDataURL('image/png');
+}
+
 /* --- Progress Stepper Component --- */
 function ProgressStepper({ currentStep }: { currentStep: number }) {
   const steps = ['Application Type', 'Internal ID', 'Traveler Details', 'Additional Documents', 'Review', 'Submit'];
@@ -996,7 +1034,7 @@ function ProgressStepper({ currentStep }: { currentStep: number }) {
 /* --- Main ApplyView --- */
 export default function ApplyView() {
   const router = useRouter();
-  const { selectedVisaType, setSelectedVisaType, walletBalance, submitApplication, navigate } = useAppStore();
+  const { selectedVisaType, setSelectedVisaType, walletBalance, submitApplication, navigate, setApplications, setWalletBalance } = useAppStore();
   const { visaTypes } = useVisaCatalogue();
   const activeVisaType = selectedVisaType ?? readStoredVisaType() ?? visaTypes[0] ?? mockVisaTypes[0];
   const [appType, setAppType] = useState<'individual' | 'group'>('individual');
@@ -1006,6 +1044,8 @@ export default function ApplyView() {
   const [returnDate, setReturnDate] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<{ txnId: string; appId: string; error?: string } | null>(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [walletPaymentLoading, setWalletPaymentLoading] = useState(false);
   const [copiedTxn, setCopiedTxn] = useState(false);
   const [passportOriginCity, setPassportOriginCity] = useState('');
   const [residenceState, setResidenceState] = useState('');
@@ -1061,7 +1101,7 @@ export default function ApplyView() {
     () => validationIssues.filter((issue) => issue.blocksSubmit),
     [validationIssues]
   );
-  const canSubmit = Boolean(activeVisaType) && walletBalance >= total && blockingValidationIssues.length === 0 && !pricingResult.manualQuotationRequired && !jurisdictionBlocksSubmit;
+  const canSubmit = Boolean(activeVisaType) && blockingValidationIssues.length === 0 && !pricingResult.manualQuotationRequired && !jurisdictionBlocksSubmit;
 
   const handleTravelDateChange = useCallback((nextTravelDate: string) => {
     setTravelDate(nextTravelDate);
@@ -1228,11 +1268,21 @@ export default function ApplyView() {
         const data = await response.json().catch(() => ({}));
         if (response.ok && data.application?.id) {
           setSubmitResult({ txnId: data.application.internalId || internalId || '', appId: data.application.id });
+          fetchPortalApplications().then(setApplications).catch(() => undefined);
+          setSubmitting(false);
+          return;
+        }
+        if (!isDemoMode()) {
+          setSubmitResult({ txnId: '', appId: '', error: getOcrErrorMessage(data, 'Unable to save application. Please try again.') });
           setSubmitting(false);
           return;
         }
       } catch {
-        // Keep the existing local workflow available if production submission is unavailable.
+        if (!isDemoMode()) {
+          setSubmitResult({ txnId: '', appId: '', error: 'Unable to save application. Please try again.' });
+          setSubmitting(false);
+          return;
+        }
       }
     }
 
@@ -1244,7 +1294,56 @@ export default function ApplyView() {
       setSubmitResult({ txnId: '', appId: '', error: result.error });
     }
     setSubmitting(false);
-  }, [activeVisaType, submitting, blockingValidationIssues, travelers, internalId, groupName, appType, total, travelDate, returnDate, submitApplication]);
+  }, [activeVisaType, submitting, blockingValidationIssues, travelers, internalId, groupName, appType, total, travelDate, returnDate, submitApplication, setApplications]);
+
+  const handlePayNow = useCallback(async () => {
+    if (!submitResult?.appId || paymentLoading) return;
+    setPaymentLoading(true);
+    setSubmitResult((current) => current ? { ...current, error: undefined } : current);
+    try {
+      const response = await fetch('/api/payments/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicationId: submitResult.appId,
+          idempotencyKey: `application-payment:${submitResult.appId}`,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      const checkoutUrl = data.paymentOrder?.providerSessionUrl;
+      if (!response.ok || typeof checkoutUrl !== 'string') {
+        throw new Error(getOcrErrorMessage(data, 'Unable to create payment session.'));
+      }
+      const popup = window.open(checkoutUrl, 'vvisa-zoho-payment', 'noopener,noreferrer,width=480,height=720');
+      if (!popup) window.location.href = checkoutUrl;
+    } catch (error) {
+      setSubmitResult((current) => current ? { ...current, error: error instanceof Error ? error.message : 'Unable to create payment session.' } : current);
+    } finally {
+      setPaymentLoading(false);
+    }
+  }, [paymentLoading, submitResult?.appId]);
+
+  const handlePayFromWallet = useCallback(async () => {
+    if (!submitResult?.appId || walletPaymentLoading) return;
+    setWalletPaymentLoading(true);
+    setSubmitResult((current) => current ? { ...current, error: undefined } : current);
+    try {
+      const response = await fetch('/api/wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicationId: submitResult.appId }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(getOcrErrorMessage(data, 'Unable to pay from wallet.'));
+      if (typeof data.balance === 'number') setWalletBalance(data.balance);
+      fetchPortalApplications().then(setApplications).catch(() => undefined);
+      setSubmitResult((current) => current ? { ...current, txnId: data.paymentOrder?.id ?? current.txnId } : current);
+    } catch (error) {
+      setSubmitResult((current) => current ? { ...current, error: error instanceof Error ? error.message : 'Unable to pay from wallet.' } : current);
+    } finally {
+      setWalletPaymentLoading(false);
+    }
+  }, [setApplications, setWalletBalance, submitResult?.appId, walletPaymentLoading]);
 
   const copyTxnId = useCallback(() => {
     if (submitResult?.txnId) {
@@ -1593,14 +1692,40 @@ export default function ApplyView() {
                   </span>
                 </div>
 
-                <Button
-                  onClick={handleSubmit}
-                  disabled={submitting || !canSubmit}
-                  className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-10 flex items-center justify-center gap-2 text-sm"
-                >
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  {submitting ? 'Submitting...' : 'Review and Save'} <ArrowRight className="h-4 w-4" />
-                </Button>
+                {submitResult?.appId && !submitResult.error ? (
+                  <div className="space-y-2">
+                    <Button
+                      onClick={handlePayNow}
+                      disabled={paymentLoading}
+                      className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-10 flex items-center justify-center gap-2 text-sm"
+                    >
+                      {paymentLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                      {paymentLoading ? 'Opening Payment...' : 'Pay Now'} <ArrowRight className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      onClick={handlePayFromWallet}
+                      disabled={walletPaymentLoading || walletBalance < total}
+                      className="w-full bg-vvisa-surface-2 border border-vvisa-border hover:bg-vvisa-border disabled:opacity-50 disabled:cursor-not-allowed text-foreground rounded-lg h-10 flex items-center justify-center gap-2 text-sm"
+                    >
+                      {walletPaymentLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                      Pay from Wallet
+                    </Button>
+                    {walletBalance < total && (
+                      <p className="text-[11px] leading-4 text-amber-700 dark:text-amber-200">
+                        Wallet balance is low. Use Pay Now or add funds.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={submitting || !canSubmit}
+                    className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg h-10 flex items-center justify-center gap-2 text-sm"
+                  >
+                    {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    {submitting ? 'Submitting...' : 'Review and Save'} <ArrowRight className="h-4 w-4" />
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -1699,6 +1824,25 @@ export default function ApplyView() {
                       <p className="text-vvisa-text-muted">Remaining Balance</p>
                       <p className="vv-tabular mt-0.5 font-medium text-emerald-500">{formatINR(walletBalance - total)}</p>
                     </div>
+                  </div>
+
+                  <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <Button
+                      onClick={handlePayNow}
+                      disabled={paymentLoading}
+                      className="bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded-lg h-10 text-sm"
+                    >
+                      {paymentLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      {paymentLoading ? 'Opening...' : 'Pay Now'}
+                    </Button>
+                    <Button
+                      onClick={handlePayFromWallet}
+                      disabled={walletPaymentLoading || walletBalance < total}
+                      className="bg-vvisa-surface-2 border border-vvisa-border hover:bg-vvisa-border disabled:opacity-50 text-foreground rounded-lg h-10 text-sm"
+                    >
+                      {walletPaymentLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      Pay from Wallet
+                    </Button>
                   </div>
 
                   <div className="flex gap-3">
