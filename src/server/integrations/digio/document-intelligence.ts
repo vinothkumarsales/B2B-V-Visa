@@ -100,42 +100,159 @@ async function callDigio(input: {
   mimeType?: string;
 }): Promise<Record<string, unknown>> {
   const auth = Buffer.from(`${env.DIGIO_CLIENT_ID}:${env.DIGIO_CLIENT_SECRET}`).toString('base64');
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
-  try {
-    const fileType = input.mimeType || mimeTypeFromDataUrl(input.imageBase64) || 'application/octet-stream';
-    const form = new FormData();
-    form.set('front_part', new Blob([base64ToBuffer(input.imageBase64)], { type: fileType }), fileNameFor(input.documentType, fileType));
-    form.set('unique_request_id', input.providerRequestId);
-    form.set('should_verify', 'false');
+  const baseUrl = env.DIGIO_BASE_URL.replace(/\/$/, '');
+  const fileType = input.mimeType || mimeTypeFromDataUrl(input.imageBase64) || 'application/octet-stream';
+  const fileBlob = new Blob([base64ToBuffer(input.imageBase64)], { type: fileType });
+  const fileName = fileNameFor(input.documentType, fileType);
 
-    const response = await fetch(`${env.DIGIO_BASE_URL.replace(/\/$/, '')}/v3/client/kyc/analyze/file/idcard`, {
+  const sessionRaw = await callDigioTemplateSession({
+    auth,
+    baseUrl,
+    providerRequestId: input.providerRequestId,
+    documentType: input.documentType,
+    fileBlob,
+    fileName,
+  });
+  if (sessionRaw) return sessionRaw;
+
+  return callDigioStatelessAnalyzer({
+    auth,
+    baseUrl,
+    providerRequestId: input.providerRequestId,
+    documentType: input.documentType,
+    fileBlob,
+    fileName,
+  });
+}
+
+async function callDigioTemplateSession(input: {
+  auth: string;
+  baseUrl: string;
+  providerRequestId: string;
+  documentType: string;
+  fileBlob: Blob;
+  fileName: string;
+}): Promise<Record<string, unknown> | null> {
+  const templateName = env.DIGIO_TEMPLATE_NAME;
+  if (!templateName && !env.DIGIO_TEMPLATE_ID) return null;
+
+  const requestPayload = {
+    customer_identifier: input.providerRequestId,
+    template_name: templateName,
+    ...(env.DIGIO_TEMPLATE_ID ? { template_id: env.DIGIO_TEMPLATE_ID } : {}),
+    notify_customer: false,
+    generate_access_token: true,
+  };
+
+  try {
+    const createResponse = await fetch(`${input.baseUrl}/client/kyc/v2/request/with_template`, {
       method: 'POST',
-      signal: controller.signal,
       headers: {
-        Authorization: `Basic ${auth}`,
+        Authorization: input.auth,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify(requestPayload),
+    });
+    const createData = await parseJsonResponse(createResponse);
+    if (!createResponse.ok || !stringField(createData.id)) {
+      logDigioRejection('template_create', createResponse, createData, input.documentType, input.baseUrl);
+      return null;
+    }
+
+    const form = new FormData();
+    form.set('front_part', input.fileBlob, input.fileName);
+
+    const uploadResponse = await fetch(`${input.baseUrl}/client/kyc/v2/${stringField(createData.id)}/upload`, {
+      method: 'POST',
+      headers: { Authorization: input.auth },
       body: form,
     });
-    const data = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+    const uploadData = await parseJsonResponse(uploadResponse);
+    if (!uploadResponse.ok) {
+      logDigioRejection('template_upload', uploadResponse, uploadData, input.documentType, input.baseUrl);
+      return null;
+    }
+
+    return {
+      mode: 'template-session',
+      digioRequestId: stringField(createData.id),
+      ...uploadData,
+    };
+  } catch (error) {
+    console.error('Digio OCR template session failed', {
+      stage: 'template_session_exception',
+      message: error instanceof Error ? error.message.slice(0, 180) : 'Unknown Digio error',
+      documentType: input.documentType,
+      baseUrlHost: safeHost(input.baseUrl),
+    });
+    return null;
+  }
+}
+
+async function callDigioStatelessAnalyzer(input: {
+  auth: string;
+  baseUrl: string;
+  providerRequestId: string;
+  documentType: string;
+  fileBlob: Blob;
+  fileName: string;
+}): Promise<Record<string, unknown>> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20_000);
+  try {
+    const form = new FormData();
+    form.set('front_part', input.fileBlob, input.fileName);
+    form.set('unique_request_id', input.providerRequestId);
+
+    const response = await fetch(`${input.baseUrl}/v4/client/kyc/analyze/file/idcard`, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { Authorization: input.auth },
+      body: form,
+    });
+    const data = await parseJsonResponse(response);
     if (!response.ok) {
+      logDigioRejection('stateless_v4', response, data, input.documentType, input.baseUrl);
       const code = String(data.error_code || data.error || data.code || 'DIGIO_PROVIDER_ERROR');
-      const message = String(data.message || data.error_description || data.error || response.statusText || 'Digio provider error');
-      console.error('Digio OCR provider rejected request', {
-        status: response.status,
-        code,
-        message: message.slice(0, 180),
-        documentType: input.documentType,
-        baseUrlHost: safeHost(env.DIGIO_BASE_URL),
-      });
       throw new Error(code);
     }
-    return data;
+    return {
+      mode: 'stateless-v4',
+      ...data,
+    };
   } finally {
     clearTimeout(timeout);
   }
 }
 
+async function parseJsonResponse(response: Response): Promise<Record<string, unknown>> {
+  const text = await response.text().catch(() => '');
+  if (!text) return {};
+  try {
+    return JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    return { rawText: text.slice(0, 500) };
+  }
+}
+
+function logDigioRejection(
+  stage: string,
+  response: Response,
+  data: Record<string, unknown>,
+  documentType: string,
+  baseUrl: string,
+) {
+  const code = String(data.error_code || data.error || data.code || 'DIGIO_PROVIDER_ERROR');
+  const message = String(data.message || data.error_description || data.rawText || response.statusText || 'Digio provider error');
+  console.error('Digio OCR provider rejected request', {
+    stage,
+    status: response.status,
+    code,
+    message: message.slice(0, 180),
+    documentType,
+    baseUrlHost: safeHost(baseUrl),
+  });
+}
 function normalizeDigioFields(raw: Record<string, unknown>): Record<string, string> {
   const source = flattenDigioPassportPayload(raw);
   return {
@@ -255,10 +372,18 @@ function flattenDigioPassportPayload(raw: Record<string, unknown>): Record<strin
   return Object.assign({}, ...candidates);
 }
 
+function firstRecord(value: unknown) {
+  return Array.isArray(value) && value[0] && typeof value[0] === 'object'
+    ? (value[0] as Record<string, unknown>)
+    : undefined;
+}
+
 function recordField(value: unknown) {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : undefined;
 }
+
+
 
 

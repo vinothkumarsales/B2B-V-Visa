@@ -134,6 +134,8 @@ const envSchema = z.object({
   DIGIO_CLIENT_SECRET: z.string().optional(),
   DIGIO_BASE_URL: z.string().url().default('https://api.digio.in'),
   DIGIO_ENVIRONMENT: z.enum(['sandbox', 'production']).default('sandbox'),
+  DIGIO_TEMPLATE_NAME: z.string().optional(),
+  DIGIO_TEMPLATE_ID: z.string().optional(),
 
   STORAGE_PROVIDER: z.enum(['local', 'supabase', 's3', 'gcs', 'azure']).default('local'),
   STORAGE_PRIVATE_ROOT: z.string().default('upload/private'),
@@ -254,3 +256,4 @@ if (data.ZOHO_PAYMENTS_API_BASE_URL) {
 export const env = data;
 export const isDemoMode = env.APP_MODE === 'demo';
 export const isProductionMode = env.APP_MODE === 'production';
+
