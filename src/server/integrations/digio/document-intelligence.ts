@@ -251,7 +251,6 @@ function logDigioRejection(
     message: message.slice(0, 180),
     documentType,
     baseUrlHost: safeHost(baseUrl),
-    envShape: digioEnvShape(),
   });
 }
 function normalizeDigioFields(raw: Record<string, unknown>): Record<string, string> {
@@ -310,17 +309,6 @@ function normalizeSex(value: unknown) {
   if (normalized.startsWith('M')) return 'Male';
   if (normalized.startsWith('F')) return 'Female';
   return raw;
-}
-
-function digioEnvShape() {
-  return {
-    hasClientId: Boolean(env.DIGIO_CLIENT_ID),
-    hasClientSecret: Boolean(env.DIGIO_CLIENT_SECRET),
-    clientIdLength: env.DIGIO_CLIENT_ID?.length ?? 0,
-    clientSecretLength: env.DIGIO_CLIENT_SECRET?.length ?? 0,
-    hasTemplateName: Boolean(env.DIGIO_TEMPLATE_NAME),
-    templateNameLength: env.DIGIO_TEMPLATE_NAME?.length ?? 0,
-  };
 }
 
 function safeHost(value: string) {
@@ -395,6 +383,7 @@ function recordField(value: unknown) {
     ? (value as Record<string, unknown>)
     : undefined;
 }
+
 
 
 
