@@ -53,6 +53,10 @@ interface TravelerData {
   dateOfIssue: string;
   dateOfExpiry: string;
   passportFileName: string;
+  passportFileBase64: string;
+  passportMimeType: string;
+  ocrProviderRequestId: string;
+  ocrConfidence: 'low' | 'medium' | 'high' | '';
   ocrStatus: 'idle' | 'scanning' | 'done' | 'error';
   ocrError: string;
   additionalDocs: { [key: string]: string | null };
@@ -189,6 +193,10 @@ function createEmptyTraveler(index: number, requiredDocKeys: string[]): Traveler
     dateOfIssue: '',
     dateOfExpiry: '',
     passportFileName: '',
+    passportFileBase64: '',
+    passportMimeType: '',
+    ocrProviderRequestId: '',
+    ocrConfidence: '',
     ocrStatus: 'idle',
     ocrError: '',
     additionalDocs: Object.fromEntries(requiredDocKeys.map((k) => [k, null])),
@@ -203,6 +211,25 @@ function getAgeReferenceDate(travelDate: string): string {
 function getTravelerDisplayName(traveler: TravelerData, index: number): string {
   const name = `${traveler.firstName} ${traveler.lastName}`.trim();
   return name || `Traveler ${index + 1}`;
+}
+
+function buildPassportCrmFields(traveler: TravelerData) {
+  return Object.fromEntries(
+    Object.entries({
+      documentName: 'Passport',
+      passportNumber: traveler.passportNumber,
+      firstName: traveler.firstName,
+      lastName: traveler.lastName,
+      nationality: traveler.nationality,
+      sex: traveler.sex,
+      dateOfBirth: traveler.dateOfBirth,
+      dateOfExpiry: traveler.dateOfExpiry,
+      placeOfBirth: traveler.placeOfBirth,
+      placeOfIssue: traveler.placeOfIssue,
+      maritalStatus: traveler.maritalStatus,
+      dateOfIssue: traveler.dateOfIssue,
+    }).filter(([, value]) => typeof value === 'string' && value.trim().length > 0),
+  );
 }
 
 function validateApplicants(travelers: TravelerData[], travelDate: string): ApplicantValidationIssue[] {
@@ -349,6 +376,7 @@ function TravelerCard({
 
       // Update file name
       onUpdate(traveler.id, 'passportFileName', file.name);
+      onUpdate(traveler.id, 'passportMimeType', file.type);
       setPassportPreview((current) => {
         if (current?.url) URL.revokeObjectURL(current.url);
         return {
@@ -362,6 +390,7 @@ function TravelerCard({
 
       try {
         const base64 = await fileToBase64(file);
+        onUpdate(traveler.id, 'passportFileBase64', base64);
         const res = await fetch('/api/ocr', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -378,6 +407,8 @@ function TravelerCard({
             const value = normalizePassportAutofillValue(key, String(f.value));
             if (value) onUpdate(traveler.id, key, value);
           }
+          if (typeof data.providerRequestId === 'string') onUpdate(traveler.id, 'ocrProviderRequestId', data.providerRequestId);
+          if (data.confidence === 'low' || data.confidence === 'medium' || data.confidence === 'high') onUpdate(traveler.id, 'ocrConfidence', data.confidence);
           onUpdate(traveler.id, 'ocrStatus', 'done');
           onDocumentUploaded();
         } else {
@@ -1113,7 +1144,7 @@ export default function ApplyView() {
     trackApplyProductIntent({ eventType: 'DOCUMENT_UPLOADED', visa: activeVisaType });
   }, [activeVisaType]);
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!activeVisaType || submitting) return;
     if (blockingValidationIssues.length > 0) {
       setSubmitResult({ txnId: '', appId: '', error: blockingValidationIssues.map((issue) => issue.message).join(' ') });
@@ -1144,7 +1175,7 @@ export default function ApplyView() {
       status: 'PAYMENT_PENDING' as const,
     }));
 
-    const result = submitApplication({
+    const localPayload = {
       internalId,
       groupName: appType === 'group' ? groupName : '',
       destination: activeVisaType.destination,
@@ -1154,15 +1185,65 @@ export default function ApplyView() {
       returnDate,
       totalPrice: total,
       travelers: travelersPayload,
-    });
+    };
 
-    setSubmitting(false);
+    if (appType === 'individual' && activeVisaType.id && travelers.length === 1) {
+      try {
+        const traveler = travelers[0];
+        const passportDocument = traveler.passportFileBase64 && traveler.passportFileName && traveler.passportMimeType
+          ? {
+              fileName: traveler.passportFileName,
+              mimeType: traveler.passportMimeType,
+              contentBase64: traveler.passportFileBase64,
+              providerRequestId: traveler.ocrProviderRequestId || undefined,
+              confidence: traveler.ocrConfidence || undefined,
+              normalizedExtraction: buildPassportCrmFields(traveler),
+            }
+          : undefined;
+        const response = await fetch('/api/applications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            visaProductId: activeVisaType.id,
+            internalId: internalId || undefined,
+            applicants: [{
+              firstName: traveler.firstName,
+              lastName: traveler.lastName,
+              passportNumber: traveler.passportNumber,
+              nationality: traveler.nationality || 'Indian',
+              sex: traveler.sex || undefined,
+              dateOfBirth: traveler.dateOfBirth || undefined,
+              placeOfBirth: traveler.placeOfBirth || undefined,
+              placeOfIssue: traveler.placeOfIssue || undefined,
+              maritalStatus: traveler.maritalStatus || undefined,
+              dateOfIssue: traveler.dateOfIssue || undefined,
+              dateOfExpiry: traveler.dateOfExpiry || undefined,
+              isChild: calculateAge(traveler.dateOfBirth, travelDate || new Date().toISOString().slice(0, 10)) !== null
+                ? (calculateAge(traveler.dateOfBirth, travelDate || new Date().toISOString().slice(0, 10)) as number) < 18
+                : false,
+              passportDocument,
+            }],
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data.application?.id) {
+          setSubmitResult({ txnId: data.application.internalId || internalId || '', appId: data.application.id });
+          setSubmitting(false);
+          return;
+        }
+      } catch {
+        // Keep the existing local workflow available if production submission is unavailable.
+      }
+    }
+
+    const result = submitApplication(localPayload);
 
     if (result.success) {
       setSubmitResult({ txnId: result.transactionId, appId: result.applicationId });
     } else {
       setSubmitResult({ txnId: '', appId: '', error: result.error });
     }
+    setSubmitting(false);
   }, [activeVisaType, submitting, blockingValidationIssues, travelers, internalId, groupName, appType, total, travelDate, returnDate, submitApplication]);
 
   const copyTxnId = useCallback(() => {
