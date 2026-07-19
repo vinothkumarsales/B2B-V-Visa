@@ -164,7 +164,7 @@ async function callDigioTemplateSession(input: {
 
     const uploadResponse = await fetch(`${input.baseUrl}/client/kyc/v2/${stringField(createData.id)}/upload`, {
       method: 'POST',
-      headers: { Authorization: input.auth },
+      headers: { Authorization: input.auth, 'x-session': input.auth },
       body: form,
     });
     const uploadData = await parseJsonResponse(uploadResponse);
@@ -207,7 +207,7 @@ async function callDigioStatelessAnalyzer(input: {
     const response = await fetch(`${input.baseUrl}/v4/client/kyc/analyze/file/idcard`, {
       method: 'POST',
       signal: controller.signal,
-      headers: { Authorization: input.auth },
+      headers: { Authorization: input.auth, 'x-session': input.auth },
       body: form,
     });
     const data = await parseJsonResponse(response);
@@ -383,6 +383,7 @@ function recordField(value: unknown) {
     ? (value as Record<string, unknown>)
     : undefined;
 }
+
 
 
 
