@@ -99,7 +99,7 @@ async function callDigio(input: {
   imageBase64: string;
   mimeType?: string;
 }): Promise<Record<string, unknown>> {
-  const auth = Buffer.from(`${env.DIGIO_CLIENT_ID}:${env.DIGIO_CLIENT_SECRET}`).toString('base64');
+  const auth = `Basic ${Buffer.from(`${env.DIGIO_CLIENT_ID}:${env.DIGIO_CLIENT_SECRET}`).toString('base64')}`;
   const baseUrl = env.DIGIO_BASE_URL.replace(/\/$/, '');
   const fileType = input.mimeType || mimeTypeFromDataUrl(input.imageBase64) || 'application/octet-stream';
   const fileBlob = new Blob([base64ToBuffer(input.imageBase64)], { type: fileType });
@@ -149,6 +149,7 @@ async function callDigioTemplateSession(input: {
       method: 'POST',
       headers: {
         Authorization: input.auth,
+        'x-session': input.auth,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestPayload),
