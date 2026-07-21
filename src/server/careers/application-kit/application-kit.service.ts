@@ -154,7 +154,7 @@ export async function runApplicationKit(input: GenerateApplicationKitInput): Pro
   }
 
   try {
-    const candidateName = input.candidateSummary?.name || input.candidateId || 'Candidate';
+    const candidateName = input.candidateId || 'Candidate';
     const jobTitle = input.jobSummary?.title || 'Role';
     const company = input.jobSummary?.company || 'Company';
     const mailbox = await writeRecruiterEmailDraft({
@@ -165,43 +165,21 @@ export async function runApplicationKit(input: GenerateApplicationKitInput): Pro
       coverLetterMarkdown: (result.draft as any)?.coverLetterMarkdown || '',
       prohibitedTerms: [],
     });
-    state = await writeCheckpoint(state);
-    state.output = state.output || {};
-    state.output.mailboxDraft = {
-      requestId: mailbox.requestId,
-      sent: mailbox.sent,
-      prohibitedTermsFound: mailbox.draft.prohibitedTermsFound,
-    };
+    warnings.push(`Mailbox draft assembled: requestId=${mailbox.requestId}, sent=${String(mailbox.sent)}, prohibitedTermsFound=${String(mailbox.draft.prohibitedTermsFound)}`);
   } catch (mailError) {
     warnings.push('Mailbox draft assembly failed: ' + (mailError as Error).message);
   }
 
   const governed = await executeGovernedAction({ action: 'write_artifacts' });
-  if (!governed.ok) {
-    warnings.push(governed.reason || 'Governed write_artifacts blocked.');
-  }
+  if (!governed.ok) warnings.push(governed.reason || 'Governed write_artifacts blocked.');
 
   const governedRead = await executeGovernedAction({ action: 'read_artifacts' });
-  if (!governedRead.ok) {
-    warnings.push(governedRead.reason || 'Governed read_artifacts blocked.');
-  }
+  if (!governedRead.ok) warnings.push(governedRead.reason || 'Governed read_artifacts blocked.');
 
   const governedResume = await executeGovernedAction({ action: 'resume_pipeline' });
-  if (!governedResume.ok) {
-    warnings.push(governedResume.reason || 'Governed resume_pipeline blocked.');
-  }
+  if (!governedResume.ok) warnings.push(governedResume.reason || 'Governed resume_pipeline blocked.');
 
-  state = await writeCheckpoint(state);
-  state.output.governedExecution = {
-    writeArtifacts: governed.executed,
-    readArtifacts: governedRead.executed,
-    resumePipeline: governedResume.executed,
-    actions: {
-      write_artifacts: governed.ok,
-      read_artifacts: governedRead.ok,
-      resume_pipeline: governedResume.ok,
-    },
-  } as any;
+  warnings.push(`Governed trace: write_artifacts=${String(governed.executed)} read_artifacts=${String(governedRead.executed)} resume_pipeline=${String(governedResume.executed)}`);
 
   return result;
 }
