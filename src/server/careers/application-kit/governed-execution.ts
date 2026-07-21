@@ -40,19 +40,14 @@ export async function executeGovernedAction(input: {
   const { action, payload } = input;
 
   if (!isGovernedActionAllowed(action)) {
-    return {
-      ok: false,
-      action,
-      executed: false,
-      reason: `Action '${action}' is disabled by default.`,
-    };
+    return { ok: false, action, executed: false, reason: `Action '${action}' is disabled by default.` };
   }
 
   switch (action) {
     case 'write_artifacts':
-      return { ok: true, action, executed: true };
+      return { ok: true, action, executed: true, reason: 'Artifact write governed by idempotent artifact writer.' };
     case 'read_artifacts':
-      return { ok: true, action, executed: true };
+      return { ok: true, action, executed: true, reason: 'Read governed by artifact path boundary.' };
     case 'approve_hitl':
       return { ok: true, action, executed: true, reason: 'HITL approval governed by existing admin API.' };
     case 'resume_pipeline':
