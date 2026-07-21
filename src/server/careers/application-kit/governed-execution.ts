@@ -40,7 +40,18 @@ export async function executeGovernedAction(input: {
   const { action, payload } = input;
 
   if (!isGovernedActionAllowed(action)) {
-    return { ok: false, action, executed: false, reason: `Action '${action}' is disabled by default.` };
+    switch (action) {
+      case 'send_recruiter_email':
+        return { ok: false, action, executed: false, reason: 'Email sending is disabled by default.' };
+      case 'update_crm':
+        return { ok: false, action, executed: false, reason: 'CRM updates are disabled by default.' };
+      case 'save_workdrive':
+        return { ok: false, action, executed: false, reason: 'WorkDrive saves are disabled by default.' };
+      case 'browser_submit':
+        return { ok: false, action, executed: false, reason: 'Browser automation submission is disabled by default.' };
+      default:
+        return { ok: false, action, executed: false, reason: `Action '${action}' is disabled by default.` };
+    }
   }
 
   switch (action) {
