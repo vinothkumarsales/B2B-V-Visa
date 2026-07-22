@@ -24,19 +24,13 @@ export function MittoDashboardActions({ candidateId, initialConnections }: { can
   }
 
   async function connect(provider: 'mail' | 'linkedin') {
-    setBusy(provider); setMessage('');
-    try {
-      const response = await fetch('/api/careers/connections', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ provider }) });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.ok) throw new Error(data.error?.message ?? 'Connection setup unavailable');
-      setConnections(current => current.some(item => item.provider === provider) ? current : [...current, { provider, connected: false }]);
-      setMessage(`${provider === 'mail' ? 'Gmail' : 'LinkedIn'} authorization prepared. Complete OAuth when provider credentials are configured.`);
-    } catch (error) { setMessage(error instanceof Error ? error.message : 'Connection setup unavailable.'); }
-    finally { setBusy(''); }
+    setMessage(provider === 'mail'
+      ? 'Gmail requires the Mitto callback to be approved in Google Cloud. No connection was created.'
+      : 'LinkedIn requires a LinkedIn OAuth application and callback approval. No connection was created.');
   }
 
   const connected = (provider: string) => connections.find(item => item.provider === provider)?.connected;
-  return <div className="grid gap-4 lg:grid-cols-3"><Action title="Upload a new resume" copy="PDF, JPG, PNG, or WebP · private and versioned"><input ref={fileRef} className="hidden" type="file" accept=".pdf,image/jpeg,image/png,image/webp" onChange={event => void upload(event.target.files?.[0])} /><button className="mitto-button-secondary w-full" onClick={() => fileRef.current?.click()} disabled={busy === 'resume'}>{busy === 'resume' ? <Loader2 className="size-4 animate-spin" /> : <UploadCloud className="size-4" />} Upload resume</button></Action><Action title="Gmail" copy="Governed recruiter drafts and response signals"><button className="mitto-button-secondary w-full" onClick={() => void connect('mail')} disabled={busy === 'mail' || connected('mail')}>{busy === 'mail' ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />} {connected('mail') ? 'Connected' : 'Connect Gmail'}</button></Action><Action title="LinkedIn" copy="Profile context and opportunity discovery"><button className="mitto-button-secondary w-full" onClick={() => void connect('linkedin')} disabled={busy === 'linkedin' || connected('linkedin')}>{busy === 'linkedin' ? <Loader2 className="size-4 animate-spin" /> : <Linkedin className="size-4" />} {connected('linkedin') ? 'Connected' : 'Connect LinkedIn'}</button></Action>{message && <p className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[.06] p-4 text-sm text-cyan-50 lg:col-span-3">{message}</p>}</div>;
+  return <div className="grid gap-4 lg:grid-cols-3"><Action title="Upload a new resume" copy="Text-based PDF recommended · private and versioned"><input ref={fileRef} className="hidden" type="file" accept=".pdf,image/jpeg,image/png,image/webp" onChange={event => void upload(event.target.files?.[0])} /><button className="mitto-button-secondary w-full" onClick={() => fileRef.current?.click()} disabled={busy === 'resume'}>{busy === 'resume' ? <Loader2 className="size-4 animate-spin" /> : <UploadCloud className="size-4" />} Upload and analyse</button></Action><Action title="Gmail" copy="Waiting for Google callback approval"><button className="mitto-button-secondary w-full" onClick={() => void connect('mail')} disabled={connected('mail')}><Mail className="size-4" /> {connected('mail') ? 'Connected' : 'Configuration required'}</button></Action><Action title="LinkedIn" copy="Waiting for a LinkedIn OAuth application"><button className="mitto-button-secondary w-full" onClick={() => void connect('linkedin')} disabled={connected('linkedin')}><Linkedin className="size-4" /> {connected('linkedin') ? 'Connected' : 'Configuration required'}</button></Action>{message && <p className="rounded-2xl border border-cyan-700/20 bg-cyan-50 p-4 text-sm text-slate-700 lg:col-span-3">{message}</p>}</div>;
 }
 
 function Action({ title, copy, children }: { title: string; copy: string; children: React.ReactNode }) { return <div className="mitto-glass rounded-[1.3rem] p-5"><h3 className="font-semibold">{title}</h3><p className="mb-5 mt-2 min-h-10 text-sm text-slate-400">{copy}</p>{children}</div>; }

@@ -51,6 +51,7 @@ class SupabasePrivateDocumentStorage implements PrivateDocumentStorage {
   constructor(private readonly baseUrl: string, private readonly serviceKey: string, private readonly bucket: string) {}
   async upload(input: UploadInput): Promise<StoredDocument> {
     validateUpload(input);
+    await this.ensurePrivateBucket();
     const checksum = createHash('sha256').update(input.bytes).digest('hex');
     const safeFilename = sanitizeFilename(input.originalFilename);
     const extension = extname(safeFilename);
@@ -58,6 +59,15 @@ class SupabasePrivateDocumentStorage implements PrivateDocumentStorage {
     const response = await fetch(`${this.baseUrl.replace(/\/$/, '')}/storage/v1/object/${encodeURIComponent(this.bucket)}/${storageKey.split('/').map(encodeURIComponent).join('/')}`, { method: 'POST', headers: { authorization: `Bearer ${this.serviceKey}`, apikey: this.serviceKey, 'content-type': input.mimeType, 'x-upsert': 'false' }, body: new Blob([new Uint8Array(input.bytes)], { type: input.mimeType }) });
     if (!response.ok) throw new Error(`Supabase storage upload failed with status ${response.status}`);
     return { storageProvider: 'supabase', storageKey, safeFilename, mimeType: input.mimeType, fileSize: input.bytes.byteLength, checksum };
+  }
+  private async ensurePrivateBucket() {
+    const headers = { authorization: `Bearer ${this.serviceKey}`, apikey: this.serviceKey, 'content-type': 'application/json' };
+    const base = this.baseUrl.replace(/\/$/, '');
+    const check = await fetch(`${base}/storage/v1/bucket/${encodeURIComponent(this.bucket)}`, { headers, cache: 'no-store' });
+    if (check.ok) return;
+    if (check.status !== 404) throw new Error(`Supabase storage bucket check failed with status ${check.status}`);
+    const create = await fetch(`${base}/storage/v1/bucket`, { method: 'POST', headers, body: JSON.stringify({ id: this.bucket, name: this.bucket, public: false, file_size_limit: 10485760, allowed_mime_types: [...allowedMimeTypes] }) });
+    if (!create.ok && create.status !== 409) throw new Error(`Supabase storage bucket creation failed with status ${create.status}`);
   }
   async createSignedDownloadUrl(key: string): Promise<string> {
     assertSafeStorageKey(key);
