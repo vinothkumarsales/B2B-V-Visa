@@ -7,6 +7,8 @@ import { careersFeatureSnapshot } from '@/server/careers/feature-flags';
 import { careerCandidateFacingStatus } from '@/server/careers/onboarding';
 import { MittoDashboardActions } from '@/components/careers/MittoDashboardActions';
 
+export const metadata = { title: 'Command center | Mitto Career', description: 'Your private Mitto Career automation workspace.' };
+
 export default async function MittoDashboardPage() {
   const session = await requireSession().catch(() => null);
   if (!session) redirect('/login');
