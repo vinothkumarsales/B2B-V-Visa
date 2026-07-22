@@ -17,7 +17,8 @@ export function MittoDashboardActions({ candidateId, initialConnections }: { can
       const response = await fetch('/api/careers/resume', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ candidateId, fileName: file.name, mimeType: file.type, contentBase64 }) });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error?.message ?? 'Upload unavailable');
-      setMessage('Resume uploaded and queued for managed review.');
+      setMessage(data.analysis?.status === 'ready' ? `Resume analysed. ATS readiness: ${data.analysis.atsScore}/100. Refreshing your intelligence dashboard…` : 'Resume uploaded. OCR or manual review is required before scoring.');
+      window.setTimeout(() => window.location.reload(), 900);
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Upload unavailable.'); }
     finally { setBusy(''); }
   }

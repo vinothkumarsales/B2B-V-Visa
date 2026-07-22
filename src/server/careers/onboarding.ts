@@ -7,6 +7,7 @@ import { careersFeatureEnabled, careersSafeMutationEnabled } from './feature-fla
 import { careerPaymentIntentInitialStatus, careerSubscriptionInitialStatus } from './payment-domain';
 import { CAREER_SUPPORTED_CURRENCIES, resolveCareerPackageSelection } from './packages';
 import { careerCandidateFacingStatus, careerProfileCompletion } from './policy';
+import { analyzeCareerResume } from './resume-intelligence';
 
 export const careerOnboardingSchema = z.object({
   fullName: z.string().min(2).max(160),
@@ -181,7 +182,7 @@ export async function saveCareerResumeUpload(input: {
 
   const candidate = await db.careerCandidate.findFirst({
     where: { id: input.payload.candidateId, userId: input.userId },
-    include: { resumes: { orderBy: { version: 'desc' }, take: 1 } },
+    include: { resumes: { orderBy: { version: 'desc' }, take: 1 }, preferences: true },
   });
   if (!candidate) throw apiError('RESOURCE_NOT_FOUND', 'Career candidate profile not found.', 404);
 
@@ -213,8 +214,16 @@ export async function saveCareerResumeUpload(input: {
       candidateId: candidate.id,
       status: 'profile_processing',
       label: 'Resume received',
-      detail: 'Resume uploaded for internal review. No Career-Ops scan or application automation has started.',
+      detail: 'Resume uploaded securely. CareerOps intelligence is starting.',
     },
+  });
+
+  const analysis = await analyzeCareerResume(bytes, storage.mimeType, candidate).catch(() => ({
+    status: 'needs_ocr' as const, atsScore: null, eligibility: 'Resume analysis needs manual review',
+    opportunityCountries: [], strengths: [], improvements: ['Resume text extraction could not be completed'], extractedCharacters: 0,
+  }));
+  await db.careerStatusEvent.create({
+    data: { candidateId: candidate.id, status: 'profile_processing', label: 'CareerOps analysis ready', detail: JSON.stringify(analysis) },
   });
 
   await auditLog({
@@ -225,7 +234,7 @@ export async function saveCareerResumeUpload(input: {
     metadata: { candidateId: candidate.id, version },
   });
 
-  return resume;
+  return { resume, analysis };
 }
 
 function candidateData(
