@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { CareerCheckoutPanel } from '@/components/careers/CareerCheckoutPanel';
 import { careersFeatureSnapshot } from '@/server/careers/feature-flags';
 import { careerActivationDisplayStatus } from '@/server/careers/activation-policy';
+import { MittoCareerShell } from '@/components/careers/MittoCareerShell';
 
 export default async function CareersDashboardPage() {
   const session = await requireSession().catch(() => null);
@@ -32,14 +33,15 @@ export default async function CareersDashboardPage() {
   });
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_42%,#f4f8fb_100%)] px-5 py-8 text-foreground lg:py-12">
+    <MittoCareerShell compact>
+    <main className="px-5 py-8 lg:py-12">
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="overflow-hidden rounded-2xl border border-vvisa-border-subtle bg-slate-950 text-white shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
           <div className="grid gap-8 p-6 md:p-8 lg:grid-cols-[1fr_auto] lg:p-10">
             <div>
               <Badge className="bg-cyan-300 text-slate-950">
                 <Sparkles className="size-3.5" />
-                VVisa Careers command center
+                Mitto Career command center
               </Badge>
               <h1 className="mt-5 text-4xl font-semibold leading-tight md:text-5xl">Candidate dashboard</h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
@@ -170,6 +172,7 @@ export default async function CareersDashboardPage() {
         )}
       </div>
     </main>
+    </MittoCareerShell>
   );
 }
 
