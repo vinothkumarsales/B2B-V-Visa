@@ -31,20 +31,78 @@ export function llmProviderEnabled(): boolean {
   return activeProvider !== 'none';
 }
 
+export function resolveLlmProviderFromEnv(): LlmProvider {
+  const key = (process.env.OPENROUTER_API_KEY || '').trim();
+  if (key) return 'openrouter';
+  return 'none';
+}
+
 export async function callLlm(input: LlmCallInput): Promise<LlmCallResult> {
-  if (!llmProviderEnabled()) {
+  const provider = activeProvider;
+
+  if (provider === 'none') {
     return {
-      provider: activeProvider,
+      provider,
       text: '',
       metadata: { disabled: true, reason: 'LLM provider is not configured' },
     };
   }
 
-  // Provider boundary: no live LLM call is implemented in this phase.
-  // This stub preserves the contract for 4C wiring while keeping fixture-only behavior safe.
+  if (provider === 'openrouter') {
+    const apiKey = (process.env.OPENROUTER_API_KEY || '').trim();
+    if (!apiKey) {
+      return {
+        provider,
+        text: '',
+        metadata: { disabled: true, reason: 'OPENROUTER_API_KEY is not set' },
+      };
+    }
+
+    const baseUrl = (process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/+$/, '');
+    const model = (process.env.OPENROUTER_MODEL || '').trim() || 'openrouter/default';
+
+    try {
+      const response = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content: input.prompt }],
+          temperature: input.temperature ?? 0.2,
+          max_tokens: input.maxTokens ?? 256,
+        }),
+      });
+
+      const data = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+      const text = String((data?.choices?.[0] as Record<string, unknown>)?.['message']?.['content'] ?? '');
+
+      return {
+        provider,
+        text,
+        metadata: {
+          status: response.status,
+          model,
+          raw: data,
+        },
+      };
+    } catch (error) {
+      return {
+        provider,
+        text: '',
+        metadata: {
+          error: true,
+          message: (error as Error)?.message || 'OpenRouter request failed',
+        },
+      };
+    }
+  }
+
   return {
-    provider: activeProvider,
+    provider,
     text: '',
-    metadata: { stub: true, reason: 'LLM call boundary not implemented in 4A/4B' },
+    metadata: { disabled: true, reason: `LLM provider '${provider}' boundary not implemented` },
   };
 }
