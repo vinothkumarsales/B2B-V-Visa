@@ -1,10 +1,6 @@
-import LoginView from '@/views/LoginView';
-import { RouteScreen } from '@/components/RouteScreen';
+import { Suspense } from 'react';
+import { MittoAuth } from '@/components/careers/MittoAuth';
 
 export default function LoginPage() {
-  return (
-    <RouteScreen view="login">
-      <LoginView />
-    </RouteScreen>
-  );
+  return <Suspense><MittoAuth mode="login" /></Suspense>;
 }
