@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mitto Career | Managed job-search command center', description: 'Human-reviewed career automation from résumé intake to application preparation.' };
 
 export default async function CareersLandingPage() {
-  const configured = await listPublicCareerPackages('INR');
+  const configured = await listPublicCareerPackages('INR').catch(() => []);
   const packages = configured.length ? configured : fallbackPackages;
   return <MittoCareerShell>
     <section className="mx-auto grid max-w-[1480px] gap-14 px-5 pb-24 pt-16 lg:grid-cols-[1.02fr_.98fr] lg:px-8 lg:pb-32 lg:pt-24">
