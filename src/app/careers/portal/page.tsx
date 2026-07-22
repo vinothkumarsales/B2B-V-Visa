@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowRight, BriefcaseBusiness, CheckCircle2, FileSearch, FileText, Gauge, ShieldCheck, Sparkles, UserRound } from 'lucide-react';
 import { MittoCareerShell } from '@/components/careers/MittoCareerShell';
 import { GlassCard, SectionHeading, StatusBadge } from '@/components/careers/MittoPrimitives';
+import { redirect } from 'next/navigation';
 
 const workspace = [
   { label: 'Profile setup', value: 'Start here', detail: 'Add your experience, target roles, regions, and work authorization.', icon: UserRound, href: '/careers/onboarding', status: 'Available' as const },
@@ -10,6 +11,7 @@ const workspace = [
 ];
 
 export default function MittoCareerPortalPage() {
+  redirect('/#workspace');
   return (
     <MittoCareerShell>
       <section className="mx-auto max-w-7xl px-5 pb-16 pt-12 lg:px-8 lg:pt-20">

@@ -91,6 +91,38 @@ enum IntegrationProvider {
   DIGIO
 }
 
+enum CareerConnectionProvider {
+  mail
+  linkedin
+}
+
+enum CareerConnectionStatus {
+  idle
+  connecting
+  connected
+  limited
+  error
+  revoked
+}
+
+model CareerConnection {
+  id                String                 @id @default(cuid())
+  userId            String
+  user              User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          CareerConnectionProvider
+  status            CareerConnectionStatus  @default(idle)
+  connected         Boolean                 @default(false)
+  meta              Json?
+  scopes            String[]
+  lastSyncAt        DateTime?
+  tokenExpiresAt    DateTime?
+  providerAccountId String?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  @@index([userId, provider])
+}
+
 enum IntegrationEventStatus {
   PENDING
   PROCESSING
@@ -252,6 +284,7 @@ model User {
   auditLogs    AuditLog[]
   adminUser    AdminUser?
   careerCandidates CareerCandidate[]
+  connections  CareerConnection[]
 }
 
 model Session {

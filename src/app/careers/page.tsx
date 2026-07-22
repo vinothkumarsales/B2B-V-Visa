@@ -4,11 +4,13 @@ import { MittoCareerShell } from '@/components/careers/MittoCareerShell';
 import { GlassCard, SectionHeading, StatusBadge } from '@/components/careers/MittoPrimitives';
 import { mittoFeatures, mittoJourney } from '@/components/careers/mitto-career-data';
 import { listPublicCareerPackages } from '@/server/careers/packages';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mitto Career | Managed job-search command center', description: 'Human-reviewed career automation from résumé intake to application preparation.' };
 
 export default async function CareersLandingPage() {
+  redirect('/#workspace');
   const configured = await listPublicCareerPackages('INR').catch(() => []);
   const packages = configured.length ? configured : fallbackPackages;
   return <MittoCareerShell>
