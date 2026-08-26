@@ -1,42 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { loginSchema, type LoginPayload } from '@/lib/auth/login-schema';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import {
-  DollarSign,
-  Zap,
-  Headphones,
-  ArrowLeft,
-  Eye,
-  EyeOff,
-} from 'lucide-react';
-
-const features = [
-  {
-    icon: DollarSign,
-    title: 'Best Prices for Travel Agents',
-    points: ['Bulk discounts on every visa', 'No hidden charges or markup'],
-  },
-  {
-    icon: Zap,
-    title: 'Quick & Easy Applications',
-    points: ['Apply for 500+ visas in minutes', 'Bulk upload & auto-fill'],
-  },
-  {
-    icon: Headphones,
-    title: '24/7 Support, Anytime',
-    points: ['Dedicated account manager', 'WhatsApp, email & phone support'],
-  },
-];
+import { AuthLayout, FieldError, GoogleMark } from '@/components/auth/AuthLayout';
+import { TRUST_POINTS } from '@/content/proof';
+import { AlertCircle, ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 function loginErrorMessage(code?: string) {
   switch (code) {
@@ -78,15 +54,26 @@ function loginErrorMessage(code?: string) {
   }
 }
 
+const emptySubscribe = () => () => {};
+
 export default function LoginView() {
   const router = useRouter();
   const navigate = useAppStore((s) => s.navigate);
   const login = useAppStore((s) => s.login);
   const [showPassword, setShowPassword] = useState(false);
-  const [serverError, setServerError] = useState(() => {
-    if (typeof window === 'undefined') return '';
-    return loginErrorMessage(new URLSearchParams(window.location.search).get('error') ?? undefined);
-  });
+  // An OAuth failure comes back as ?error=CODE. Read it through
+  // useSyncExternalStore so the server snapshot (null) and the first client
+  // snapshot agree, then let submit results override it.
+  const urlErrorCode = useSyncExternalStore(
+    emptySubscribe,
+    () => new URLSearchParams(window.location.search).get('error'),
+    () => null,
+  );
+  // null = show whatever the URL says; a string = an explicit submit result.
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const serverError =
+    submitError ?? (urlErrorCode ? loginErrorMessage(urlErrorCode) : '');
+  const setServerError = setSubmitError;
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -128,230 +115,132 @@ export default function LoginView() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] lg:grid lg:grid-cols-[minmax(340px,42%)_1fr]">
-      {/* Left Panel — Branding */}
-      <motion.div
-        initial={{ opacity: 0, x: -16 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative flex min-h-[230px] w-full flex-col justify-between overflow-hidden bg-[#1f5fd6] p-6 text-white sm:p-8 lg:min-h-screen lg:p-12"
-      >
-        {/* Decorative background circles */}
-        <div className="absolute -top-24 -left-24 w-72 h-72 bg-white/5 rounded-full" />
-        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-white/5 rounded-full" />
-
-        {/* Back button */}
-        <button
-          onClick={() => navigate('landing')}
-          className="relative z-10 flex w-fit items-center gap-2 text-primary-foreground/80 transition-colors hover:text-primary-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          <span className="text-sm">Back</span>
-        </button>
-
-        <div className="relative z-10 flex flex-col gap-8">
-          {/* Logo + Brand */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm">
-              <span className="text-primary-foreground font-bold text-xl">V</span>
-            </div>
-            <span className="text-primary-foreground font-semibold text-xl tracking-tight">
-              VVisa Business
-            </span>
-          </div>
-
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
-              Join 10,000+ Agents growing with VVisa!
-            </h1>
-            <p className="mt-3 text-white/70 text-sm leading-relaxed">
-              The fastest way to process visa applications for your customers.
-            </p>
-          </div>
-
-          {/* Feature Cards */}
-          <div className="hidden flex-col gap-3 lg:flex">
-            {features.map((feature) => (
-              <div
-                key={feature.title}
-                className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/15 shrink-0 mt-0.5">
-                    <feature.icon className="size-4 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-sm text-white">
-                      {feature.title}
-                    </h3>
-                    <ul className="mt-1.5 space-y-0.5">
-                      {feature.points.map((point) => (
-                        <li
-                          key={point}
-                          data-point={point}
-                          className="text-[0px] leading-relaxed text-white/70 after:text-xs after:content-[attr(data-point)]"
-                        >
-                          • {point}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Right Panel — Login Form */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="flex w-full items-start justify-center bg-[#f5f7fb] px-5 py-8 sm:px-8 lg:min-h-screen lg:items-center lg:px-12"
-      >
-        <div className="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          {/* Heading */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-slate-950">Login to VVisa</h2>
-            <p className="mt-1.5 text-sm text-slate-500">
-              Enter your credentials to access your account
-            </p>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Email */}
-            <div className="space-y-2">
-              <Label
-                htmlFor="login-identifier"
-                className="text-sm font-medium text-slate-700"
-              >
-                Email or mobile number
-              </Label>
-              <Input
-                id="login-identifier"
-                type="text"
-                autoComplete="username"
-                placeholder="you@agency.com or +91 mobile"
-                className="h-11 border-slate-300 bg-white text-slate-950 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20"
-                {...register('identifier')}
-              />
-              {errors.identifier && (
-                <p className="text-xs text-red-600">{errors.identifier.message}</p>
-              )}
-            </div>
-
-            {/* Password */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label
-                  htmlFor="login-password"
-                  className="text-sm font-medium text-slate-700"
-                >
-                  Password
-                </Label>
-                <button
-                  type="button"
-                  className="text-xs text-blue-600 transition-colors hover:text-blue-700"
-                >
-                  Reset My Password
-                </button>
-              </div>
-              <div className="relative">
-                <Input
-                  id="login-password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
-                  autoComplete="current-password"
-                  className="h-11 border-slate-300 bg-white pr-10 text-slate-950 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20"
-                  {...register('password')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-700"
-                >
-                  {showPassword ? (
-                    <EyeOff className="size-4" />
-                  ) : (
-                    <Eye className="size-4" />
-                  )}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="text-xs text-red-400">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
-
-            {/* Sign In Button */}
-            {serverError && (
-              <p className="text-xs text-red-400">{serverError}</p>
-            )}
-            <Button
-              type="submit"
-              disabled={submitting}
-              className="h-11 w-full cursor-pointer bg-blue-600 font-medium text-white transition-colors hover:bg-blue-700"
-            >
-              {submitting ? 'Signing in...' : 'Sign In'}
-            </Button>
-          </form>
-
-          {/* Divider */}
-          <div className="flex items-center gap-4 my-6">
-            <Separator className="flex-1 bg-slate-200" />
-            <span className="text-xs font-medium text-slate-400">OR</span>
-            <Separator className="flex-1 bg-slate-200" />
-          </div>
-
-          {/* Google Button */}
-          <Button
-            variant="outline"
+    <AuthLayout
+      title="Log in to VVisa"
+      subtitle="Enter your agency credentials to open the desk."
+      footer={
+        <p className="mt-8 text-center text-sm text-vvisa-text-secondary">
+          No account yet?{' '}
+          <button
             type="button"
             onClick={() => {
-              setServerError('');
-              window.location.href = '/api/auth/google';
+              navigate('signup');
+              router.push('/register');
             }}
-            className="h-11 w-full cursor-pointer border-slate-300 bg-white font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950"
+            className="rounded font-medium text-primary transition-colors hover:underline"
           >
-            <svg className="size-4 mr-2" viewBox="0 0 24 24">
-              <path
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-                fill="#4285F4"
-              />
-              <path
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                fill="#34A853"
-              />
-              <path
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                fill="#FBBC05"
-              />
-              <path
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                fill="#EA4335"
-              />
-            </svg>
-            Continue with Google
-          </Button>
+            Create an agency account
+          </button>
+        </p>
+      }
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+        {serverError && (
+          <div
+            role="alert"
+            className="flex items-start gap-2.5 rounded-[var(--mk-radius)] border border-destructive/30 bg-destructive/8 px-4 py-3 text-sm text-destructive"
+          >
+            <AlertCircle className="mt-0.5 size-4 shrink-0" />
+            <span>{serverError}</span>
+          </div>
+        )}
 
-          {/* Sign Up Link */}
-          <p className="mt-8 text-center text-sm text-slate-500">
-            Don&apos;t have an account?{' '}
-            <button
-              onClick={() => {
-                navigate('signup');
-                router.push('/register');
-              }}
-              className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors cursor-pointer"
-            >
-              Sign up
-            </button>
-          </p>
+        <div className="space-y-2">
+          <Label htmlFor="login-identifier" className="mk-eyebrow text-foreground">
+            Email or mobile
+          </Label>
+          <Input
+            id="login-identifier"
+            type="text"
+            autoComplete="username"
+            autoFocus
+            placeholder="you@agency.com"
+            className="h-11 rounded-[var(--mk-radius)]"
+            aria-invalid={Boolean(errors.identifier)}
+            aria-describedby={errors.identifier ? 'login-identifier-error' : undefined}
+            {...register('identifier')}
+          />
+          <FieldError id="login-identifier-error">{errors.identifier?.message}</FieldError>
         </div>
-      </motion.div>
-    </div>
+
+        <div className="space-y-2">
+          <div className="flex items-baseline justify-between gap-3">
+            <Label htmlFor="login-password" className="mk-eyebrow text-foreground">
+              Password
+            </Label>
+            <button
+              type="button"
+              className="rounded text-xs font-medium text-primary transition-colors hover:underline"
+            >
+              Forgot?
+            </button>
+          </div>
+          <div className="relative">
+            <Input
+              id="login-password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              className="h-11 rounded-[var(--mk-radius)] pr-11"
+              aria-invalid={Boolean(errors.password)}
+              aria-describedby={errors.password ? 'login-password-error' : undefined}
+              {...register('password')}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute right-2 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-[var(--mk-radius)] text-vvisa-text-muted transition-colors hover:bg-[var(--mk-panel)] hover:text-foreground"
+            >
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          </div>
+          <FieldError id="login-password-error">{errors.password?.message}</FieldError>
+        </div>
+
+        <Button type="submit" size="lg" disabled={submitting} className="w-full">
+          {submitting ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Signing in…
+            </>
+          ) : (
+            <>
+              Sign in
+              <ArrowRight className="size-4" />
+            </>
+          )}
+        </Button>
+      </form>
+
+      <div className="my-6 flex items-center gap-4">
+        <Separator className="flex-1" />
+        <span className="font-mono text-[11px] uppercase tracking-wider text-vvisa-text-muted">or</span>
+        <Separator className="flex-1" />
+      </div>
+
+      <Button
+        variant="outline"
+        size="lg"
+        type="button"
+        onClick={() => {
+          setServerError('');
+          window.location.href = '/api/auth/google';
+        }}
+        className="w-full"
+      >
+        <GoogleMark />
+        Continue with Google
+      </Button>
+
+      <ul className="mk-rule-t mt-8 grid grid-cols-3 gap-3 pt-6">
+        {TRUST_POINTS.map((p) => (
+          <li key={p.label}>
+            <p className="mk-numeral text-[13px] text-foreground">{p.value}</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-vvisa-text-muted">{p.label}</p>
+          </li>
+        ))}
+      </ul>
+    </AuthLayout>
   );
 }

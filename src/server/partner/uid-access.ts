@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { isReservedRootSlug } from '@/content/routes';
 import { getAdminSession } from '@/server/admin/auth';
 import { getSession } from '@/server/auth/session';
 
@@ -10,6 +11,12 @@ export type PartnerUidAccess =
   | { status: 'forbidden' };
 
 export async function resolvePartnerUidAccess(uid: string): Promise<PartnerUidAccess> {
+  // A marketing route at the same path would shadow this segment anyway, so an
+  // agency id that collides with one can never be reached here. Rejecting it up
+  // front keeps the two route systems from disagreeing, and skips a DB round
+  // trip for anything that is really a marketing URL.
+  if (isReservedRootSlug(uid)) return { status: 'not_found' };
+
   const session = await getSession();
   if (!session) return { status: 'unauthenticated' };
 

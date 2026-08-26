@@ -523,7 +523,7 @@ function TravelerCard({
               </h3>
               <div className="flex items-center gap-2 mt-0.5">
                 {traveler.ocrStatus === 'done' && (
-                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400">
+                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-300">
                     <FileCheck className="h-3 w-3" /> OCR Complete
                   </span>
                 )}
@@ -533,7 +533,7 @@ function TravelerCard({
                   </span>
                 )}
                 {traveler.ocrStatus === 'error' && (
-                  <span className="inline-flex items-center gap-1 text-[10px] text-red-400">
+                  <span className="inline-flex items-center gap-1 text-[10px] text-red-700 dark:text-red-300">
                     <X className="h-3 w-3" /> {traveler.ocrError}
                   </span>
                 )}
@@ -555,7 +555,7 @@ function TravelerCard({
                   e.stopPropagation();
                   onRemove(traveler.id);
                 }}
-                className="p-1.5 rounded-lg hover:bg-red-950/30 text-vvisa-text-muted hover:text-red-400 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-red-500/12 text-vvisa-text-muted hover:text-red-700 dark:hover:bg-red-400/15 dark:hover:text-red-300 transition-colors"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -589,7 +589,7 @@ function TravelerCard({
 
               {/* Warning Banner */}
               <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
-                <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                <AlertTriangle className="h-4 w-4 text-amber-700 dark:text-amber-300 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-700/80 dark:text-amber-200/80">
                   VVisa uses <span className="text-primary font-medium">V-Visa AI</span> for passport scanning. Upload a clear passport image and details will be filled automatically. However, it is mandatory to review the information before submitting.
                 </p>
@@ -602,7 +602,7 @@ function TravelerCard({
                     ${traveler.ocrStatus === 'scanning'
                       ? 'border-primary bg-primary/5'
                       : traveler.ocrStatus === 'done'
-                        ? 'border-emerald-500/50 bg-emerald-950/10'
+                        ? 'border-emerald-500/50 bg-emerald-500/8 dark:bg-emerald-400/10'
                         : 'border-vvisa-border hover:border-primary/50'
                     }`}
                   onClick={() => passportInputRef.current?.click()}
@@ -663,9 +663,9 @@ function TravelerCard({
                   ) : traveler.ocrStatus === 'done' && traveler.passportFileName ? (
                     <>
                       <div className="w-10 h-10 rounded-full bg-emerald-600/20 flex items-center justify-center mb-2">
-                        <Check className="h-5 w-5 text-emerald-400" />
+                        <Check className="h-5 w-5 text-emerald-700 dark:text-emerald-300" />
                       </div>
-                      <p className="text-sm text-emerald-400 font-medium mb-1">Scan Complete</p>
+                      <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium mb-1">Scan Complete</p>
                       <p className="text-xs text-vvisa-text-muted">Click to re-scan</p>
                     </>
                   ) : (
@@ -834,7 +834,7 @@ function TravelerCard({
                       />
                       {passportValidity.message && (
                         <div className="mt-2 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] leading-4 text-amber-700 dark:text-amber-100">
-                          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
+                          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-700 dark:text-amber-300" />
                           <span>{passportValidity.message}</span>
                         </div>
                       )}
@@ -842,7 +842,7 @@ function TravelerCard({
                   </div>
                   {isMinor && (!traveler.guardianApplicantId || !traveler.guardianRelationship) && (
                     <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-5 text-amber-700 dark:text-amber-100">
-                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
                       <span>This traveller will be under 18 on the travel date. Link a parent or legal guardian travelling in the same application.</span>
                     </div>
                   )}
@@ -896,15 +896,15 @@ function TravelerCard({
                             <div
                               className={`border border-dashed rounded-lg p-3 flex flex-col items-center justify-center text-center transition-colors cursor-pointer h-20
                                 ${uploadedName
-                                  ? 'border-emerald-500/50 bg-emerald-950/10'
+                                  ? 'border-emerald-500/50 bg-emerald-500/8 dark:bg-emerald-400/10'
                                   : 'border-vvisa-border hover:border-primary/50'
                                 }`}
                               onClick={() => docInputRefs.current[doc.key]?.click()}
                             >
                               {uploadedName ? (
                                 <>
-                                  <FileCheck className="h-3.5 w-3.5 text-emerald-400 mb-1" />
-                                  <p className="text-xs text-emerald-400 font-medium truncate max-w-full px-2">{uploadedName}</p>
+                                  <FileCheck className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300 mb-1" />
+                                  <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium truncate max-w-full px-2">{uploadedName}</p>
                                   <span className="text-[9px] text-vvisa-text-muted mt-0.5">Click to replace</span>
                                 </>
                               ) : (
@@ -1599,7 +1599,7 @@ export default function ApplyView() {
           {blockingValidationIssues.length > 0 && (
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-5 text-amber-700 dark:text-amber-100">
               <div className="flex items-start gap-2">
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
                 <div className="space-y-1">
                   {blockingValidationIssues.map((issue) => (
                     <p key={`${issue.travelerId}-${issue.message}`}>{issue.message}</p>
@@ -1670,7 +1670,7 @@ export default function ApplyView() {
                 {blockingValidationIssues.length > 0 && (
                   <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-5 text-amber-700 dark:text-amber-100">
                     <div className="flex items-start gap-2">
-                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
                       <div className="space-y-1">
                         {blockingValidationIssues.map((issue) => (
                           <p key={`${issue.travelerId}-${issue.message}`}>{issue.message}</p>
@@ -1752,8 +1752,8 @@ export default function ApplyView() {
               {submitResult.error ? (
                 <>
                   <div className="flex items-center justify-center mb-4">
-                    <div className="w-14 h-14 rounded-full bg-red-950/30 flex items-center justify-center">
-                      <X className="h-7 w-7 text-red-400" />
+                    <div className="w-14 h-14 rounded-full bg-red-500/14 dark:bg-red-400/15 flex items-center justify-center">
+                      <X className="h-7 w-7 text-red-700 dark:text-red-300" />
                     </div>
                   </div>
                   <h3 className="text-lg font-semibold text-foreground text-center mb-2">Submission Failed</h3>
@@ -1765,8 +1765,8 @@ export default function ApplyView() {
               ) : (
                 <>
                   <div className="flex items-center justify-center mb-4">
-                    <div className="w-14 h-14 rounded-full bg-emerald-950/30 flex items-center justify-center">
-                      <CheckCircle2 className="h-7 w-7 text-emerald-400" />
+                    <div className="w-14 h-14 rounded-full bg-emerald-500/14 dark:bg-emerald-400/15 flex items-center justify-center">
+                      <CheckCircle2 className="h-7 w-7 text-emerald-700 dark:text-emerald-300" />
                     </div>
                   </div>
                   <h3 className="text-lg font-semibold text-foreground text-center mb-1">
@@ -1790,7 +1790,7 @@ export default function ApplyView() {
                         title="Copy Transaction ID"
                       >
                         {copiedTxn ? (
-                          <Check className="h-4 w-4 text-emerald-400" />
+                          <Check className="h-4 w-4 text-emerald-700 dark:text-emerald-300" />
                         ) : (
                           <Copy className="h-4 w-4 text-vvisa-text-muted" />
                         )}

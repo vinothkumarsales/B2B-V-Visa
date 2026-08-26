@@ -35,7 +35,7 @@ export async function AdminModulePlaceholder({ title }: { title: string }) {
       </div>
 
       {!writesEnabled && (
-        <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+        <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
           Admin write operations are currently disabled in production.
         </div>
       )}
