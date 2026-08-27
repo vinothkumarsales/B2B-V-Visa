@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { after } from 'next/server';
 import { randomUUID } from 'crypto';
 import { db } from '@/lib/db';
-import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { adminDb } from '@/lib/firebase-admin';
+import { verifyFirebaseIdToken } from '@/lib/firebase-verify';
 import { apiError, isApiResponse } from '@/lib/api-response';
 import { loginSchema } from '@/lib/auth/login-schema';
 import { createSession, getSession } from '@/server/auth/session';
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
     // Firebase Authentication Token Flow
     if (body && typeof body === 'object' && 'token' in body) {
       const token = body.token;
-      const decodedToken = await adminAuth.verifyIdToken(token);
+      const decodedToken = await verifyFirebaseIdToken(token);
       const email = decodedToken.email?.toLowerCase();
       if (!email) return loginError('INVALID_TOKEN', 'Token has no email address', 400);
 

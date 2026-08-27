@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { adminAuth } from '@/lib/firebase-admin';
+import { verifyFirebaseIdToken } from '@/lib/firebase-verify';
 
 export async function POST(request: NextRequest) {
   try {
     const { token } = await request.json();
     if (!token) return NextResponse.json({ onboarded: false }, { status: 400 });
 
-    const decodedToken = await adminAuth.verifyIdToken(token);
+    const decodedToken = await verifyFirebaseIdToken(token);
     const email = decodedToken.email?.toLowerCase();
     if (!email) return NextResponse.json({ onboarded: false }, { status: 400 });
 
