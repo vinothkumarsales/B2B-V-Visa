@@ -156,3 +156,14 @@ export const FOOTER_NAV: NavGroup[] = [
     ],
   },
 ];
+
+/**
+ * Paths behind the auth wall: every "Soon" link in the Solutions menu.
+ * Derived from the nav tree so marking a link `soon` gates it automatically.
+ */
+export const SOON_GATED_PATHS: string[] = (
+  PRIMARY_NAV.find((section) => section.label === 'Solutions')?.groups ?? []
+)
+  .flatMap((group) => group.links)
+  .filter((link) => link.soon)
+  .map((link) => link.href);
