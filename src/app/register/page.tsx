@@ -1,9 +1,15 @@
-import { Suspense } from 'react';
-import { MittoAuth } from '@/components/careers/MittoAuth';
-import { GoogleAuthEntry } from '@/components/careers/GoogleAuthEntry';
+import SignupView from '@/views/SignupView';
+import { RouteScreen } from '@/components/RouteScreen';
 
-export const metadata = { title: { absolute: 'Create your workspace | Mitto Career' }, description: 'Create your private Mitto Career job-search workspace.' };
+export const metadata = {
+  title: 'Register',
+  description: 'Create your V-VISA account.',
+};
 
 export default function RegisterPage() {
-  return <><GoogleAuthEntry register /><Suspense><MittoAuth mode="register" /></Suspense></>;
+  return (
+    <RouteScreen view="signup">
+      <SignupView />
+    </RouteScreen>
+  );
 }

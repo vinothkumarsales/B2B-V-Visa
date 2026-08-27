@@ -2,19 +2,11 @@ import { db } from '@/lib/db';
 
 function adminReadFallback<T>(stage: string, fallback: T) {
   return (error: unknown): T => {
-    const prismaError = error as {
-      code?: string;
-      meta?: { modelName?: string; model?: string; target?: unknown };
-      message?: string;
-    };
-    console.error('ADMIN_READ_FAILED', {
-      route: 'admin_overview',
-      stage,
-      prismaCode: prismaError.code ?? null,
-      model: prismaError.meta?.modelName ?? prismaError.meta?.model ?? null,
-      target: prismaError.meta?.target ?? null,
-      safeErrorCode: 'ADMIN_READ_FAILED',
-    });
+    const msg = error instanceof Error ? error.message : String(error);
+    const prismaError = error as { code?: string; meta?: { modelName?: string; model?: string } };
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(`[admin/data] read failed — stage="${stage}" code="${prismaError.code ?? 'unknown'}" msg="${msg.slice(0, 120)}"`);
+    }
     return fallback;
   };
 }

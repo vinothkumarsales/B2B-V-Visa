@@ -1,6 +1,6 @@
-﻿'use client';
+'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
 import { Button } from '@/components/ui/button';
@@ -64,7 +64,6 @@ function DocUploadZone({ title, helper, docType, value, onUpload }: DocUploadZon
       });
       onUpload(docType, file.name);
     } catch {
-      // Still mark as uploaded even if OCR fails
       onUpload(docType, file.name);
     } finally {
       setUploading(false);
@@ -138,6 +137,54 @@ export default function ProfileView() {
     cheque: null,
   });
 
+  // Onboarding user and business fields
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [gender, setGender] = useState('Male');
+  const [designation, setDesignation] = useState('');
+  const [aadhaarNumber, setAadhaarNumber] = useState('');
+  const [aadhaarName, setAadhaarName] = useState('');
+  const [aadhaarAddress, setAadhaarAddress] = useState('');
+  const [logoBase64, setLogoBase64] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [businessName, setBusinessName] = useState(profileAgency?.name || '');
+  const [billingType, setBillingType] = useState<'GST' | 'NON_GST'>('NON_GST');
+
+  // Fetch full details including onboarding fields on mount
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    fetch('/api/profile')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!active) return;
+        if (data.userProfile) {
+          setFirstName(data.userProfile.firstName || '');
+          setLastName(data.userProfile.lastName || '');
+          setGender(data.userProfile.gender || 'Male');
+          setDesignation(data.userProfile.designation || '');
+          setAadhaarNumber(data.userProfile.aadhaarNumber || '');
+          setAadhaarName(data.userProfile.aadhaarName || '');
+          setAadhaarAddress(data.userProfile.aadhaarAddress || '');
+        }
+        if (data.businessProfile) {
+          setBusinessName(data.businessProfile.businessName || '');
+          setBillingType(data.businessProfile.billingType || 'NON_GST');
+          if (data.businessProfile.logoUrl) {
+            setLogoFile('agency_logo');
+            setLogoBase64(data.businessProfile.logoUrl);
+          }
+        }
+      })
+      .catch((err) => console.error('Failed to load onboarding fields:', err))
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -152,6 +199,7 @@ export default function ProfileView() {
         body: JSON.stringify({ imageBase64: base64, documentType: 'logo' }),
       });
       setLogoFile(file.name);
+      setLogoBase64(`data:${file.type};base64,${base64}`);
     } catch {
       setLogoFile(file.name);
     } finally {
@@ -182,6 +230,16 @@ export default function ProfileView() {
           city,
           state,
           zipCode,
+          firstName,
+          lastName,
+          gender,
+          designation,
+          aadhaarNumber,
+          aadhaarName,
+          aadhaarAddress,
+          businessName,
+          billingType,
+          logoUrl: logoBase64,
         }),
       });
       const payload = await response.json().catch(() => ({}));
@@ -192,7 +250,7 @@ export default function ProfileView() {
         accountType: profileAgency?.accountType ?? 'b2b',
         walletBalance: profileAgency?.walletBalance ?? 0,
       });
-      setSaveMessage('Profile saved. CRM sync queued.');
+      setSaveMessage('Profile saved successfully.');
     } catch (error) {
       setSaveMessage(error instanceof Error ? error.message : 'Profile update failed');
     } finally {
@@ -200,6 +258,14 @@ export default function ProfileView() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex h-[50vh] flex-col items-center justify-center gap-3">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+        <p className="text-sm text-vvisa-text-muted">Loading profile details...</p>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -241,6 +307,10 @@ export default function ProfileView() {
                   <Loader2 className="h-6 w-6 text-primary animate-spin mb-1" />
                   <p className="text-xs text-primary">Scanning...</p>
                 </>
+              ) : logoBase64 ? (
+                <div className="relative w-full h-full p-2 flex items-center justify-center">
+                  <img src={logoBase64} alt="Uploaded logo" className="max-w-full max-h-full object-contain rounded-lg" />
+                </div>
               ) : logoFile ? (
                 <>
                   <Check className="h-6 w-6 text-emerald-400 mb-1" />
@@ -259,7 +329,7 @@ export default function ProfileView() {
             </div>
             <div className="flex-1 space-y-3">
               <p className="text-sm text-vvisa-text-secondary">
-                JPG, JPEG, PNG or SVG â€” max 1 MB
+                JPG, JPEG, PNG or SVG - max 1 MB
               </p>
               <Button
                 variant="outline"
@@ -273,12 +343,88 @@ export default function ProfileView() {
         </CardContent>
       </Card>
 
+      {/* Section 1.5: Personal Details */}
+      <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+            <User className="h-4 w-4 text-vvisa-text-secondary" />
+            Personal Details
+          </CardTitle>
+          <p className="text-xs text-vvisa-text-muted">Manage your personal onboarding credentials</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs text-vvisa-text-muted mb-1.5 block">First Name</Label>
+              <Input
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Last Name</Label>
+              <Input
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Gender</Label>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10 w-full px-3 outline-none"
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Designation</Label>
+              <Input
+                value={designation}
+                onChange={(e) => setDesignation(e.target.value)}
+                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Business Name</Label>
+              <Input
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Billing Type</Label>
+              <select
+                value={billingType}
+                onChange={(e) => setBillingType(e.target.value as 'GST' | 'NON_GST')}
+                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10 w-full px-3 outline-none"
+              >
+                <option value="NON_GST">Non-GST Invoice</option>
+                <option value="GST">GST Invoice</option>
+              </select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Section 2: Agency Information */}
       <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold text-foreground flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-vvisa-text-secondary" />
+              <Building2 className="h-4 w-4 text-vvisa-text-secondary" />
               Agency Information
             </div>
             {agencyId && <span className="text-xs text-vvisa-text-muted font-mono font-normal">{agencyId}</span>}
@@ -365,14 +511,14 @@ export default function ProfileView() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <DocUploadZone
                 title="GST Certificate"
-                helper="PDF â€” max 5 MB"
+                helper="PDF - max 5 MB"
                 docType="gst"
                 value={uploadedDocs.gst}
                 onUpload={handleDocUpload}
               />
               <DocUploadZone
                 title="Cancelled Cheque"
-                helper="JPG, PNG or PDF â€” max 5 MB"
+                helper="JPG, PNG or PDF - max 5 MB"
                 docType="cheque"
                 value={uploadedDocs.cheque}
                 onUpload={handleDocUpload}
@@ -443,42 +589,43 @@ export default function ProfileView() {
         </CardContent>
       </Card>
 
-      {/* Section 3: Aadhar Details */}
+      {/* Section 3: Aadhaar Details */}
       <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-foreground flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Lock className="h-4 w-4 text-vvisa-text-secondary" />
-              Aadhar Details
-            </div>
-            {agencyId && <span className="text-xs text-vvisa-text-muted font-mono font-normal">{agencyId}</span>}
+          <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+            <Lock className="h-4 w-4 text-vvisa-text-secondary" />
+            Aadhaar Details
           </CardTitle>
           <p className="text-xs text-vvisa-text-muted">Identity verification information</p>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Name as per Aadhar</Label>
+              <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Name as per Aadhaar</Label>
               <Input
-                value="â€”"
-                readOnly
-                className="bg-vvisa-bg border border-vvisa-border rounded-lg text-foreground h-10 opacity-60 cursor-not-allowed"
+                value={aadhaarName}
+                onChange={(e) => setAadhaarName(e.target.value)}
+                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
+                placeholder="Enter name as per Aadhaar"
               />
             </div>
             <div>
-              <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Aadhar Number</Label>
+              <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Aadhaar Number</Label>
               <Input
-                value="â€”"
-                readOnly
-                className="bg-vvisa-bg border border-vvisa-border rounded-lg text-foreground h-10 opacity-60 cursor-not-allowed"
+                value={aadhaarNumber}
+                onChange={(e) => setAadhaarNumber(e.target.value)}
+                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10 font-mono"
+                placeholder="Enter 12-digit Aadhaar"
+                maxLength={12}
               />
             </div>
             <div>
-              <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Address</Label>
+              <Label className="text-xs text-vvisa-text-muted mb-1.5 block">Address as per Aadhaar</Label>
               <Input
-                value="â€”"
-                readOnly
-                className="bg-vvisa-bg border border-vvisa-border rounded-lg text-foreground h-10 opacity-60 cursor-not-allowed"
+                value={aadhaarAddress}
+                onChange={(e) => setAadhaarAddress(e.target.value)}
+                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
+                placeholder="Enter address as per Aadhaar"
               />
             </div>
           </div>

@@ -1,9 +1,15 @@
-import { Suspense } from 'react';
-import { MittoAuth } from '@/components/careers/MittoAuth';
-import { GoogleAuthEntry } from '@/components/careers/GoogleAuthEntry';
+import LoginView from '@/views/LoginView';
+import { RouteScreen } from '@/components/RouteScreen';
 
-export const metadata = { title: { absolute: 'Log in | Mitto Career' }, description: 'Log in to your private Mitto Career workspace.' };
+export const metadata = {
+  title: 'Log In',
+  description: 'Log in to your V-VISA travel-agent account.',
+};
 
 export default function LoginPage() {
-  return <><GoogleAuthEntry /><Suspense><MittoAuth mode="login" /></Suspense></>;
+  return (
+    <RouteScreen view="login">
+      <LoginView />
+    </RouteScreen>
+  );
 }

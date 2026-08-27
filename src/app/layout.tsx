@@ -6,18 +6,20 @@ import { SalesIqLoader } from '@/components/SalesIqLoader';
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | VVisa Business',
-    default: 'VVisa Business — Best Prices, Effortless Bookings',
+    template: '%s | V-VISA Business',
+    default: 'V-VISA Business - Best Prices, Effortless Bookings',
   },
   description: "India's most trusted B2B visa platform for travel agencies. 500,000+ visas delivered. 65 visa types. 5,000+ agents.",
   keywords: ['visa for travel agents', 'b2b visa platform', 'bulk visa applications', 'india visa services'],
   icons: {
-    icon: "/logo.svg",
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
   },
   openGraph: {
-    siteName: 'VVisa Business',
+    siteName: 'V-VISA Business',
     locale: 'en_IN',
-    title: 'VVisa Business — Best Prices, Effortless Bookings',
+    title: 'V-VISA Business - Best Prices, Effortless Bookings',
     description: "India's most trusted B2B visa platform for travel agencies.",
   },
 };

@@ -180,25 +180,29 @@ function SidebarContent({
   const initials = agency ? getInitials(agency.name) : 'AG';
 
   const navItems: NavItem[] = [
-    { label: 'Profile', icon: User, route: 'profile' },
+    { label: 'Explore Visas', icon: Zap, route: 'explore' },
     { label: 'Alliance Dashboard', icon: LayoutDashboard, route: 'alliance' },
     { label: 'Dashboard', icon: LayoutDashboard, route: 'dashboard' as ViewRoute },
     { label: 'Applications', icon: Archive, route: 'applications' as ViewRoute },
     { label: 'Wallet', icon: Wallet, route: 'wallet', badge: `INR ${walletBalance.toLocaleString('en-IN')}` },
     { label: 'Overstay', icon: FileText, route: 'overstay' },
-    { label: 'Change Password', icon: Lock, route: 'change-password' },
-    { label: 'Sign Out', icon: LogOut, route: 'landing' as ViewRoute, danger: true },
   ];
 
   return (
     <div className="flex h-full flex-col">
       <div className={`p-4 ${collapsed ? 'flex justify-center' : ''}`}>
         <div className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
-          <Avatar className="size-10 shrink-0 bg-primary shadow-[var(--vvisa-shadow-sm)]">
-            <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
+          {(agency as any)?.logoUrl ? (
+            <div className="size-10 shrink-0 rounded-lg overflow-hidden border border-vvisa-border bg-white flex items-center justify-center">
+              <img src={(agency as any).logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
+            </div>
+          ) : (
+            <Avatar className="size-10 shrink-0 bg-primary shadow-[var(--vvisa-shadow-sm)]">
+              <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+          )}
           {!collapsed && (
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-foreground">
@@ -212,41 +216,7 @@ function SidebarContent({
         </div>
       </div>
 
-      {onToggleCollapse && (
-        <div className="px-3 pb-3">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={onToggleCollapse}
-                className={`flex h-9 w-full items-center justify-center rounded-lg border border-vvisa-border-subtle bg-vvisa-surface text-vvisa-text-secondary transition-colors hover:bg-vvisa-surface-2 hover:text-foreground ${
-                  collapsed ? 'px-0' : 'gap-2 px-3 text-xs font-medium'
-                }`}
-                aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}
-              >
-                {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
-                {!collapsed && <span>Collapse</span>}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={8}>
-              {collapsed ? 'Expand navigation' : 'Collapse navigation'}
-            </TooltipContent>
-          </Tooltip>
-        </div>
-      )}
 
-      <div className="mb-3 px-4">
-        <Button
-          onClick={() => onNavigate('explore')}
-          className={`cursor-pointer font-semibold ${
-            collapsed ? 'flex h-10 w-10 items-center justify-center p-0' : 'h-10 w-full'
-          }`}
-        >
-          {collapsed ? <Zap className="size-4" aria-label="Explore Visas" /> : 'Explore Visas'}
-        </Button>
-      </div>
-
-      <Separator className="mx-4 bg-vvisa-border-subtle" />
 
       <div className="flex-1 overflow-y-auto py-2">
         <SidebarNav
@@ -257,18 +227,31 @@ function SidebarContent({
         />
       </div>
 
-      <Separator className="mx-4 bg-vvisa-border-subtle" />
-      <div className="p-2 pb-4">
-        <button
-          onClick={onLogout}
-          className={`flex min-h-10 w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-red-500 transition-colors hover:bg-red-500/10 ${
-            collapsed ? 'justify-center' : ''
-          }`}
-        >
-          <LogOut className="size-4 shrink-0" />
-          {!collapsed && <span>Sign Out</span>}
-        </button>
-      </div>
+      {onToggleCollapse && (
+        <>
+          <Separator className="mx-4 bg-vvisa-border-subtle" />
+          <div className="p-3">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={onToggleCollapse}
+                  className={`flex h-9 w-full items-center justify-center rounded-lg border border-vvisa-border-subtle bg-vvisa-surface text-vvisa-text-secondary transition-colors hover:bg-vvisa-surface-2 hover:text-foreground ${
+                    collapsed ? 'px-0' : 'gap-2 px-3 text-xs font-medium'
+                  }`}
+                  aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}
+                >
+                  {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+                  {!collapsed && <span>Collapse</span>}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>
+                {collapsed ? 'Expand navigation' : 'Collapse navigation'}
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -310,13 +293,13 @@ function SupportPopover() {
                 </span>
               </a>
               <a
-                href="mailto:support@vvisa.in"
+                href="mailto:support@V-VISA.in"
                 className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-vvisa-text-secondary transition-colors hover:bg-vvisa-surface hover:text-foreground"
               >
                 <Mail className="size-4 text-primary" />
                 <span>
                   <span className="block text-[11px] text-vvisa-text-muted">Email</span>
-                  support@vvisa.in
+                  support@V-VISA.in
                 </span>
               </a>
               <SalesIqChatButton />
@@ -355,12 +338,12 @@ export default function DashboardShell({ children, basePath = '' }: { children: 
   const [hasAdminAccess, setHasAdminAccess] = useState(cachedAdminAccess ?? false);
   const [sidebarPreference, setSidebarPreference] = useState<'expanded' | 'collapsed' | null>(() => {
     if (typeof window === 'undefined') return null;
-    const saved = sessionStorage.getItem('vvisa:sidebarPreference');
+    const saved = sessionStorage.getItem('V-VISA:sidebarPreference');
     return saved === 'expanded' || saved === 'collapsed' ? saved : null;
   });
   const [workflowDetailActive, setWorkflowDetailActive] = useState(() => {
     if (typeof window === 'undefined') return false;
-    return sessionStorage.getItem('vvisa:workflowDetailActive') === 'true';
+    return sessionStorage.getItem('V-VISA:workflowDetailActive') === 'true';
   });
 
   useEffect(() => {
@@ -388,13 +371,13 @@ export default function DashboardShell({ children, basePath = '' }: { children: 
       setWorkflowDetailActive(Boolean(customEvent.detail));
     };
 
-    window.addEventListener('vvisa:workflow-detail-change', onWorkflowDetailChange);
-    return () => window.removeEventListener('vvisa:workflow-detail-change', onWorkflowDetailChange);
+    window.addEventListener('V-VISA:workflow-detail-change', onWorkflowDetailChange);
+    return () => window.removeEventListener('V-VISA:workflow-detail-change', onWorkflowDetailChange);
   }, []);
 
-  const handleNavigate = (route: ViewRoute) => {
+  const handleNavigate = async (route: ViewRoute) => {
     if (route === 'landing') {
-      logout();
+      await logout();
       router.push(basePath || '/');
     } else {
       navigate(route);
@@ -403,8 +386,8 @@ export default function DashboardShell({ children, basePath = '' }: { children: 
     setMobileOpen(false);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push('/');
     setMobileOpen(false);
   };
@@ -432,12 +415,12 @@ export default function DashboardShell({ children, basePath = '' }: { children: 
   const handleToggleSidebar = () => {
     const next = sidebarCollapsed ? 'expanded' : 'collapsed';
     setSidebarPreference(next);
-    sessionStorage.setItem('vvisa:sidebarPreference', next);
+    sessionStorage.setItem('V-VISA:sidebarPreference', next);
   };
 
   return (
     <div className="vv-page flex min-h-screen">
-      <aside className={`hidden shrink-0 flex-col border-r border-sidebar-border/80 bg-sidebar/95 shadow-[var(--vvisa-shadow-sm)] transition-[width] duration-200 md:flex ${
+      <aside className={`sticky top-0 h-screen hidden shrink-0 flex-col border-r border-sidebar-border/80 bg-sidebar/95 shadow-[var(--vvisa-shadow-sm)] transition-[width] duration-200 md:flex ${
         sidebarCollapsed ? 'w-16' : 'w-60 lg:w-60'
       }`}>
         <SidebarContent
@@ -478,7 +461,7 @@ export default function DashboardShell({ children, basePath = '' }: { children: 
 
             <div>
               <p className="hidden text-[11px] font-medium uppercase tracking-[0.18em] text-vvisa-text-muted sm:block">
-                VVisa B2B
+                V-VISA B2B
               </p>
               <h1 className="text-base font-semibold leading-tight text-foreground">
                 {title}
@@ -515,11 +498,17 @@ export default function DashboardShell({ children, basePath = '' }: { children: 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex cursor-pointer items-center gap-2">
-                  <Avatar className="size-9 bg-primary shadow-[var(--vvisa-shadow-sm)]">
-                    <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
+                  {(agency as any)?.logoUrl ? (
+                    <div className="size-9 rounded-lg overflow-hidden border border-vvisa-border bg-white flex items-center justify-center">
+                      <img src={(agency as any).logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
+                    </div>
+                  ) : (
+                    <Avatar className="size-9 bg-primary shadow-[var(--vvisa-shadow-sm)]">
+                      <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent

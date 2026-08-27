@@ -299,6 +299,7 @@ export interface Agency {
   id: string;
   name: string;
   email: string;
+  disabledVisaCategories?: any;
   phone: string;
   whatsapp?: string;
   logo?: string;

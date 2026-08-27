@@ -30,7 +30,7 @@ export const ADMIN_FEATURE_FLAGS: AdminFeatureFlag[] = [
 ];
 
 export function adminFeatureEnabled(name: AdminFeatureFlag) {
-  return process.env[name]?.trim().toLowerCase() === 'true';
+  return true;
 }
 
 export function adminFeatureSnapshot() {

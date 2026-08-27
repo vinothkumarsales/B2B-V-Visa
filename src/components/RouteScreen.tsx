@@ -126,7 +126,8 @@ export function RouteScreen({
     let cancelled = false;
 
     async function hydrateAuthenticatedRoute() {
-      if (isAuthenticated && agency && bootstrapUrl === '/api/portal/bootstrap') {
+      const isCorrectAgency = agency && (bootstrapUrl === '/api/portal/bootstrap' || bootstrapUrl.includes(agency.id));
+      if (isAuthenticated && isCorrectAgency) {
         navigate(view);
         setLoading(false);
         return;
@@ -136,6 +137,14 @@ export function RouteScreen({
         const response = await fetch(bootstrapUrl, { credentials: 'include', cache: 'no-store' });
         if (!response.ok) throw new Error('Unable to load account data');
         const payload = await response.json();
+        if (payload.onboarded === false) {
+          if (cancelled) return;
+          useAppStore.getState().setIsOnboarded(false);
+          navigate(view);
+          setLoading(false);
+          return;
+        }
+        useAppStore.getState().setIsOnboarded(true);
         if (!payload.agency) throw new Error('Partner profile required');
         if (cancelled) return;
 

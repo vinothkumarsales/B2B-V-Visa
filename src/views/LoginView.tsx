@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebase';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
@@ -105,36 +107,59 @@ export default function LoginView() {
     setSubmitting(true);
     setServerError('');
     try {
+      const userCredential = await signInWithEmailAndPassword(auth, values.identifier.trim(), values.password);
+      
+      // Check verification
+      if (!userCredential.user.emailVerified) {
+        router.push('/register');
+        return;
+      }
+
+      const token = await userCredential.user.getIdToken();
+
+      // Check onboarding status
+      const onboardRes = await fetch('/api/auth/onboarding-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+      const onboardData = await onboardRes.json();
+      if (!onboardData.onboarded) {
+        router.push('/register');
+        return;
+      }
+
       const response = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          identifier: values.identifier.trim(),
-          password: values.password,
-        }),
+        body: JSON.stringify({ token }),
       });
       const data = await response.json();
       if (!response.ok) {
-        setServerError(loginErrorMessage(data?.error?.code));
+        setServerError(data?.error?.message || 'Login session creation failed');
         return;
       }
-      if (data.agency) login(data.agency);
-      router.push('/dashboard');
-    } catch {
-      setServerError('Unable to reach the login service');
+      if (data.agency) {
+        login(data.agency);
+        router.push(`/${data.agency.id}/explore`);
+      } else {
+        router.push('/explore');
+      }
+    } catch (error: any) {
+      console.error('Firebase Auth Login Failed', error);
+      setServerError(error.message || 'Authentication failed. Please check your credentials.');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] lg:grid lg:grid-cols-[minmax(340px,42%)_1fr]">
-      {/* Left Panel — Branding */}
+    <div className="min-h-screen bg-[#f5f7fb] lg:flex lg:items-start">
       <motion.div
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative flex min-h-[230px] w-full flex-col justify-between overflow-hidden bg-[#1f5fd6] p-6 text-white sm:p-8 lg:min-h-screen lg:p-12"
+        className="relative flex min-h-[230px] w-full flex-col justify-between overflow-hidden bg-[#6e51ff] p-6 text-white sm:p-8 lg:sticky lg:top-0 lg:h-screen lg:w-[42%] lg:min-w-[340px] lg:p-12"
       >
         {/* Decorative background circles */}
         <div className="absolute -top-24 -left-24 w-72 h-72 bg-white/5 rounded-full" />
@@ -156,13 +181,13 @@ export default function LoginView() {
               <span className="text-primary-foreground font-bold text-xl">V</span>
             </div>
             <span className="text-primary-foreground font-semibold text-xl tracking-tight">
-              VVisa Business
+              V-VISA Business
             </span>
           </div>
 
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
-              Join 10,000+ Agents growing with VVisa!
+              Join 10,000+ Agents growing with V-VISA!
             </h1>
             <p className="mt-3 text-white/70 text-sm leading-relaxed">
               The fastest way to process visa applications for your customers.
@@ -208,14 +233,14 @@ export default function LoginView() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="flex w-full items-start justify-center bg-[#f5f7fb] px-5 py-8 sm:px-8 lg:min-h-screen lg:items-center lg:px-12"
+        className="flex w-full flex-1 items-start justify-center bg-[#f5f7fb] px-5 py-8 sm:px-8 lg:min-h-screen lg:items-center lg:px-12"
       >
         <div className="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          {/* Heading */}
+          {/* Welcome Message */}
           <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-slate-950">Login to VVisa</h2>
-            <p className="mt-1.5 text-sm text-slate-500">
-              Enter your credentials to access your account
+            <h1 className="text-3xl font-bold text-slate-900 leading-tight">Welcome to V-VISA B2B Partner Portal</h1>
+            <p className="mt-3 text-[15px] font-medium text-slate-600 leading-relaxed">
+              If you already have an agency account, please sign in below.
             </p>
           </div>
 
@@ -310,9 +335,44 @@ export default function LoginView() {
           <Button
             variant="outline"
             type="button"
-            onClick={() => {
+            onClick={async () => {
               setServerError('');
-              window.location.href = '/api/auth/google';
+              setSubmitting(true);
+              try {
+                const provider = new GoogleAuthProvider();
+                const result = await signInWithPopup(auth, provider);
+                const token = await result.user.getIdToken();
+
+                // Check onboarding status
+                const onboardRes = await fetch('/api/auth/onboarding-status', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ token }),
+                });
+                const onboardData = await onboardRes.json();
+                if (!onboardData.onboarded) {
+                  router.push('/register');
+                  return;
+                }
+
+                const response = await fetch('/api/auth', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ token }),
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                  setServerError(data?.error?.message || 'Google Login session failed');
+                  return;
+                }
+                if (data.agency) login(data.agency);
+                router.push('/dashboard');
+              } catch (error: any) {
+                console.error('Google Auth Failed', error);
+                setServerError(error.message || 'Google Authentication failed.');
+              } finally {
+                setSubmitting(false);
+              }
             }}
             className="h-11 w-full cursor-pointer border-slate-300 bg-white font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950"
           >

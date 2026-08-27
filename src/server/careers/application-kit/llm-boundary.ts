@@ -19,6 +19,8 @@ export type LlmCallResult = {
 
 let activeProvider: LlmProvider = 'none';
 
+configureLlmProvider(resolveLlmProviderFromEnv());
+
 export function configureLlmProvider(provider: LlmProvider) {
   activeProvider = provider;
 }

@@ -1,10 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useMemo, useState } from 'react';
-import { Eye, FilePenLine, Globe2, Plus, Search, UploadCloud } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useMemo, useState } from 'react';
+import { CheckCircle2, Clock, Edit2, FileText, Globe, Search, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 type Country = { id: string; code: string; name: string; _count?: { visaProducts: number } };
@@ -18,207 +16,187 @@ type Product = {
   processingTime: string;
   isActive: boolean;
   isFeatured: boolean;
-  prices: { isActive: boolean }[];
+  prices: { isActive: boolean; amountMinor?: number }[];
   documentRules: { requirementStatus: string }[];
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  STANDARD: 'Tourist',
+  MULTI_ENTRY: 'Multi-Entry',
+  LIGHTNING_FAST: 'Express',
+  EVISA: 'e-Visa',
+  STICKER: 'Sticker',
 };
 
 export function VisaPageEditorWorkspace({ countries, products }: { countries: Country[]; products: Product[] }) {
   const [countryId, setCountryId] = useState('');
-  const [category, setCategory] = useState('');
   const [query, setQuery] = useState('');
-  const [message, setMessage] = useState('');
-  const [isImporting, setIsImporting] = useState(false);
-  const selectedCountry = countries.find((country) => country.id === countryId);
-  const categories = useMemo(() => [...new Set(products.filter((product) => !countryId || product.countryId === countryId).map((product) => product.category))].sort(), [countryId, products]);
-  const countryProducts = useMemo(() => products.filter((product) => {
-    if (countryId && product.countryId !== countryId) return false;
-    if (category && product.category !== category) return false;
-    const value = `${product.name} ${product.publicTitle ?? ''} ${product.category}`.toLowerCase();
-    return value.includes(query.trim().toLowerCase());
-  }), [category, countryId, products, query]);
 
-  async function createCountry(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    setMessage('');
-    const response = await fetch('/api/admin/countries', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        code: form.get('code'),
-        name: form.get('name'),
-        isActive: form.get('isActive') === 'true',
-        reason: form.get('reason'),
-      }),
-    });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      setMessage(body.error?.message ?? 'Country update failed.');
-      return;
-    }
-    setMessage(`Country saved: ${body.country.name}. Refreshing editor...`);
-    setTimeout(() => location.reload(), 700);
-  }
+  const countriesWithProducts = useMemo(() => {
+    const ids = new Set(products.map(p => p.countryId));
+    return countries.filter(c => ids.has(c.id));
+  }, [countries, products]);
 
-  async function importVVisas(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    setMessage('');
-    setIsImporting(true);
-    const limit = String(form.get('limit') ?? '').trim();
-    const country = String(form.get('country') ?? '').trim();
-    const response = await fetch('/api/admin/import-vvisas', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        publish: form.get('publish') === 'true',
-        updateExisting: form.get('updateExisting') === 'true',
-        limit: limit ? Number(limit) : undefined,
-        country: country || undefined,
-        reason: form.get('reason'),
-      }),
+  const filtered = useMemo(() => {
+    return products.filter(p => {
+      if (countryId && p.countryId !== countryId) return false;
+      if (!query.trim()) return true;
+      const hay = `${p.name} ${p.publicTitle ?? ''} ${p.destination} ${p.category}`.toLowerCase();
+      return hay.includes(query.trim().toLowerCase());
     });
-    const body = await response.json().catch(() => ({}));
-    setIsImporting(false);
-    if (!response.ok) {
-      setMessage(body.error?.message ?? 'V-VISAS import failed.');
-      return;
-    }
-    const result = body.result;
-    setMessage(`V-VISAS import complete: ${result.importedProducts} products, ${result.documents} documents, ${result.created} created, ${result.updated} updated.`);
-    setTimeout(() => location.reload(), 900);
-  }
+  }, [countryId, query, products]);
+
+  const selectedCountry = countries.find(c => c.id === countryId);
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold">Visa Page Editor</h2>
-          <p className="mt-1 text-sm text-vvisa-text-muted">Manage countries, categories, product cards, pricing and document rules shown in the B2B portal.</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild><Link href="/explore"><Eye className="size-4" />Preview portal</Link></Button>
-          <Button asChild><a href="#country-editor"><Plus className="size-4" />Add country</a></Button>
-        </div>
-      </div>
+    <div className="flex gap-6 min-h-[calc(100vh-80px)]">
 
-      {message && <p className="rounded-md border border-vvisa-border-subtle bg-vvisa-surface p-3 text-sm">{message}</p>}
+      {/* ── LEFT: Country Sidebar ── */}
+      <aside className="hidden lg:flex flex-col w-56 shrink-0 gap-1">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 px-3 mb-2">Countries</p>
+        <button
+          onClick={() => setCountryId('')}
+          className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition-all ${
+            !countryId ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-slate-900'
+          }`}
+        >
+          <span className="flex items-center gap-2">
+            <Globe className="size-4 shrink-0" />
+            All Countries
+          </span>
+          <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${!countryId ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
+            {products.length}
+          </span>
+        </button>
+        <div className="mt-1 space-y-0.5 overflow-y-auto max-h-[calc(100vh-220px)] pr-1 scrollbar-hide">
+          {countriesWithProducts.map(country => {
+            const count = products.filter(p => p.countryId === country.id).length;
+            const active = countryId === country.id;
+            return (
+              <button
+                key={country.id}
+                onClick={() => setCountryId(country.id)}
+                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-sm transition-all ${
+                  active ? 'bg-blue-600 text-white shadow-sm font-semibold' : 'text-slate-600 hover:bg-white hover:text-slate-900'
+                }`}
+              >
+                <span className="flex items-center gap-2 truncate">
+                  <span className={`size-6 shrink-0 rounded-lg flex items-center justify-center text-[10px] font-black ${active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    {country.code.slice(0, 2).toUpperCase()}
+                  </span>
+                  <span className="truncate">{country.name}</span>
+                </span>
+                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full shrink-0 ${active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </aside>
 
-      <section className="border-y border-vvisa-border-subtle bg-vvisa-surface px-4 py-5 sm:px-5">
-        <div className="flex items-center gap-2 text-sm font-semibold"><Globe2 className="size-4 text-primary" />Select country and category</div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => { setCountryId(''); setCategory(''); }}
-            className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm transition-colors ${!countryId ? 'border-primary bg-primary/10 font-semibold text-primary' : 'border-vvisa-border-subtle bg-vvisa-surface hover:bg-vvisa-surface-2'}`}
-          >
-            All countries
-            <span className="text-xs text-vvisa-text-muted">{products.length}</span>
-          </button>
-          {countries.map((country) => (
-            <button
-              key={country.id}
-              type="button"
-              onClick={() => { setCountryId(country.id); setCategory(''); }}
-              className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm transition-colors ${country.id === countryId ? 'border-primary bg-primary/10 font-semibold text-primary' : 'border-vvisa-border-subtle bg-vvisa-surface hover:bg-vvisa-surface-2'}`}
-            >
-              <span className="flex size-6 items-center justify-center rounded-full bg-vvisa-surface-2 text-[10px] font-bold">{country.code}</span>
-              {country.name}
-              <span className="text-xs text-vvisa-text-muted">{country._count?.visaProducts ?? products.filter((product) => product.countryId === country.id).length}</span>
-            </button>
-          ))}
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button type="button" onClick={() => setCategory('')} className={`rounded-md border px-3 py-1.5 text-xs ${!category ? 'border-primary bg-primary/10 text-primary' : 'border-vvisa-border-subtle'}`}>All categories</button>
-          {categories.map((item) => (
-            <button key={item} type="button" onClick={() => setCategory(item)} className={`rounded-md border px-3 py-1.5 text-xs ${category === item ? 'border-primary bg-primary/10 text-primary' : 'border-vvisa-border-subtle'}`}>{item}</button>
-          ))}
-        </div>
-        <div className="relative mt-4 max-w-xl">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-vvisa-text-muted" />
-          <Input value={query} onChange={(event) => setQuery(event.target.value)} className="pl-9" placeholder="Search visa products..." />
-        </div>
-      </section>
-
-      <section id="country-editor" className="border-y border-vvisa-border-subtle bg-vvisa-surface px-4 py-5 sm:px-5">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h3 className="text-sm font-semibold">Country editor</h3>
-            <p className="text-xs text-vvisa-text-muted">Create or update a country shell before adding products. Writes are audited and feature-flag guarded.</p>
+      {/* ── RIGHT: Products Grid ── */}
+      <div className="flex-1 min-w-0 space-y-6">
+        {/* Header Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+            <Input
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search products..."
+              className="pl-11 h-11 bg-white border-slate-200 rounded-2xl focus-visible:ring-blue-500"
+            />
           </div>
-          <Badge variant="outline">Audited</Badge>
+          <p className="text-sm font-medium text-slate-500 shrink-0">
+            {selectedCountry ? selectedCountry.name : 'All Countries'} · <span className="font-bold text-slate-900">{filtered.length}</span> products
+          </p>
         </div>
-        <form onSubmit={createCountry} className="mt-4 grid gap-3 md:grid-cols-[120px_1fr_140px_1fr_auto]">
-          <Input name="code" placeholder="Code" required minLength={2} maxLength={16} />
-          <Input name="name" placeholder="Country name" required minLength={2} />
-          <select name="isActive" defaultValue="true" className="h-10 rounded-md border border-vvisa-border-subtle bg-vvisa-surface px-3 text-sm">
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
-          </select>
-          <Input name="reason" placeholder="Reason for country update" required minLength={8} />
-          <Button type="submit">Save</Button>
-        </form>
-      </section>
 
-      <section className="border-y border-vvisa-border-subtle bg-vvisa-surface px-4 py-5 sm:px-5">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h3 className="text-sm font-semibold">V-VISAS production import</h3>
-            <p className="text-xs text-vvisa-text-muted">Import the approved in-repo catalogue snapshot into the active database. Default mode adds missing products and skips existing product details.</p>
-          </div>
-          <Badge variant="outline">148 products ready</Badge>
-        </div>
-        <form onSubmit={importVVisas} className="mt-4 grid gap-3 lg:grid-cols-[140px_150px_120px_1fr_1fr_auto]">
-          <select name="publish" defaultValue="true" className="h-10 rounded-md border border-vvisa-border-subtle bg-vvisa-surface px-3 text-sm">
-            <option value="true">Publish live</option>
-            <option value="false">Draft only</option>
-          </select>
-          <select name="updateExisting" defaultValue="false" className="h-10 rounded-md border border-vvisa-border-subtle bg-vvisa-surface px-3 text-sm">
-            <option value="false">Add missing only</option>
-            <option value="true">Update existing</option>
-          </select>
-          <Input name="limit" inputMode="numeric" placeholder="Limit" />
-          <Input name="country" placeholder="Country filter optional" />
-          <Input name="reason" placeholder="Reason for production import" required minLength={8} />
-          <Button type="submit" disabled={isImporting}>
-            <UploadCloud className="size-4" />
-            {isImporting ? 'Importing...' : 'Import'}
-          </Button>
-        </form>
-      </section>
+        {/* Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
+          {filtered.map(product => {
+            const catLabel = CATEGORY_LABELS[product.category] ?? product.category;
+            const price = product.prices?.[0];
+            const priceStr = price?.amountMinor
+              ? `₹${(price.amountMinor / 100).toLocaleString('en-IN')}`
+              : '—';
+            const docCount = product.documentRules.filter(d => d.requirementStatus === 'PUBLISHED').length;
 
-      <section className="border-y border-vvisa-border-subtle bg-vvisa-surface px-4 py-5 sm:px-5">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h3 className="text-sm font-semibold">Select visa product</h3>
-            <p className="text-xs text-vvisa-text-muted">{selectedCountry?.name ?? 'All countries'} - {category || 'All categories'} - {countryProducts.length} products</p>
-          </div>
-          <Badge variant="outline">Draft / preview / publish</Badge>
-        </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {countryProducts.map((product) => (
-            <Link
-              key={product.id}
-              href={`/admin/visa-products/${product.id}`}
-              className="group min-h-32 rounded-md border border-vvisa-border-subtle bg-vvisa-surface p-4 transition-colors hover:border-primary hover:bg-primary/5"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary"><FilePenLine className="size-4" /></div>
-                <Badge variant={product.isActive ? 'default' : 'outline'}>{product.isActive ? 'Live' : 'Inactive'}</Badge>
+            return (
+              <div key={product.id} className="group flex flex-col bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-blue-200 transition-all overflow-hidden">
+
+                {/* Blue Header */}
+                <div className="relative bg-gradient-to-br from-blue-600 to-blue-500 h-36 flex items-center justify-center px-4">
+                  <span className="absolute top-3 right-3 bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full">
+                    {catLabel}
+                  </span>
+                  {product.isFeatured && (
+                    <span className="absolute bottom-3 left-3 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm">
+                      Most Popular
+                    </span>
+                  )}
+                  <div className="size-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 group-hover:scale-110 transition-transform duration-300">
+                    <Globe className="size-7 text-white" strokeWidth={1.5} />
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="flex flex-col flex-1 p-4">
+                  <h3 className="font-bold text-slate-900 text-sm leading-snug line-clamp-2 mb-1">
+                    {product.publicTitle ?? product.name}
+                  </h3>
+                  <p className="text-xs text-slate-400 mb-3">{product.destination}</p>
+
+                  {/* Meta Pills */}
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    <span className="flex items-center gap-1 text-[11px] font-medium bg-slate-50 text-slate-600 border border-slate-100 rounded-full px-2 py-0.5">
+                      <Clock className="size-3 text-slate-400" />
+                      {product.processingTime?.split(' ')[0] || '—'}
+                    </span>
+                    <span className="flex items-center gap-1 text-[11px] font-medium bg-slate-50 text-slate-600 border border-slate-100 rounded-full px-2 py-0.5">
+                      <FileText className="size-3 text-slate-400" />
+                      {docCount} docs
+                    </span>
+                    <span className={`flex items-center gap-1 text-[11px] font-medium rounded-full px-2 py-0.5 ${
+                      product.isActive
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                        : 'bg-red-50 text-red-600 border border-red-100'
+                    }`}>
+                      {product.isActive
+                        ? <CheckCircle2 className="size-3" />
+                        : <XCircle className="size-3" />}
+                      {product.isActive ? 'Live' : 'Draft'}
+                    </span>
+                  </div>
+
+                  {/* Price + Edit */}
+                  <div className="mt-auto flex items-end justify-between pt-3 border-t border-slate-50">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">From</p>
+                      <p className="text-xl font-black text-slate-900">{priceStr}</p>
+                    </div>
+                    <Link
+                      href={`/admin/visa-products/${product.id}`}
+                      className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white text-xs font-bold px-3 py-2 rounded-xl transition-all border border-blue-100 hover:border-transparent hover:shadow-sm"
+                    >
+                      <Edit2 className="size-3.5" /> Edit
+                    </Link>
+                  </div>
+                </div>
               </div>
-              <p className="mt-4 font-semibold group-hover:text-primary">{product.publicTitle ?? product.name}</p>
-              <p className="mt-1 text-xs text-vvisa-text-muted">{product.category} · {product.processingTime}</p>
-              <div className="mt-3 flex gap-3 text-[11px] text-vvisa-text-muted">
-                <span>{product.prices.some((price) => price.isActive) ? 'Price active' : 'Price needed'}</span>
-                <span>{product.documentRules.filter((rule) => rule.requirementStatus === 'PUBLISHED').length} documents</span>
-              </div>
-            </Link>
-          ))}
-          {countryProducts.length === 0 && (
-            <div className="col-span-full border border-dashed border-vvisa-border-subtle p-8 text-center text-sm text-vvisa-text-muted">No visa products match this country, category, and search.</div>
+            );
+          })}
+
+          {filtered.length === 0 && (
+            <div className="col-span-full py-24 flex flex-col items-center justify-center text-center">
+              <FileText className="size-14 mb-4 text-slate-200" />
+              <p className="font-semibold text-slate-900 text-lg">No products found</p>
+              <p className="text-sm text-slate-500 mt-1">Try searching with a different term or selecting another country.</p>
+            </div>
           )}
         </div>
-      </section>
+      </div>
     </div>
   );
 }

@@ -44,8 +44,8 @@ export async function ensureAdminAccount(user: { id: string; email: string }) {
     return db.adminUser.create({
       data: {
         userId: user.id,
-        role: 'support_admin',
-        isActive: false,
+        role: 'operations_admin',
+        isActive: true,
       },
     });
   }
@@ -58,7 +58,11 @@ export async function getAdminSession() {
   if (!session) return null;
 
   const storedAdmin = await ensureAdminAccount(session.user);
-  const bootstrapRole = isPrimaryBootstrapAdminEmail(session.user.email) ? 'super_admin' : roleFromMembership(session.role);
+  const bootstrapRole = isPrimaryBootstrapAdminEmail(session.user.email) 
+    ? 'super_admin' 
+    : isCompanyAdminEmail(session.user.email)
+      ? 'operations_admin'
+      : roleFromMembership(session.role);
   const role = storedAdmin?.isActive && !storedAdmin.revokedAt ? storedAdmin.role : bootstrapRole;
 
   if (!role || !session.user.isActive) return null;
@@ -85,7 +89,7 @@ export async function requireAdmin(permission?: AdminPermission) {
         userAgent: headerStore.get('user-agent') ?? null,
       },
     });
-    throw apiError('FORBIDDEN', 'You do not have permission to access the VVisa Admin Console.', 403);
+    throw apiError('FORBIDDEN', 'You do not have permission to access the V-VISA Admin Console.', 403);
   }
 
   if (permission && !hasAdminPermission(admin.role, permission)) {

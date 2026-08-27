@@ -293,7 +293,7 @@ function validateApplicants(travelers: TravelerData[], travelDate: string): Appl
 
 function readStoredVisaType() {
   if (typeof window === 'undefined') return null;
-  const raw = sessionStorage.getItem('vvisa:selectedVisaType');
+  const raw = sessionStorage.getItem('V-VISA:selectedVisaType');
   if (!raw) return null;
   try {
     return JSON.parse(raw);
@@ -304,7 +304,7 @@ function readStoredVisaType() {
 
 function getApplySearchSessionId(visa?: VisaType) {
   if (typeof window === 'undefined') return undefined;
-  const key = 'vvisa:crmSearchSessionId';
+  const key = 'V-VISA:crmSearchSessionId';
   const existing = sessionStorage.getItem(key);
   if (existing) return existing;
 
@@ -591,7 +591,7 @@ function TravelerCard({
               <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
                 <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-700/80 dark:text-amber-200/80">
-                  VVisa uses <span className="text-primary font-medium">V-Visa AI</span> for passport scanning. Upload a clear passport image and details will be filled automatically. However, it is mandatory to review the information before submitting.
+                  V-VISA uses <span className="text-primary font-medium">V-Visa AI</span> for passport scanning. Upload a clear passport image and details will be filled automatically. However, it is mandatory to review the information before submitting.
                 </p>
               </div>
 

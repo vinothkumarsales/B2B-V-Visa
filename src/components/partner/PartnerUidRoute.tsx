@@ -34,7 +34,7 @@ export async function PartnerUidRoute({
 
   return (
     <RouteScreen view={view} authenticated>
-      <DashboardShell>{children}</DashboardShell>
+      <DashboardShell basePath={`/${uid}`}>{children}</DashboardShell>
     </RouteScreen>
   );
 }

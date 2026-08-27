@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAppStore } from '@/store/app.store';
+import GlobalVisaCoverage from '@/components/visa/GlobalVisaCoverage';
 import { mockTestimonials, mockFAQs } from '@/lib/mock-data';
 import {
   ArrowRight,
@@ -80,8 +81,8 @@ export default function LandingView() {
         <div className="mx-auto max-w-7xl flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <Image src="/logo.svg" alt="VVisa" width={32} height={32} />
-            <span className="text-foreground font-bold text-xl tracking-tight">VVisa</span>
+            <Image src="/logo.svg" alt="V-VISA" width={32} height={32} />
+            <span className="text-foreground font-bold text-xl tracking-tight">V-VISA</span>
           </div>
 
           {/* Nav */}
@@ -132,7 +133,7 @@ export default function LandingView() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="text-[2.75rem] sm:text-5xl lg:text-[3.75rem] font-extrabold leading-[1.05] tracking-normal text-slate-950 dark:text-white"
               >
-                VVisa B2B visa operations,
+                V-VISA B2B visa operations,
                 <br />
                 without the noise.
               </motion.h1>
@@ -246,6 +247,9 @@ export default function LandingView() {
           </div>
         </section>
 
+        {/* 3D Global Visa Coverage Globe */}
+        <GlobalVisaCoverage />
+
         {/* ────────────────────── 3. TICKER BAR ────────────────────── */}
         <section className="ticker-bar border-y border-vvisa-border py-3 overflow-hidden">
           <div className="animate-marquee flex whitespace-nowrap gap-12">
@@ -319,12 +323,12 @@ export default function LandingView() {
           </motion.div>
         </section>
 
-        {/* ────────────────────── 5. WHY CHOOSE VVISA ────────────────────── */}
+        {/* ────────────────────── 5. WHY CHOOSE V-VISA ────────────────────── */}
         <section id="features" className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
           <motion.div {...fadeInUp} className="mx-auto max-w-7xl">
             <div className="text-center mb-14">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white">
-                Why Choose VVisa?
+                Why Choose V-VISA?
               </h2>
               <p className="mt-3 text-vvisa-text-secondary max-w-xl mx-auto">
                 Everything your travel agency needs to compare visas, prepare documents, and move applications with fewer manual checks.
@@ -401,7 +405,7 @@ export default function LandingView() {
                     <div className="h-3 w-3 rounded-full bg-red-500/60" />
                     <div className="h-3 w-3 rounded-full bg-amber-500/60" />
                     <div className="h-3 w-3 rounded-full bg-emerald-500/60" />
-                    <span className="ml-3 text-xs text-vvisa-text-muted font-mono">vvisa.app/dashboard</span>
+                    <span className="ml-3 text-xs text-vvisa-text-muted font-mono">V-VISA.app/dashboard</span>
                   </div>
                   <div className="space-y-4">
                     {/* Notification */}
@@ -487,7 +491,7 @@ export default function LandingView() {
               {[
                 { step: 1, icon: Search, label: 'Select Destination & Dates' },
                 { step: 2, icon: Upload, label: 'Upload Passport & Photo' },
-                { step: 3, icon: Wallet, label: 'Pay from VVisa Wallet' },
+                { step: 3, icon: Wallet, label: 'Pay from V-VISA Wallet' },
                 { step: 4, icon: CheckCircle, label: 'Get Your Visa Within ETA' },
               ].map((item, idx) => (
                 <motion.div
@@ -590,7 +594,7 @@ export default function LandingView() {
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white">
                 Frequently Asked Questions
               </h2>
-              <p className="mt-3 text-vvisa-text-secondary">Everything you need to know about VVisa.</p>
+              <p className="mt-3 text-vvisa-text-secondary">Everything you need to know about V-VISA.</p>
             </div>
 
             <Accordion type="single" collapsible className="w-full">
@@ -620,8 +624,8 @@ export default function LandingView() {
             {/* Brand column */}
             <div className="col-span-2 md:col-span-4 lg:col-span-1 mb-4 lg:mb-0">
               <div className="flex items-center gap-2 mb-3">
-                <Image src="/logo.svg" alt="VVisa" width={28} height={28} />
-                <span className="text-foreground font-bold text-lg">VVisa</span>
+                <Image src="/logo.svg" alt="V-VISA" width={28} height={28} />
+                <span className="text-foreground font-bold text-lg">V-VISA</span>
               </div>
               <p className="text-sm text-vvisa-text-muted">Built for India &hearts;</p>
               {/* Social icons */}
@@ -694,7 +698,7 @@ export default function LandingView() {
           {/* Bottom bar */}
           <div className="mt-12 pt-8 border-t border-vvisa-border flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-vvisa-text-muted">
-              &copy; 2026 VVisa AI Platform. All rights reserved.
+              &copy; 2026 V-VISA AI Platform. All rights reserved.
             </p>
             <div className="flex items-center gap-4">
               <a href="#" className="text-xs text-vvisa-text-muted hover:text-white transition-colors">

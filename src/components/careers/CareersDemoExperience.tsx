@@ -128,7 +128,7 @@ export function CareersDemoExperience({
               ))}
             </div>
             <h1 className="mt-7 max-w-4xl text-4xl font-semibold leading-[1.04] md:text-6xl">
-              See how VVisa Careers manages a Europe job-search journey
+              See how V-VISA Careers manages a Europe job-search journey
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-vvisa-text-secondary">
               From resume intake to service activation, opportunity tracking, internal review, and employer-response tasks - all in one managed dashboard.

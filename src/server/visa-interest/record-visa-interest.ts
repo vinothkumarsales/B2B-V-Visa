@@ -1,7 +1,8 @@
-﻿import type { VisaInterestStatus } from '@prisma/client';
+import type { VisaInterestStatus } from '@prisma/client';
 import { env } from '@/lib/env';
 import { db } from '@/lib/db';
 import { queueZohoCrmEvent } from '@/server/integrations/zoho/crm-outbox';
+import { apiError } from '@/lib/api-response';
 import {
   getVisaInterestLeadTiming,
   type VisaInterestIntent,
@@ -27,6 +28,26 @@ export type RecordVisaInterestInput = {
 };
 
 export async function recordVisaInterest(input: RecordVisaInterestInput) {
+  if (input.category) {
+    const agency = await db.agency.findUnique({
+      where: { id: input.agencyId },
+      select: { disabledVisaCategories: true },
+    });
+    
+    if (agency?.disabledVisaCategories) {
+      let disabled: string[] = [];
+      try {
+        disabled = typeof agency.disabledVisaCategories === 'string'
+          ? JSON.parse(agency.disabledVisaCategories)
+          : agency.disabledVisaCategories;
+      } catch {}
+
+      if (disabled.includes(input.category)) {
+        throw apiError('FORBIDDEN', 'This visa category is currently disabled for your agency.', 403);
+      }
+    }
+  }
+
   const now = new Date();
   const timing = getVisaInterestLeadTiming(input.intent);
   const leadEligibleAt =

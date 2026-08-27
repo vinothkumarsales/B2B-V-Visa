@@ -54,16 +54,35 @@ export async function createIndividualApplication(input: {
   actorUserId: string;
   payload: z.infer<typeof createApplicationSchema>;
 }) {
-  const visaProduct = await db.visaProduct.findFirst({
-    where: {
-      id: input.payload.visaProductId,
-      isActive: true,
-      OR: [{ validUntil: null }, { validUntil: { gt: new Date() } }],
-    },
-  });
+  const [visaProduct, agency] = await Promise.all([
+    db.visaProduct.findFirst({
+      where: {
+        id: input.payload.visaProductId,
+        isActive: true,
+        OR: [{ validUntil: null }, { validUntil: { gt: new Date() } }],
+      },
+    }),
+    db.agency.findUnique({
+      where: { id: input.agencyId },
+      select: { disabledVisaCategories: true },
+    })
+  ]);
 
   if (!visaProduct) {
     throw apiError('RESOURCE_NOT_FOUND', 'Visa product not found', 404);
+  }
+
+  if (agency?.disabledVisaCategories && visaProduct.category) {
+    let disabled: string[] = [];
+    try {
+      disabled = typeof agency.disabledVisaCategories === 'string'
+        ? JSON.parse(agency.disabledVisaCategories)
+        : agency.disabledVisaCategories;
+    } catch {}
+
+    if (disabled.includes(visaProduct.category)) {
+      throw apiError('FORBIDDEN', 'This visa category is currently disabled for your agency.', 403);
+    }
   }
 
   const totalAmountMinor = visaProduct.amountMinor * input.payload.applicants.length;
