@@ -10,11 +10,13 @@ import { productionApprovedProducts } from '@/lib/production-approved-products';
 /* Derived from the published catalogue, so the figure is true by construction. */
 const destinationCount = new Set(productionApprovedProducts.map((p) => p.destination)).size;
 
-const QUEUE = [
+export type QueueRow = { name: string; meta: string; state: string; tone: string };
+
+const DEFAULT_QUEUE: QueueRow[] = [
   { name: 'SAPNA CHHAJER', meta: 'Vietnam · 8 travellers', state: 'Approved', tone: 'text-emerald-300' },
   { name: 'VISHAL GIREEYA', meta: 'Turkey · 4 travellers', state: 'Processing', tone: 'text-blue-300' },
   { name: 'KAUSHIK JAIN', meta: 'United Kingdom · 2 travellers', state: 'Payment due', tone: 'text-amber-300' },
-] as const;
+];
 
 /**
  * Split-screen chrome for login and signup.
@@ -29,11 +31,14 @@ export function AuthLayout({
   subtitle,
   children,
   footer,
+  queue = DEFAULT_QUEUE,
 }: {
   title: string;
   subtitle: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** Rows shown in the context panel. Signup passes a shorter set. */
+  queue?: QueueRow[];
 }) {
   const testimonial = TESTIMONIALS[0];
 
@@ -43,7 +48,7 @@ export function AuthLayout({
       <aside className="mk-ink relative flex flex-col justify-between gap-10 p-8 lg:min-h-screen lg:p-12">
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="text-[var(--mk-ink-fg)]">
-            <Wordmark tone="inherit" />
+            <Wordmark tone="inherit" className="h-7" />
           </Link>
           <Link
             href="/"
@@ -66,7 +71,7 @@ export function AuthLayout({
               vvisa.business / applications
             </div>
             <div className="divide-y divide-white/8">
-              {QUEUE.map((row) => (
+              {queue.map((row) => (
                 <div key={row.name} className="flex items-center justify-between gap-4 px-4 py-3">
                   <div className="min-w-0">
                     <p className="truncate text-[13px] font-medium text-white/90">{row.name}</p>

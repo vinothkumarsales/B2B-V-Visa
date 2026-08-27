@@ -25,9 +25,6 @@ export const metadata: Metadata = {
   },
   description: "India's most trusted B2B visa platform for travel agencies. 500,000+ visas delivered. 65 visa types. 5,000+ agents.",
   keywords: ['visa for travel agents', 'b2b visa platform', 'bulk visa applications', 'india visa services'],
-  icons: {
-    icon: "/logo.svg",
-  },
   openGraph: {
     siteName: 'VVisa Business',
     locale: 'en_IN',

@@ -8,7 +8,7 @@ export function SiteFooter() {
       <div className="mk-container px-[var(--mk-gutter)] py-16">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
           <div>
-            <Wordmark />
+            <Wordmark variant="full" className="h-14" />
             <p className="mk-prose mt-4 max-w-xs text-sm leading-relaxed text-vvisa-text-muted">
               A visa operations console for travel agencies — catalogue, documents, payment and
               tracking on one screen.

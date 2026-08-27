@@ -85,7 +85,7 @@ export function SiteHeader() {
 
       <div className="mk-container flex h-16 items-center justify-between gap-6 px-[var(--mk-gutter)]">
         <Link href="/" aria-label="VVisa home">
-          <Wordmark />
+          <Wordmark className="h-7" priority />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
@@ -139,7 +139,7 @@ export function SiteHeader() {
             <SheetContent side="right" className="w-[20rem] border-[var(--mk-rule)] bg-[var(--mk-canvas)] p-0">
               <SheetTitle className="sr-only">Navigation</SheetTitle>
               <div className="flex h-16 items-center justify-between border-b border-[var(--mk-rule)] px-5">
-                <Wordmark />
+                <Wordmark className="h-7" />
                 <SheetClose asChild>
                   <Button variant="ghost" size="icon-sm" aria-label="Close menu">
                     <X className="size-4" />

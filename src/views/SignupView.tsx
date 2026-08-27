@@ -79,6 +79,10 @@ export default function SignupView() {
     <AuthLayout
       title="Create your account"
       subtitle="Set up your agency in a couple of minutes"
+      queue={[
+        { name: 'SAPNA CHHAJER', meta: 'Vietnam · 8 travellers', state: 'Approved', tone: 'text-emerald-300' },
+        { name: 'VISHAL GIREEYA', meta: 'Turkey · 4 travellers', state: 'Processing', tone: 'text-blue-300' },
+      ]}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
         {serverError && (

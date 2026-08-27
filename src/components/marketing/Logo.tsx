@@ -1,52 +1,92 @@
+import Image from 'next/image';
+
 /**
- * Brand mark, inline.
+ * Brand assets.
  *
- * `public/logo.svg` is a dark tile with an embedded infinite `breathe`
- * animation. Loaded through next/image it sits in its own document, so the
- * page's `prefers-reduced-motion` rule cannot reach it, and its fixed dark
- * fill has no light-on-dark variant. Inlining it fixes both: the plate follows
- * `currentColor`, and the animation is gone.
+ * The supplied artwork is a wordmark ("v·visa" with the plane, plus the
+ * "by mittoX" endorsement), not an icon — so there is no separate text label
+ * beside it. The source PNG shipped with a baked white background and no alpha,
+ * which would have shown as a white box on the dark surfaces this site uses, so
+ * two composited variants are generated: the wordmark as supplied for light
+ * surfaces, and a version with the neutral letterforms lifted to white (the
+ * blue accent kept) for dark ones.
+ *
+ * Both variants are rendered and toggled with CSS rather than by reading the
+ * theme in JS, so there is no flash on load and no hydration branch.
  */
-export function Logo({ className = 'size-7' }: { className?: string }) {
+
+const FULL = { w: 480, h: 220 };
+const MARK = { w: 474, h: 156 };
+
+export function Logo({
+  className = 'h-8',
+  variant = 'mark',
+  priority = false,
+}: {
+  /** Height utility; width follows the intrinsic ratio. */
+  className?: string;
+  /** `mark` is the wordmark alone — use it anywhere under ~56px tall, where
+   *  "by mittoX" would be too small to read. `full` is the complete lockup. */
+  variant?: 'mark' | 'full';
+  priority?: boolean;
+}) {
+  const dims = variant === 'full' ? FULL : MARK;
+  const base = variant === 'full' ? '/logo-vvisa' : '/logo-vvisa-mark';
+
   return (
-    <svg viewBox="0 0 30 30" className={className} aria-hidden focusable="false">
-      {/*
-        Plate and glyph are one path with `evenodd`, so the glyph is punched
-        out rather than painted. The mark then works on any background: the
-        plate takes `currentColor` and the cut-out shows whatever is behind.
-        A two-colour version would go invisible whenever the glyph colour
-        matched its container, which is exactly what happened on the dark
-        auth panel.
-      */}
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        fill="currentColor"
-        d="M7.5 0.5 H22.5 A7 7 0 0 1 29.5 7.5 V22.5 A7 7 0 0 1 22.5 29.5 H7.5 A7 7 0 0 1 0.5 22.5 V7.5 A7 7 0 0 1 7.5 0.5 Z
-           M24.51 7.1 H16.86 L5.7 22.91 h7.44 L24.3 7.1 Z
-           M9.2 7.1 h15.31 v3.42 H9.2 Z
-           M5.7 19.49 h15.31 v3.42 H5.7 Z"
+    <>
+      <Image
+        src={`${base}.png`}
+        alt="v·visa by mittoX"
+        width={dims.w}
+        height={dims.h}
+        priority={priority}
+        className={`${className} w-auto dark:hidden`}
       />
-    </svg>
+      <Image
+        src={`${base}-dark.png`}
+        alt=""
+        aria-hidden
+        width={dims.w}
+        height={dims.h}
+        priority={priority}
+        className={`${className} hidden w-auto dark:block`}
+      />
+    </>
   );
 }
 
 /**
- * `inherit` makes the mark follow its container's colour, which is what the
- * dark auth panel needs — the default `--foreground` is near-black there.
+ * The wordmark is the brand — `tone="inherit"` renders the light-on-dark
+ * variant regardless of theme, for permanently dark surfaces such as the auth
+ * panel and the inverted CTA band.
  */
 export function Wordmark({
-  className = '',
+  className = 'h-8',
   tone = 'default',
+  variant = 'mark',
+  priority = false,
 }: {
   className?: string;
   tone?: 'default' | 'inherit';
+  variant?: 'mark' | 'full';
+  priority?: boolean;
 }) {
-  const color = tone === 'inherit' ? 'text-current' : 'text-foreground';
-  return (
-    <span className={`flex items-center gap-2.5 ${className}`}>
-      <Logo className={`size-7 ${color}`} />
-      <span className={`text-[17px] font-semibold tracking-tight ${color}`}>VVisa</span>
-    </span>
-  );
+  const dims = variant === 'full' ? FULL : MARK;
+  const base = variant === 'full' ? '/logo-vvisa' : '/logo-vvisa-mark';
+
+  if (tone === 'inherit') {
+    return (
+      <Image
+        src={`${base}-dark.png`}
+        alt="v·visa by mittoX"
+        width={dims.w}
+        height={dims.h}
+        priority={priority}
+        className={`${className} w-auto`}
+      />
+    );
+  }
+
+  return <Logo className={className} variant={variant} priority={priority} />;
 }
