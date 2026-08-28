@@ -25,6 +25,7 @@ import {
   User,
   Zap,
   Wallet,
+  Handshake,
   LayoutDashboard,
   Archive,
   FileText,
@@ -179,13 +180,15 @@ function SidebarContent({
 
   const initials = agency ? getInitials(agency.name) : 'AG';
 
+  // Ordered by how often the desk reaches for them: daily work first,
+  // then money, then account settings.
   const navItems: NavItem[] = [
-    { label: 'Explore Visas', icon: Zap, route: 'explore' },
-    { label: 'Alliance Dashboard', icon: LayoutDashboard, route: 'alliance' },
     { label: 'Dashboard', icon: LayoutDashboard, route: 'dashboard' as ViewRoute },
     { label: 'Applications', icon: Archive, route: 'applications' as ViewRoute },
+    { label: 'Explore Visas', icon: Zap, route: 'explore' },
     { label: 'Wallet', icon: Wallet, route: 'wallet', badge: `INR ${walletBalance.toLocaleString('en-IN')}` },
     { label: 'Overstay', icon: FileText, route: 'overstay' },
+    { label: 'Alliance Dashboard', icon: Handshake, route: 'alliance' },
   ];
 
   return (

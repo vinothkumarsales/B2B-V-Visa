@@ -86,7 +86,6 @@ export default function ApplicationDetailView() {
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold text-foreground">{app.groupName || 'Application'}</h1>
-            {agency?.id && <span className="text-[9px] text-vvisa-border-active font-mono ml-2">{agency.id}</span>}
             {app.internalId && (
               <Badge variant="secondary" className="bg-vvisa-surface-2 text-vvisa-text-secondary text-xs border-0 font-mono">
                 {app.internalId}
@@ -145,7 +144,7 @@ export default function ApplicationDetailView() {
                     </Badge>
                   )}
                   {traveler.isChild && (
-                    <Badge variant="secondary" className="bg-amber-950/30 text-amber-400 text-xs border-0">
+                    <Badge variant="secondary" className="bg-amber-500/14 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300 text-xs border-0">
                       <Baby className="h-3 w-3 mr-1" />
                       Child
                     </Badge>
@@ -182,7 +181,7 @@ export default function ApplicationDetailView() {
                     {statusSteps.map((step, i) => (
                       <div key={i} className="flex items-center gap-2">
                         <div className="w-4 h-4 rounded-full bg-emerald-600/20 flex items-center justify-center shrink-0">
-                          <Check className="h-2.5 w-2.5 text-emerald-400" />
+                          <Check className="h-2.5 w-2.5 text-emerald-700 dark:text-emerald-300" />
                         </div>
                         <span className="text-xs text-vvisa-text-secondary">{step.label}</span>
                       </div>

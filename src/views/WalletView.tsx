@@ -54,7 +54,6 @@ export default function WalletView() {
             <h1 className="text-2xl font-bold text-foreground">Wallet</h1>
             <p className="text-sm text-vvisa-text-muted mt-1">Manage your balance, deposits, and withdrawals</p>
           </div>
-          {agency?.id && <span className="text-xs text-vvisa-border-active font-mono">{agency.id}</span>}
         </div>
         <Card className="vv-surface-elevated shrink-0 rounded-xl border">
           <CardContent className="px-5 py-3 text-right">
@@ -132,7 +131,7 @@ export default function WalletView() {
                         <Building className="h-4 w-4 text-vvisa-text-secondary" />
                         V-VISA Bank 1
                       </CardTitle>
-                      <Badge className="bg-emerald-950/30 text-emerald-400 text-xs border-0">Preferred</Badge>
+                      <Badge className="bg-emerald-500/14 dark:bg-emerald-400/15 text-emerald-700 dark:text-emerald-300 text-xs border-0">Preferred</Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="px-4 pb-4 space-y-2.5">
@@ -228,9 +227,9 @@ export default function WalletView() {
           {depositTab === 'card' && (
             <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
               <CardContent className="p-5 space-y-4">
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-950/30 border border-amber-800/30">
-                  <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-200/80">
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/14 dark:bg-amber-400/15 border border-amber-500/30">
+                  <AlertTriangle className="h-4 w-4 text-amber-700 dark:text-amber-300 shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-800 dark:text-amber-200/85">
                     A 2% processing fee will be charged on credit card deposits. For fee-free deposits, use Bank Transfer or UPI.
                   </p>
                 </div>
@@ -275,11 +274,11 @@ export default function WalletView() {
           )}
 
           {/* Warning Banner */}
-          <div className="flex items-start gap-3 p-3.5 rounded-lg bg-amber-950/30 border border-amber-800/30">
-            <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 p-3.5 rounded-lg bg-amber-500/14 dark:bg-amber-400/15 border border-amber-500/30">
+            <AlertTriangle className="h-4 w-4 text-amber-700 dark:text-amber-300 shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs text-amber-200/90 font-medium">Payment Processing Time</p>
-              <p className="text-xs text-amber-200/70 mt-0.5">
+              <p className="text-xs text-amber-800 dark:text-amber-200/90 font-medium">Payment Processing Time</p>
+              <p className="text-xs text-amber-800/85 dark:text-amber-200/75 mt-0.5">
                 Please wait 30 min – 2 hrs for payments to reflect in your wallet. If your payment is not reflected after 2 hours, please contact support.
               </p>
             </div>
@@ -344,11 +343,11 @@ export default function WalletView() {
                             {tc.label}
                           </Badge>
                         </td>
-                        <td className={`px-4 py-3 text-sm font-mono text-right whitespace-nowrap ${isCredit ? 'text-emerald-400' : 'text-red-400'}`}>
+                        <td className={`px-4 py-3 text-sm font-mono text-right whitespace-nowrap ${isCredit ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-700 dark:text-red-300'}`}>
                           {isCredit ? '+' : ''}{formatINR(txn.amount)}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className={`text-xs ${txn.status === 'COMPLETED' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                          <span className={`text-xs ${txn.status === 'COMPLETED' ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}`}>
                             {txn.status === 'COMPLETED' ? '✓ Completed' : '⏳ Pending'}
                           </span>
                         </td>

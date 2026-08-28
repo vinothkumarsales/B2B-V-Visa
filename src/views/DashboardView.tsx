@@ -28,6 +28,19 @@ function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+/** Best available human label for an application row. */
+function applicationTitle(app: { groupName?: string | null; internalId?: string | null; travelers: { firstName?: string | null; lastName?: string | null }[] }) {
+  if (app.groupName) return app.groupName;
+  const lead = app.travelers[0];
+  const name = [lead?.firstName, lead?.lastName].filter(Boolean).join(' ').trim();
+  if (name) return name;
+  return app.internalId ? `Application ${app.internalId}` : 'Untitled application';
+}
+
+function travelerCount(count: number) {
+  return `${count} traveller${count === 1 ? '' : 's'}`;
+}
+
 export default function DashboardView() {
   const { visaTypes } = useVisaCatalogue();
   const statusConfig = usePortalStatusConfig();
@@ -188,47 +201,53 @@ export default function DashboardView() {
         {/* Left: Quick Stats + Recent Apps */}
         <div className="flex-1 space-y-6">
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-vvisa-surface-2">
-                  <Briefcase className="h-5 w-5 text-vvisa-text-secondary" />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {([
+              {
+                label: 'Total applications',
+                value: String(stats.totalApplications),
+                icon: Briefcase,
+                tone: 'text-vvisa-text-secondary',
+                chip: 'bg-vvisa-surface-2',
+              },
+              {
+                label: 'Approved this month',
+                value: String(stats.approvedThisMonth),
+                icon: CheckCircle,
+                tone: 'text-vvisa-green',
+                chip: 'bg-emerald-500/12',
+              },
+              {
+                label: 'Wallet balance',
+                value: formatINR(stats.walletBalance),
+                icon: Wallet,
+                tone: 'text-primary',
+                chip: 'bg-primary/12',
+                tabular: true,
+              },
+            ] as const).map((stat) => (
+              <div key={stat.label} className="vv-card vv-card-hover p-4">
+                <div className="flex items-center gap-3">
+                  <span className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${stat.chip}`}>
+                    <stat.icon className={`size-5 ${stat.tone}`} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-medium text-vvisa-text-muted">{stat.label}</p>
+                    <p
+                      className={`mt-0.5 text-2xl font-bold tracking-tight ${stat.tone} ${'tabular' in stat && stat.tabular ? 'vv-tabular' : ''}`}
+                    >
+                      {stat.value}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-vvisa-text-muted">Total Applications</p>
-                  <p className="text-xl font-bold text-foreground">{stats.totalApplications}</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-emerald-950/30">
-                  <CheckCircle className="h-5 w-5 text-emerald-400" />
-                </div>
-                <div>
-                  <p className="text-xs text-vvisa-text-muted">Approved This Month</p>
-                  <p className="text-xl font-bold text-emerald-400">{stats.approvedThisMonth}</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-primary/10">
-                  <Wallet className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs text-vvisa-text-muted">Wallet Balance</p>
-                  <p className="text-xl font-bold text-primary font-mono">{formatINR(stats.walletBalance)}</p>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            ))}
           </div>
 
           {/* Recent Applications */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-foreground">{String(recentApplicationsSection?.config.title ?? recentApplicationsSection?.name ?? 'Recent Applications')}</h2>
-              {agency?.id && <span className="text-xs text-vvisa-border-active font-mono">{agency.id}</span>}
               <button
                 onClick={() => {
                   navigate('applications');
@@ -245,7 +264,15 @@ export default function DashboardView() {
                 return (
                   <Card
                     key={app.id}
-                    className="bg-vvisa-surface border border-vvisa-border rounded-xl cursor-pointer hover:bg-vvisa-surface-2 transition-colors"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        e.currentTarget.click();
+                      }
+                    }}
+                    className="vv-card vv-card-hover cursor-pointer"
                     onClick={() => {
                       useAppStore.getState().setSelectedApplicationId(app.id);
                       navigate('application-detail');
@@ -254,15 +281,15 @@ export default function DashboardView() {
                   >
                     <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="p-2 rounded-lg bg-vvisa-surface-2 shrink-0">
-                          <Plane className="h-4 w-4 text-vvisa-text-secondary" />
-                        </div>
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-vvisa-surface-2">
+                          <Plane className="size-4 text-vvisa-text-secondary" />
+                        </span>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            {app.groupName || app.travelers[0]?.firstName + ' ' + app.travelers[0]?.lastName}
+                          <p className="truncate text-sm font-semibold text-foreground">
+                            {applicationTitle(app)}
                           </p>
                           <p className="text-xs text-vvisa-text-muted truncate">
-                            {app.destination} · {app.visaType} · {app.travelers.length} traveler{app.travelers.length > 1 ? 's' : ''}
+                            {app.destination} · {app.visaType} · {travelerCount(app.travelers.length)}
                           </p>
                         </div>
                       </div>
@@ -270,9 +297,9 @@ export default function DashboardView() {
                         <span className="text-xs text-vvisa-text-muted">{formatDate(app.createdAt)}</span>
                         <Badge
                           variant="secondary"
-                          className={`${sc?.bg || ''} ${sc?.text || ''} text-xs font-medium border-0`}
+                          className={`${sc?.bg || ''} ${sc?.text || ''} gap-1.5 border-0 text-xs font-medium`}
                         >
-                          <span className={`inline-block w-1.5 h-1.5 rounded-full ${sc?.dot || ''} mr-1.5`} />
+                          <span className={`size-1.5 shrink-0 rounded-full ${sc?.dot || ''}`} />
                           {sc?.label || app.status}
                         </Badge>
                       </div>

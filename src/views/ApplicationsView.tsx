@@ -21,18 +21,17 @@ const pageVariants = {
   exit: { opacity: 0, y: -8 },
 };
 
-const listVariants = {
-  animate: {
-    transition: {
-      staggerChildren: 0.06,
-    },
-  },
-};
-
-const cardVariants = {
+/**
+ * Entrance for a single row. Applied per card rather than via a parent
+ * `staggerChildren`: rows arrive asynchronously, and a parent that has already
+ * finished animating never drives children that mount afterwards — leaving
+ * them stuck at opacity 0.
+ */
+const cardMotion = (index: number) => ({
   initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' } },
-} as const;
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] as const, delay: Math.min(index, 8) * 0.05 },
+});
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -128,7 +127,6 @@ export default function ApplicationsView() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Applications</h1>
         <p className="text-sm text-vvisa-text-muted mt-1">Track and manage visa applications</p>
-        {agency?.id && <p className="text-xs text-vvisa-text-muted font-mono mt-1">{agency.id}</p>}
       </div>
 
       {/* Filters Row */}
@@ -177,19 +175,19 @@ export default function ApplicationsView() {
             value="APPROVED"
             className="data-[state=active]:bg-vvisa-surface-2 data-[state=active]:text-foreground text-vvisa-text-muted rounded-md px-3 py-2 text-xs sm:text-sm flex items-center gap-1.5"
           >
-            Approved <Badge variant="secondary" className="bg-emerald-950/30 text-emerald-400 text-xs border-0">{tabCounts.APPROVED}</Badge>
+            Approved <Badge variant="secondary" className="bg-emerald-500/14 dark:bg-emerald-400/15 text-emerald-700 dark:text-emerald-300 text-xs border-0">{tabCounts.APPROVED}</Badge>
           </TabsTrigger>
           <TabsTrigger
             value="PAYMENT_PENDING"
             className="data-[state=active]:bg-vvisa-surface-2 data-[state=active]:text-foreground text-vvisa-text-muted rounded-md px-3 py-2 text-xs sm:text-sm flex items-center gap-1.5"
           >
-            Pending Payment <Badge variant="secondary" className="bg-amber-950/30 text-amber-400 text-xs border-0">{tabCounts.PAYMENT_PENDING}</Badge>
+            Pending Payment <Badge variant="secondary" className="bg-amber-500/14 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300 text-xs border-0">{tabCounts.PAYMENT_PENDING}</Badge>
           </TabsTrigger>
           <TabsTrigger
             value="SUBMITTED"
             className="data-[state=active]:bg-vvisa-surface-2 data-[state=active]:text-foreground text-vvisa-text-muted rounded-md px-3 py-2 text-xs sm:text-sm flex items-center gap-1.5"
           >
-            Submitted <Badge variant="secondary" className="bg-blue-950/30 text-blue-400 text-xs border-0">{tabCounts.SUBMITTED}</Badge>
+            Submitted <Badge variant="secondary" className="bg-blue-500/14 dark:bg-blue-400/15 text-blue-700 dark:text-blue-300 text-xs border-0">{tabCounts.SUBMITTED}</Badge>
           </TabsTrigger>
           <TabsTrigger
             value="DRAFT"
@@ -201,19 +199,13 @@ export default function ApplicationsView() {
       </Tabs>
 
       {/* Application Cards */}
-      <motion.div
-        className="space-y-3"
-        variants={listVariants}
-        initial="initial"
-        animate="animate"
-      >
-        {filteredApps.map((app) => {
+      <motion.div className="space-y-3">
+        {filteredApps.map((app, index) => {
           if (isGroup(app)) {
             return (
-              <motion.div key={app.id} variants={cardVariants}>
+              <motion.div key={app.id} {...cardMotion(index)}>
                 <GroupCard
                   app={app}
-                  agencyId={agency?.id}
                   onViewGroup={() => {
                     setSelectedApplicationId(app.id);
                     navigate('application-detail');
@@ -224,16 +216,15 @@ export default function ApplicationsView() {
             );
           } else if (app.status === 'APPROVED') {
             return (
-              <motion.div key={app.id} variants={cardVariants}>
-                <IndividualApprovedCard app={app} agencyId={agency?.id} />
+              <motion.div key={app.id} {...cardMotion(index)}>
+                <IndividualApprovedCard app={app} />
               </motion.div>
             );
           } else {
             return (
-              <motion.div key={app.id} variants={cardVariants}>
+              <motion.div key={app.id} {...cardMotion(index)}>
                 <IndividualDefaultCard
                   app={app}
-                  agencyId={agency?.id}
                   statusConfig={statusConfig}
                   onView={() => {
                     setSelectedApplicationId(app.id);
@@ -259,7 +250,7 @@ export default function ApplicationsView() {
 }
 
 /* ─── Group Application Card ─── */
-function GroupCard({ app, agencyId, onViewGroup }: { app: VisaApplication; agencyId?: string; onViewGroup: () => void }) {
+function GroupCard({ app, onViewGroup }: { app: VisaApplication; onViewGroup: () => void }) {
   const approvedCount = app.travelers.filter((t) => t.status === 'APPROVED').length;
   const totalTravelers = app.travelers.length;
   const allApproved = approvedCount === totalTravelers;
@@ -303,11 +294,11 @@ function GroupCard({ app, agencyId, onViewGroup }: { app: VisaApplication; agenc
               Applicants: <span className="text-foreground font-medium">{totalTravelers}</span>
             </span>
             {allApproved ? (
-              <span className="text-emerald-400 font-medium">
+              <span className="text-emerald-700 dark:text-emerald-300 font-medium">
                 Approved: {approvedCount} <Check className="h-3.5 w-3.5 inline" />
               </span>
             ) : (
-              <span className="text-amber-400 font-medium">
+              <span className="text-amber-700 dark:text-amber-300 font-medium">
                 Approved: {approvedCount}/{totalTravelers}
               </span>
             )}
@@ -327,7 +318,6 @@ function GroupCard({ app, agencyId, onViewGroup }: { app: VisaApplication; agenc
 
         {/* Bottom: Client ID + View Group */}
         <div className="flex items-center justify-between pt-3 border-t border-vvisa-border">
-          {agencyId && <span className="text-[10px] text-vvisa-text-muted font-mono">{agencyId}</span>}
           <Button
             variant="ghost"
             className="text-primary hover:text-primary/80 hover:bg-primary/10 text-xs p-0 h-auto"
@@ -341,7 +331,7 @@ function GroupCard({ app, agencyId, onViewGroup }: { app: VisaApplication; agenc
 }
 
 /* ─── Individual Approved Card ─── */
-function IndividualApprovedCard({ app, agencyId }: { app: VisaApplication; agencyId?: string }) {
+function IndividualApprovedCard({ app }: { app: VisaApplication }) {
   const traveler = app.travelers[0];
   if (!traveler) return null;
 
@@ -383,7 +373,7 @@ function IndividualApprovedCard({ app, agencyId }: { app: VisaApplication; agenc
               {approvedSteps.map((step, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-emerald-600/20 flex items-center justify-center shrink-0">
-                    <Check className="h-2.5 w-2.5 text-emerald-400" />
+                    <Check className="h-2.5 w-2.5 text-emerald-700 dark:text-emerald-300" />
                   </div>
                   <span className="text-xs text-vvisa-text-secondary">{step.label}</span>
                 </div>
@@ -398,7 +388,7 @@ function IndividualApprovedCard({ app, agencyId }: { app: VisaApplication; agenc
               {traveler.estimatedArrival && (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-emerald-600/20 flex items-center justify-center shrink-0">
-                    <Check className="h-2.5 w-2.5 text-emerald-400" />
+                    <Check className="h-2.5 w-2.5 text-emerald-700 dark:text-emerald-300" />
                   </div>
                   <span className="text-xs text-vvisa-text-secondary">Estimated on {formatDate(traveler.estimatedArrival)}</span>
                 </div>
@@ -406,7 +396,7 @@ function IndividualApprovedCard({ app, agencyId }: { app: VisaApplication; agenc
               {traveler.deliveredAt && (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-emerald-600/20 flex items-center justify-center shrink-0">
-                    <Check className="h-2.5 w-2.5 text-emerald-400" />
+                    <Check className="h-2.5 w-2.5 text-emerald-700 dark:text-emerald-300" />
                   </div>
                   <span className="text-xs text-vvisa-text-secondary">Delivered on {formatDate(traveler.deliveredAt)}</span>
                 </div>
@@ -422,7 +412,6 @@ function IndividualApprovedCard({ app, agencyId }: { app: VisaApplication; agenc
         </div>
 
         {/* Client ID */}
-        {agencyId && <p className="text-[10px] text-vvisa-text-muted font-mono mb-3">{agencyId}</p>}
 
         {/* Actions */}
         <div className="flex flex-wrap gap-2">
@@ -445,7 +434,7 @@ function IndividualApprovedCard({ app, agencyId }: { app: VisaApplication; agenc
 }
 
 /* ─── Individual Pending / Submitted / Draft Card ─── */
-function IndividualDefaultCard({ app, agencyId, onView, statusConfig }: { app: VisaApplication; agencyId?: string; onView: () => void; statusConfig: Record<string, { label: string; bg: string; text: string; dot: string }> }) {
+function IndividualDefaultCard({ app, onView, statusConfig }: { app: VisaApplication; onView: () => void; statusConfig: Record<string, { label: string; bg: string; text: string; dot: string }> }) {
   const traveler = app.travelers[0];
   if (!traveler) return null;
 
@@ -480,7 +469,6 @@ function IndividualDefaultCard({ app, agencyId, onView, statusConfig }: { app: V
         </div>
 
         {/* Client ID */}
-        {agencyId && <p className="text-[10px] text-vvisa-text-muted font-mono mb-3">{agencyId}</p>}
 
         {/* Actions */}
         <div className="flex flex-wrap gap-2">

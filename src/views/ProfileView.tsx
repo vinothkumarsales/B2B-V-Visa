@@ -84,7 +84,7 @@ function DocUploadZone({ title, helper, docType, value, onUpload }: DocUploadZon
       />
       <div
         className={`border border-dashed rounded-lg p-4 flex flex-col items-center justify-center text-center transition-colors cursor-pointer h-20
-          ${value ? 'border-emerald-500/50 bg-emerald-950/10' : 'border-vvisa-border hover:border-primary/50'}
+          ${value ? 'border-emerald-500/50 bg-emerald-500/8 dark:bg-emerald-400/10' : 'border-vvisa-border hover:border-primary/50'}
         `}
         onClick={() => inputRef.current?.click()}
       >
@@ -95,8 +95,8 @@ function DocUploadZone({ title, helper, docType, value, onUpload }: DocUploadZon
           </>
         ) : value ? (
           <>
-            <FileCheck className="h-3.5 w-3.5 text-emerald-400 mb-1" />
-            <p className="text-xs text-emerald-400 font-medium truncate max-w-full px-2">{value}</p>
+            <FileCheck className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300 mb-1" />
+            <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium truncate max-w-full px-2">{value}</p>
             <span className="text-[9px] text-vvisa-text-muted mt-0.5">Click to replace</span>
           </>
         ) : (
@@ -297,7 +297,7 @@ export default function ProfileView() {
             />
             <div
               className={`border-2 border-dashed rounded-xl w-32 h-32 flex flex-col items-center justify-center text-center transition-all cursor-pointer shrink-0
-                ${logoFile ? 'border-emerald-500/50 bg-emerald-950/10' : 'border-vvisa-border hover:border-primary/50'}
+                ${logoFile ? 'border-emerald-500/50 bg-emerald-500/8 dark:bg-emerald-400/10' : 'border-vvisa-border hover:border-primary/50'}
                 ${logoUploading ? 'border-primary bg-primary/5' : ''}
               `}
               onClick={() => logoInputRef.current?.click()}
@@ -313,8 +313,8 @@ export default function ProfileView() {
                 </div>
               ) : logoFile ? (
                 <>
-                  <Check className="h-6 w-6 text-emerald-400 mb-1" />
-                  <p className="text-xs text-emerald-400 font-medium">{logoFile}</p>
+                  <Check className="h-6 w-6 text-emerald-700 dark:text-emerald-300 mb-1" />
+                  <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">{logoFile}</p>
                 </>
               ) : (
                 <>
@@ -502,9 +502,9 @@ export default function ProfileView() {
           {/* Documents */}
           <div>
             <h4 className="text-sm font-medium text-foreground mb-3">Documents</h4>
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-950/30 border border-amber-800/30 mb-3">
-              <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-200/80">
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/14 dark:bg-amber-400/15 border border-amber-500/30 mb-3">
+              <AlertTriangle className="h-4 w-4 text-amber-700 dark:text-amber-300 shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-800 dark:text-amber-200/85">
                 Upload your GST certificate to enable GST input credit on your invoices. All documents are scanned using <span className="text-primary font-medium">ocr.z.ai</span>.
               </p>
             </div>
