@@ -9,12 +9,12 @@ export async function POST(request: NextRequest) {
     const parsed = careerResumeUploadSchema.safeParse(await request.json());
     if (!parsed.success) return apiError('INVALID_INPUT', 'Invalid career resume upload.', 400);
 
-    const resume = await saveCareerResumeUpload({
+    const result = await saveCareerResumeUpload({
       userId: session.user.id,
       payload: parsed.data,
     });
 
-    return NextResponse.json({ resume, message: 'Resume uploaded for review' });
+    return NextResponse.json({ ...result, message: 'Resume uploaded and CareerOps analysis completed' });
   } catch (error) {
     if (isApiResponse(error)) return error;
     return apiError('INVALID_INPUT', 'Unable to upload resume.', 400);

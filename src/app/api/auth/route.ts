@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { after } from 'next/server';
 import { randomUUID } from 'crypto';
 import { db } from '@/lib/db';
+import { adminDb } from '@/lib/firebase-admin';
+import { verifyFirebaseIdToken } from '@/lib/firebase-verify';
 import { apiError, isApiResponse } from '@/lib/api-response';
 import { loginSchema } from '@/lib/auth/login-schema';
 import { createSession, getSession } from '@/server/auth/session';
@@ -107,11 +109,108 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    let body: unknown;
+    let body: any;
     try {
       body = await request.json();
     } catch {
       return loginError('INVALID_JSON', 'The request body must be valid JSON.', 400);
+    }
+
+    // Firebase Authentication Token Flow
+    if (body && typeof body === 'object' && 'token' in body) {
+      const token = body.token;
+      const decodedToken = await verifyFirebaseIdToken(token);
+      const email = decodedToken.email?.toLowerCase();
+      if (!email) return loginError('INVALID_TOKEN', 'Token has no email address', 400);
+
+      let user = await db.user.findUnique({
+        where: { email },
+        include: { memberships: { include: { agency: true } } },
+      });
+
+      if (!user) {
+        const name = decodedToken.name ?? email.split('@')[0];
+        user = await db.$transaction(async (tx) => {
+          const u = await tx.user.create({
+            data: {
+              name,
+              email,
+              phone: decodedToken.phone_number ?? null,
+              passwordHash: '',
+            },
+          });
+          const agency = await tx.agency.create({
+            data: {
+              name: `${name}'s Agency`,
+              email,
+              status: 'DRAFT',
+              memberships: {
+                create: {
+                  userId: u.id,
+                  role: 'AGENCY_OWNER',
+                  isDefault: true,
+                },
+              },
+              wallets: {
+                create: { currency: 'INR' },
+              },
+            },
+          });
+          return tx.user.findUniqueOrThrow({
+            where: { id: u.id },
+            include: { memberships: { include: { agency: true } } },
+          });
+        });
+      }
+
+      // Sync user profile to Firestore
+      try {
+        await adminDb.collection('users').doc(user.id).set({
+          name: user.name ?? '',
+          email: user.email,
+          phone: user.phone ?? '',
+          createdAt: user.createdAt.toISOString(),
+        }, { merge: true });
+        const membership = user.memberships[0] ?? null;
+        if (membership?.agency) {
+          await adminDb.collection('agencies').doc(membership.agency.id).set({
+            name: membership.agency.name,
+            email: membership.agency.email,
+            status: membership.agency.status,
+            createdAt: membership.agency.createdAt.toISOString(),
+          }, { merge: true });
+        }
+      } catch (firestoreError) {
+        console.error('FIRESTORE_SYNC_FAILED', firestoreError);
+      }
+
+      await createSession(user.id);
+      const membership = user.memberships[0] ?? null;
+
+      after(async () => {
+        try {
+          await auditLog({
+            agencyId: membership?.agencyId,
+            actorUserId: user.id,
+            action: 'LOGIN',
+            resourceType: 'User',
+            resourceId: user.id,
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      });
+
+      return NextResponse.json({
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        },
+        agency: membership?.agency ?? null,
+        role: membership?.role ?? null,
+        message: 'Login successful',
+      });
     }
 
     const parsed = loginSchema.safeParse(body);
@@ -178,7 +277,7 @@ export async function POST(request: NextRequest) {
       isAdminBootstrapLogin = true;
       user = await db.user.create({
         data: {
-          name: 'VVisa Admin',
+          name: 'V-VISA Admin',
           email,
           passwordHash: hashPassword(parsed.data.password),
         },
@@ -212,7 +311,7 @@ export async function POST(request: NextRequest) {
       await db.$transaction(async (tx) => {
         const existingAgency = await tx.agency.findUnique({ where: { email } });
         const portalAgency = existingAgency ?? await tx.agency.create({
-          data: { name: adminUserName ? `${adminUserName}'s Agency` : 'VVisa Admin Agency', email, status: 'DRAFT' },
+          data: { name: adminUserName ? `${adminUserName}'s Agency` : 'V-VISA Admin Agency', email, status: 'DRAFT' },
         });
         await tx.agencyMembership.upsert({
           where: { userId_agencyId: { userId: adminUserId, agencyId: portalAgency.id } },

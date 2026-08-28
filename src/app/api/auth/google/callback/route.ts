@@ -277,7 +277,7 @@ export async function GET(request: NextRequest) {
     });
 
     setStage('final_redirect');
-    const destination = result.agency?.id ? `/${result.agency.id}` : '/dashboard';
+    const destination = '/careers/dashboard';
     logGoogleStage('final_redirect', { destination, hasAdminAccess: isAdminEmail });
     return NextResponse.redirect(new URL(destination, request.url));
   } catch (error) {

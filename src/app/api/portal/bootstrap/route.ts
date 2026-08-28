@@ -1,20 +1,29 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { apiError, isApiResponse } from '@/lib/api-response';
-import { requireAgencyMembership } from '@/server/auth/session';
+import { getSession } from '@/server/auth/session';
 
 export async function GET() {
   try {
-    const session = await requireAgencyMembership();
+    const session = await getSession();
+    if (!session) return apiError('AUTH_REQUIRED', 'Authentication required', 401);
+
+    if (!session.activeMembership || !session.activeAgencyId) {
+      return NextResponse.json({
+        user: { id: session.user.id, name: session.user.name, email: session.user.email },
+        onboarded: false,
+      });
+    }
+
     const [applications, wallet] = await Promise.all([
       db.visaApplication.findMany({
-        where: { agencyId: session.agencyId },
+        where: { agencyId: session.activeAgencyId },
         include: { applicants: true },
         orderBy: { createdAt: 'desc' },
         take: 50,
       }),
       db.wallet.findUnique({
-        where: { agencyId_currency: { agencyId: session.agencyId, currency: 'INR' } },
+        where: { agencyId_currency: { agencyId: session.activeAgencyId, currency: 'INR' } },
         include: { entries: { orderBy: { createdAt: 'desc' }, take: 50 } },
       }),
     ]);
@@ -28,8 +37,9 @@ export async function GET() {
 
     return NextResponse.json({
       user: { id: session.user.id, name: session.user.name, email: session.user.email },
-      agency: session.agency,
+      agency: session.activeMembership.agency,
       role: session.role,
+      onboarded: true,
       applications,
       transactions: wallet?.entries ?? [],
       walletBalanceMinor: balance?._sum.amountMinor ?? 0,

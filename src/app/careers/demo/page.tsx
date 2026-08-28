@@ -13,8 +13,8 @@ import {
 } from '@/server/careers/demo-data';
 
 export const metadata = {
-  title: 'Careers Demo Mode | VVisa Careers',
-  description: 'Fixture-only VVisa Careers demo journey for presentation.',
+  title: 'Careers Demo Mode | V-VISA Careers',
+  description: 'Fixture-only V-VISA Careers demo journey for presentation.',
 };
 
 export default function CareersDemoPage() {

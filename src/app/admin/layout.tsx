@@ -13,7 +13,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <CardTitle>403 - Access denied</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-vvisa-text-secondary">
-            You do not have permission to access the VVisa Admin Console.
+            You do not have permission to access the V-VISA Admin Console.
           </CardContent>
         </Card>
       </div>

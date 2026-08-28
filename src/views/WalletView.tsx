@@ -129,7 +129,7 @@ export default function WalletView() {
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
                         <Building className="h-4 w-4 text-vvisa-text-secondary" />
-                        VVisa Bank 1
+                        V-VISA Bank 1
                       </CardTitle>
                       <Badge className="bg-emerald-500/14 dark:bg-emerald-400/15 text-emerald-700 dark:text-emerald-300 text-xs border-0">Preferred</Badge>
                     </div>
@@ -155,7 +155,7 @@ export default function WalletView() {
                     </div>
                     <div>
                       <p className="text-xs text-vvisa-text-muted">Account Name</p>
-                      <p className="text-sm text-foreground mt-0.5">VVisa Technologies Pvt Ltd</p>
+                      <p className="text-sm text-foreground mt-0.5">V-VISA Technologies Pvt Ltd</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -165,7 +165,7 @@ export default function WalletView() {
                   <CardHeader className="pb-2 pt-4 px-4">
                     <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
                       <Building className="h-4 w-4 text-vvisa-text-secondary" />
-                      VVisa Bank 2
+                      V-VISA Bank 2
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 pb-4 space-y-2.5">
@@ -189,7 +189,7 @@ export default function WalletView() {
                     </div>
                     <div>
                       <p className="text-xs text-vvisa-text-muted">Account Name</p>
-                      <p className="text-sm text-foreground mt-0.5">VVisa Technologies Pvt Ltd</p>
+                      <p className="text-sm text-foreground mt-0.5">V-VISA Technologies Pvt Ltd</p>
                     </div>
                   </CardContent>
                 </Card>

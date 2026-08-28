@@ -5,7 +5,7 @@ import { apiError } from '@/lib/api-response';
 
 export async function GET() {
   const admin = await getAdminSession();
-  if (!admin) return apiError('FORBIDDEN', 'You do not have permission to access the VVisa Admin Console.', 403);
+  if (!admin) return apiError('FORBIDDEN', 'You do not have permission to access the V-VISA Admin Console.', 403);
 
   return NextResponse.json({
     user: { id: admin.user.id, email: admin.user.email, name: admin.user.name },

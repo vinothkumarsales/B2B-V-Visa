@@ -782,3 +782,49 @@
     border-radius: var(--mk-radius);
   }
 }
+
+@layer utilities {
+  .mitto-career {
+    position: relative;
+    isolation: isolate;
+    background: #070912;
+    color-scheme: dark;
+    --background: #070912;
+    --foreground: #f8fafc;
+    --card: rgba(255,255,255,.065);
+    --card-foreground: #f8fafc;
+    --muted: rgba(255,255,255,.06);
+    --muted-foreground: #94a3b8;
+    --border: rgba(255,255,255,.11);
+    --input: rgba(255,255,255,.12);
+  }
+  .mitto-aurora { position: fixed; inset: 0; z-index: -2; pointer-events: none; background: radial-gradient(circle at 12% 8%,rgba(34,211,238,.17),transparent 29rem),radial-gradient(circle at 82% 22%,rgba(139,92,246,.18),transparent 34rem),radial-gradient(circle at 58% 86%,rgba(16,185,129,.10),transparent 32rem),linear-gradient(145deg,#070912 0%,#0a0d19 48%,#070912 100%); }
+  .mitto-aurora::after { content:""; position:absolute; inset:0; opacity:.16; background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px); background-size:72px 72px; mask-image:linear-gradient(to bottom,black,transparent 85%); }
+  .mitto-glass { border:1px solid rgba(255,255,255,.11); border-radius:1.5rem; background:linear-gradient(145deg,rgba(255,255,255,.09),rgba(255,255,255,.035)); box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 28px 80px rgba(0,0,0,.28); backdrop-filter:blur(24px); }
+  .mitto-button { border-radius:999px; background:#f8fafc; color:#080b13; padding:.68rem 1rem; font-size:.875rem; font-weight:700; transition:transform .2s ease,box-shadow .2s ease; box-shadow:0 10px 30px rgba(255,255,255,.08); }
+  .mitto-button:hover { transform:translateY(-1px); box-shadow:0 14px 36px rgba(34,211,238,.16); }
+  .mitto-button-secondary { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border:1px solid rgba(255,255,255,.13); border-radius:999px; background:rgba(255,255,255,.055); padding:.68rem 1rem; font-size:.875rem; font-weight:600; color:#e2e8f0; backdrop-filter:blur(18px); }
+  .mitto-eyebrow { font-size:.7rem; font-weight:700; letter-spacing:.24em; text-transform:uppercase; color:#67e8f9; }
+  .mitto-career [data-slot="card"] { border-color:rgba(255,255,255,.1); background:rgba(255,255,255,.055); color:#f8fafc; box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 24px 70px rgba(0,0,0,.24); backdrop-filter:blur(22px); }
+  .mitto-career [data-slot="input"], .mitto-career textarea, .mitto-career select { border-color:rgba(255,255,255,.12)!important; background:rgba(4,7,14,.54)!important; color:#f8fafc!important; }
+  .mitto-career label { color:#cbd5e1; }
+
+  /* Mitto Career uses a high-contrast light workspace for long-form reading. */
+  .mitto-career { background:#f5f7fb; color-scheme:light; color:#0f172a!important; --background:#f5f7fb; --foreground:#0f172a; --card:rgba(255,255,255,.88); --card-foreground:#0f172a; }
+  .mitto-aurora { background:radial-gradient(circle at 12% 8%,rgba(34,211,238,.15),transparent 30rem),radial-gradient(circle at 82% 22%,rgba(139,92,246,.12),transparent 34rem),linear-gradient(145deg,#f8fafc 0%,#eef4ff 50%,#f8fafc 100%); }
+  .mitto-aurora::after { opacity:.32; background-image:linear-gradient(rgba(15,23,42,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,.045) 1px,transparent 1px); }
+  .mitto-glass { border-color:rgba(15,23,42,.1); background:rgba(255,255,255,.82); box-shadow:0 22px 60px rgba(30,64,175,.08); }
+  .mitto-button { background:#0f172a; color:#fff; box-shadow:0 10px 30px rgba(15,23,42,.16); }
+  .mitto-button-secondary { border-color:rgba(15,23,42,.14); background:#fff; color:#0f172a; }
+  .mitto-eyebrow { color:#0e7490; }
+  .mitto-career .text-white, .mitto-career.text-white { color:#0f172a!important; }
+  .mitto-career .text-slate-300, .mitto-career .text-slate-400, .mitto-career .text-slate-500, .mitto-career .text-slate-600 { color:#475569!important; }
+  .mitto-career .text-cyan-200, .mitto-career .text-cyan-50 { color:#0e7490!important; }
+  .mitto-career .bg-black\/20, .mitto-career .bg-black\/25 { background:rgba(255,255,255,.72)!important; }
+  .mitto-career header { background:rgba(255,255,255,.88)!important; border-color:rgba(15,23,42,.08)!important; }
+  .mitto-career [data-slot="input"], .mitto-career input, .mitto-career textarea, .mitto-career select { border-color:rgba(15,23,42,.16)!important; background:#fff!important; color:#0f172a!important; }
+  .mitto-career label { color:#334155; }
+}
+
+@keyframes mitto-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.mitto-float { animation:mitto-float 6s ease-in-out infinite; }

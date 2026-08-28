@@ -53,9 +53,11 @@ interface AppState {
 
   // Auth
   isAuthenticated: boolean;
+  isOnboarded: boolean;
   agency: Agency | null;
   login: (agency: Agency) => void;
-  logout: () => void;
+  setIsOnboarded: (onboarded: boolean) => void;
+  logout: () => Promise<void>;
   clearUserScopedState: () => void;
 
   // Selected visa/application context
@@ -107,11 +109,28 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // Auth
   isAuthenticated: false,
+  isOnboarded: true,
   agency: null,
-  login: (agency) => set({ isAuthenticated: true, agency, currentView: 'dashboard', previousView: null }),
-  logout: () => get().clearUserScopedState(),
+  login: (agency) => set({ isAuthenticated: true, isOnboarded: true, agency, currentView: 'dashboard', previousView: null }),
+  setIsOnboarded: (onboarded) => set({ isOnboarded: onboarded }),
+  logout: async () => {
+    try {
+      const { auth } = await import('@/lib/firebase');
+      const { signOut } = await import('firebase/auth');
+      await signOut(auth);
+    } catch (e) {
+      console.error('Firebase signout failed:', e);
+    }
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {
+      console.error('API logout failed:', e);
+    }
+    get().clearUserScopedState();
+  },
   clearUserScopedState: () => set({
     isAuthenticated: false,
+    isOnboarded: true,
     agency: null,
     currentView: 'login',
     previousView: null,

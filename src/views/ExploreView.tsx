@@ -16,7 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PriceBreakdownPopover } from '@/components/pricing/PriceBreakdownPopover';
 import { VisaAttributeBadges } from '@/components/visa/VisaAttributeBadges';
-import { Search, ArrowRight, MapPin, Plane, Calendar, Zap, Clock, FileText, ChevronDown } from 'lucide-react';
+import { Search, ArrowRight, MapPin, Plane, Calendar, Zap, Clock, FileText, ChevronDown, Globe, Briefcase, GraduationCap, TrendingUp, Users, Heart, HelpCircle, Compass } from 'lucide-react';
 import type { VisaStickerRoute } from '@/types';
 
 const pageVariants = {
@@ -63,7 +63,7 @@ function getStickerRoutes(visa: VisaType): VisaStickerRoute[] {
 }
 
 function getSearchSessionId() {
-  const key = 'vvisa:crmSearchSessionId';
+  const key = 'V-VISA:crmSearchSessionId';
   const searchSessionId = sessionStorage.getItem(key) ?? crypto.randomUUID();
   sessionStorage.setItem(key, searchSessionId);
   return searchSessionId;
@@ -116,13 +116,39 @@ function trackProductIntent(input: {
   }).catch(() => undefined);
 }
 
+function getCategoryIcon(name: string) {
+  const norm = name.toLowerCase();
+  if (norm.includes('tourist') || norm.includes('standard')) return Plane;
+  if (norm.includes('business')) return Briefcase;
+  if (norm.includes('study') || norm.includes('student')) return GraduationCap;
+  if (norm.includes('work') || norm.includes('employment')) return Briefcase;
+  if (norm.includes('job seeker') || norm.includes('job-seeker')) return TrendingUp;
+  if (norm.includes('nomad')) return Globe;
+  if (norm.includes('transit')) return MapPin;
+  if (norm.includes('dependent') || norm.includes('family')) return Users;
+  if (norm.includes('medical') || norm.includes('health')) return Heart;
+  return HelpCircle;
+}
+
 export default function ExploreView() {
   const router = useRouter();
   const pathname = usePathname();
-  const { navigate, setSelectedVisaType } = useAppStore();
-  const { visaTypes } = useVisaCatalogue();
+  const { visaTypes, categories } = useVisaCatalogue();
+  const { navigate, setSelectedVisaType, agency } = useAppStore();
+
+  const disabledCategories = useMemo(() => {
+    if (!agency?.disabledVisaCategories) return [];
+    try {
+      return typeof agency.disabledVisaCategories === 'string'
+        ? JSON.parse(agency.disabledVisaCategories)
+        : agency.disabledVisaCategories;
+    } catch {
+      return [];
+    }
+  }, [agency]);
   const [goingTo, setGoingTo] = useState('');
   const [purposeFilter, setPurposeFilter] = useState<(typeof purposeOptions)[number]>('All');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [travelDate, setTravelDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -139,10 +165,26 @@ export default function ExploreView() {
     d.toLowerCase().includes(goingTo.toLowerCase())
   );
 
+  const destinationsWithCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const visa of visaTypes) {
+      if (visa.category && disabledCategories.includes(visa.category)) continue;
+      counts[visa.destination] = (counts[visa.destination] || 0) + 1;
+    }
+    return Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+  }, [visaTypes, disabledCategories]);
+
   const filteredVisas = useMemo(() => {
     const query = goingTo.trim().toLowerCase();
 
     return visaTypes.filter((visa) => {
+      if (visa.category && disabledCategories.includes(visa.category)) {
+        return false;
+      }
+      
       const matchesQuery =
         !query ||
         visa.destination.toLowerCase().includes(query) ||
@@ -153,17 +195,22 @@ export default function ExploreView() {
         purposeText.includes(purposeFilter.toLowerCase()) ||
         (purposeFilter === 'Tourist' && !purposeText.includes('business') && !purposeText.includes('transit'));
 
-      return matchesQuery && matchesPurpose;
+      const matchesCategory =
+        !selectedCategory ||
+        visa.category === selectedCategory ||
+        (selectedCategory === 'Tourist' && visa.category === 'STANDARD');
+
+      return matchesQuery && matchesPurpose && matchesCategory;
     });
-  }, [goingTo, purposeFilter, visaTypes]);
+  }, [goingTo, purposeFilter, visaTypes, disabledCategories, selectedCategory]);
 
   const visibleVisas = filteredVisas.slice(0, visibleCount);
-  const hasActiveFilters = Boolean(goingTo.trim()) || purposeFilter !== 'All';
+  const hasActiveFilters = Boolean(goingTo.trim()) || purposeFilter !== 'All' || selectedCategory !== null;
 
   useEffect(() => {
     const hasDestinationContext = Boolean(goingTo.trim());
-    sessionStorage.setItem('vvisa:workflowDetailActive', hasDestinationContext ? 'true' : 'false');
-    window.dispatchEvent(new CustomEvent('vvisa:workflow-detail-change', { detail: hasDestinationContext }));
+    sessionStorage.setItem('V-VISA:workflowDetailActive', hasDestinationContext ? 'true' : 'false');
+    window.dispatchEvent(new CustomEvent('V-VISA:workflow-detail-change', { detail: hasDestinationContext }));
   }, [goingTo]);
 
   const handleSearch = () => {
@@ -181,6 +228,7 @@ export default function ExploreView() {
   const clearFilters = () => {
     setGoingTo('');
     setPurposeFilter('All');
+    setSelectedCategory(null);
     setVisibleCount(PAGE_SIZE);
   };
 
@@ -192,7 +240,7 @@ export default function ExploreView() {
     trackProductIntent({ eventType: 'VISA_PRODUCT_CLICKED', country: visa.destination, visa });
     trackVisaInterest(visa, 'VISA_SELECTED');
     setSelectedVisaType(visa);
-    sessionStorage.setItem('vvisa:selectedVisaType', JSON.stringify(visa));
+    sessionStorage.setItem('V-VISA:selectedVisaType', JSON.stringify(visa));
     navigate('apply');
     const adminUidMatch = pathname.match(/^\/admin\/([^/]+)/);
     router.push(adminUidMatch ? `/admin/${adminUidMatch[1]}/apply` : '/apply');
@@ -352,6 +400,76 @@ export default function ExploreView() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Categories Distribution Section */}
+      {categories && categories.length > 0 && (
+        <div className="space-y-4.5">
+          <h2 className="text-lg font-bold text-foreground">Categories Distribution</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
+            {categories.map((cat) => {
+              const isActive = selectedCategory === cat.name;
+              const IconComponent = getCategoryIcon(cat.name);
+              return (
+                <button
+                  key={cat.name}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory((prev) => (prev === cat.name ? null : cat.name));
+                    setVisibleCount(PAGE_SIZE);
+                  }}
+                  className={`flex flex-col items-center justify-center p-4 rounded-xl border text-center transition-all duration-200 ${
+                    isActive
+                      ? 'bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-950 dark:border-white shadow-sm'
+                      : 'bg-white hover:bg-neutral-50 border-vvisa-border-subtle text-foreground dark:bg-vvisa-surface-2 dark:hover:bg-vvisa-surface/60'
+                  }`}
+                >
+                  <div className={`p-2.5 rounded-lg mb-2 ${isActive ? 'bg-white/20 text-white' : 'bg-vvisa-surface-2 text-vvisa-text-secondary'}`}>
+                    <IconComponent className="h-5 w-5" />
+                  </div>
+                  <span className="text-sm font-bold truncate max-w-full">{cat.name}</span>
+                  <span className={`text-[11px] mt-1 font-semibold ${isActive ? 'text-white/80' : 'text-vvisa-text-muted'}`}>
+                    {cat.count} option{cat.count !== 1 ? 's' : ''}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Available Destinations Section */}
+      {destinationsWithCounts && destinationsWithCounts.length > 0 && (
+        <div className="space-y-4.5">
+          <h2 className="text-lg font-bold text-foreground">Available Destinations</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {destinationsWithCounts.map((dest) => {
+              const isSelected = goingTo === dest.name;
+              return (
+                <button
+                  key={dest.name}
+                  type="button"
+                  onClick={() => {
+                    setGoingTo(dest.name);
+                    setVisibleCount(PAGE_SIZE);
+                    trackProductIntent({ eventType: 'COUNTRY_CARD_CLICKED', country: dest.name });
+                  }}
+                  className={`flex items-center gap-3.5 p-4 rounded-xl border bg-white border-vvisa-border-subtle hover:bg-neutral-50 text-left transition-all duration-200 dark:bg-vvisa-surface-2 dark:hover:bg-vvisa-surface/60 ${
+                    isSelected ? 'ring-2 ring-primary/30 border-primary' : ''
+                  }`}
+                >
+                  <div className="p-2.5 rounded-lg bg-primary/10 text-primary">
+                    <Globe className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-foreground truncate">{dest.name}</p>
+                    <p className="text-[11px] font-medium text-vvisa-text-muted mt-0.5">{dest.count} option{dest.count !== 1 ? 's' : ''}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Results Heading */}
       <div>

@@ -1,64 +1,186 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { after } from 'next/server';
 import { db } from '@/lib/db';
+import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { apiError, isApiResponse } from '@/lib/api-response';
 import { auditLog } from '@/server/audit/audit-log';
-import { hashPassword } from '@/server/auth/password';
 import { createSession } from '@/server/auth/session';
 import { queueTravelAgentCrmSync } from '@/server/integrations/zoho/travel-agent-sync';
 import { drainZohoCrmOutbox } from '@/server/integrations/zoho/crm-outbox-worker';
 
 const registerSchema = z.object({
+  token: z.string(),
   phone: z.string().min(10).max(30),
-  agencyName: z.string().min(2).max(160),
-  email: z.string().email().max(180),
-  password: z.string().min(8).max(200),
+  firstName: z.string().min(1).max(80),
+  lastName: z.string().min(1).max(80),
+  gender: z.string().min(1).max(20),
+  designation: z.string().min(1).max(80),
+  country: z.string().min(2).max(80),
+  operatingCountry: z.string().min(2).max(80).optional(),
+  businessName: z.string().min(2).max(160),
+  billingType: z.enum(['GST', 'NON_GST']),
+  gstNumber: z.string().max(20).optional(),
+}).refine(data => data.billingType === 'NON_GST' || (data.billingType === 'GST' && data.gstNumber && data.gstNumber.trim().length > 0), {
+  message: 'GST number is required for GST Invoice billing.',
+  path: ['gstNumber']
 });
 
 export async function POST(request: NextRequest) {
   try {
     const parsed = registerSchema.safeParse(await request.json());
-    if (!parsed.success) return apiError('INVALID_INPUT', 'Invalid registration details', 400);
+    if (!parsed.success) {
+      return apiError('INVALID_INPUT', parsed.error.issues[0]?.message ?? 'Invalid onboarding details', 400);
+    }
 
-    const email = parsed.data.email.trim().toLowerCase();
-    const phone = parsed.data.phone.trim();
-    const agencyName = parsed.data.agencyName.trim();
+    const {
+      token,
+      phone,
+      firstName,
+      lastName,
+      gender,
+      designation,
+      country,
+      operatingCountry,
+      businessName,
+      billingType,
+      gstNumber,
+    } = parsed.data;
 
-    const existing = await db.user.findUnique({ where: { email } });
-    if (existing) return apiError('INVALID_INPUT', 'An account already exists for this email', 409);
+    // Verify Firebase Token
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    if (!decodedToken.email_verified) {
+      return apiError('FORBIDDEN', 'Your email address is not verified yet.', 403);
+    }
+
+    const email = decodedToken.email?.toLowerCase();
+    if (!email) return apiError('INVALID_INPUT', 'Invalid auth token', 400);
+
+    const existingUser = await db.user.findUnique({
+      where: { email },
+      include: { memberships: { include: { agency: true } } },
+    });
+
+    const fullName = `${firstName} ${lastName}`;
 
     const result = await db.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data: {
-          name: agencyName,
-          email,
-          phone,
-          passwordHash: hashPassword(parsed.data.password),
-        },
-      });
+      if (existingUser) {
+        const agencyId = existingUser.memberships[0]?.agencyId;
+        const user = await tx.user.update({
+          where: { id: existingUser.id },
+          data: {
+            name: fullName,
+            phone,
+            firstName,
+            lastName,
+            gender,
+            designation,
+          },
+        });
 
-      const agency = await tx.agency.create({
-        data: {
-          name: agencyName,
-          email,
-          phone,
-          status: 'DRAFT',
-          memberships: {
-            create: {
-              userId: user.id,
-              role: 'AGENCY_OWNER',
-              isDefault: true,
+        let agency;
+        if (agencyId) {
+          agency = await tx.agency.update({
+            where: { id: agencyId },
+            data: {
+              name: businessName,
+              phone,
+              gstNumber: billingType === 'GST' ? gstNumber : null,
+              billingType,
+              country,
+            },
+          });
+        } else {
+          agency = await tx.agency.create({
+            data: {
+              name: businessName,
+              email,
+              phone,
+              status: 'DRAFT',
+              gstNumber: billingType === 'GST' ? gstNumber : null,
+              billingType,
+              country,
+              memberships: {
+                create: {
+                  userId: user.id,
+                  role: 'AGENCY_OWNER',
+                  isDefault: true,
+                },
+              },
+              wallets: {
+                create: { currency: 'INR' },
+              },
+            },
+          });
+        }
+        return { user, agency };
+      } else {
+        const user = await tx.user.create({
+          data: {
+            name: fullName,
+            email,
+            phone,
+            firstName,
+            lastName,
+            gender,
+            designation,
+            passwordHash: '', // managed by Firebase
+          },
+        });
+
+        const agency = await tx.agency.create({
+          data: {
+            name: businessName,
+            email,
+            phone,
+            status: 'DRAFT',
+            gstNumber: billingType === 'GST' ? gstNumber : null,
+            billingType,
+            country,
+            memberships: {
+              create: {
+                userId: user.id,
+                role: 'AGENCY_OWNER',
+                isDefault: true,
+              },
+            },
+            wallets: {
+              create: { currency: 'INR' },
             },
           },
-          wallets: {
-            create: { currency: 'INR' },
-          },
-        },
+        });
+
+        return { user, agency };
+      }
+    });
+
+    // Mirror/sync User and Agency details with extended onboarding profile fields to Firestore
+    try {
+      await adminDb.collection('users').doc(result.user.id).set({
+        name: result.user.name ?? '',
+        firstName,
+        lastName,
+        gender,
+        designation,
+        email: result.user.email,
+        phone: result.user.phone ?? '',
+        createdAt: result.user.createdAt.toISOString(),
       });
 
-      return { user, agency };
-    });
+      await adminDb.collection('agencies').doc(result.agency.id).set({
+        name: result.agency.name,
+        email: result.agency.email,
+        phone: result.agency.phone ?? '',
+        status: result.agency.status,
+        country,
+        operatingCountry: operatingCountry ?? country,
+        billingType,
+        gstNumber: result.agency.gstNumber ?? '',
+        createdAt: result.agency.createdAt.toISOString(),
+      });
+    } catch (firestoreError) {
+      console.error('FIRESTORE_SYNC_FAILED', firestoreError);
+    }
 
     await createSession(result.user.id);
 
@@ -90,8 +212,15 @@ export async function POST(request: NextRequest) {
       message: 'Registration successful',
     });
   } catch (error) {
+    if (error instanceof Error) {
+      console.error('REGISTER_FAILED_ERROR', {
+        name: error.name,
+        message: error.message,
+      });
+    } else {
+      console.error('REGISTER_FAILED_ERROR', String(error));
+    }
     if (isApiResponse(error)) return error;
-    return apiError('INVALID_INPUT', 'Unable to register account', 400);
+    return apiError('INVALID_INPUT', 'Unable to complete onboarding', 400);
   }
 }
-

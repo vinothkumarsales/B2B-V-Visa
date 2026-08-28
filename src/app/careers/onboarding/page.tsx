@@ -5,6 +5,8 @@ import { careersFeatureSnapshot } from '@/server/careers/feature-flags';
 import { listPublicCareerPackages } from '@/server/careers/packages';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { MittoCareerShell } from '@/components/careers/MittoCareerShell';
+import { GlassCard } from '@/components/careers/MittoPrimitives';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,9 +16,10 @@ export default async function CareersOnboardingPage() {
   const enabled = flags.CAREERS_SAAS_ENABLED && flags.CAREERS_ONBOARDING_ENABLED && flags.CAREERS_PACKAGES_ENABLED && packages.length > 0;
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_42%,#f4f8fb_100%)] px-5 py-8 text-foreground lg:py-12">
+    <MittoCareerShell compact>
+    <main className="px-5 py-8 lg:py-12">
       <div className="mx-auto max-w-6xl space-y-8">
-        <div className="overflow-hidden rounded-2xl border border-vvisa-border-subtle bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
+        <GlassCard className="overflow-hidden">
           <div className="grid gap-8 p-6 md:p-8 lg:grid-cols-[1fr_0.8fr] lg:p-10">
             <div>
               <Button asChild variant="ghost" size="sm" className="-ml-3 mb-5">
@@ -29,7 +32,7 @@ export default async function CareersOnboardingPage() {
                 <Sparkles className="size-3.5" />
                 Managed intake
               </Badge>
-              <h1 className="mt-5 max-w-3xl text-4xl font-semibold leading-tight md:text-5xl">Build your Europe job-search profile</h1>
+                <h1 className="mt-5 max-w-3xl text-4xl font-semibold leading-tight text-white md:text-5xl">Build your Mitto Career profile</h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-vvisa-text-secondary">
                 Tell us who you are, where you want to go, and what kind of roles you are targeting. This creates the structured candidate record used for package selection, payment activation, and internal review.
               </p>
@@ -58,9 +61,10 @@ export default async function CareersOnboardingPage() {
               </div>
             </div>
           </div>
-        </div>
+        </GlassCard>
         <CareerOnboardingForm enabled={enabled} packages={packages} />
       </div>
     </main>
+    </MittoCareerShell>
   );
 }

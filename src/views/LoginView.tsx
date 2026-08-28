@@ -2,6 +2,8 @@
 
 import { useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebase';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAppStore } from '@/store/app.store';
@@ -92,23 +94,47 @@ export default function LoginView() {
     setSubmitting(true);
     setServerError('');
     try {
+      const userCredential = await signInWithEmailAndPassword(auth, values.identifier.trim(), values.password);
+      
+      // Check verification
+      if (!userCredential.user.emailVerified) {
+        router.push('/register');
+        return;
+      }
+
+      const token = await userCredential.user.getIdToken();
+
+      // Check onboarding status
+      const onboardRes = await fetch('/api/auth/onboarding-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+      const onboardData = await onboardRes.json();
+      if (!onboardData.onboarded) {
+        router.push('/register');
+        return;
+      }
+
       const response = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          identifier: values.identifier.trim(),
-          password: values.password,
-        }),
+        body: JSON.stringify({ token }),
       });
       const data = await response.json();
       if (!response.ok) {
-        setServerError(loginErrorMessage(data?.error?.code));
+        setServerError(data?.error?.message || 'Login session creation failed');
         return;
       }
-      if (data.agency) login(data.agency);
-      router.push('/dashboard');
-    } catch {
-      setServerError('Unable to reach the login service');
+      if (data.agency) {
+        login(data.agency);
+        router.push(`/${data.agency.id}/explore`);
+      } else {
+        router.push('/explore');
+      }
+    } catch (error: any) {
+      console.error('Firebase Auth Login Failed', error);
+      setServerError(error.message || 'Authentication failed. Please check your credentials.');
     } finally {
       setSubmitting(false);
     }
@@ -223,9 +249,44 @@ export default function LoginView() {
         variant="outline"
         size="lg"
         type="button"
-        onClick={() => {
+        onClick={async () => {
           setServerError('');
-          window.location.href = '/api/auth/google';
+          setSubmitting(true);
+          try {
+            const provider = new GoogleAuthProvider();
+            const result = await signInWithPopup(auth, provider);
+            const token = await result.user.getIdToken();
+
+            // Check onboarding status
+            const onboardRes = await fetch('/api/auth/onboarding-status', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ token }),
+            });
+            const onboardData = await onboardRes.json();
+            if (!onboardData.onboarded) {
+              router.push('/register');
+              return;
+            }
+
+            const response = await fetch('/api/auth', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ token }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+              setServerError(data?.error?.message || 'Google Login session failed');
+              return;
+            }
+            if (data.agency) login(data.agency);
+            router.push('/dashboard');
+          } catch (error: any) {
+            console.error('Google Auth Failed', error);
+            setServerError(error.message || 'Google Authentication failed.');
+          } finally {
+            setSubmitting(false);
+          }
         }}
         className="w-full"
       >

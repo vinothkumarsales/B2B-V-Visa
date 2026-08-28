@@ -330,9 +330,9 @@ export default function DashboardView() {
                 <CardContent className="p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <Sparkles className="h-5 w-5 text-primary" />
-                    <h3 className="text-sm font-semibold text-foreground">VVisa Alliance Program</h3>
+                    <h3 className="text-sm font-semibold text-foreground">V-VISA Alliance Program</h3>
                   </div>
-                  <p className="text-sm font-medium text-foreground mb-2">Introducing the VVisa Alliance Program</p>
+                  <p className="text-sm font-medium text-foreground mb-2">Introducing the V-VISA Alliance Program</p>
                   <ul className="space-y-1.5 mb-4">
                     <li className="text-xs text-vvisa-text-secondary flex items-start gap-1.5">
                       <span className="text-primary mt-0.5">•</span>

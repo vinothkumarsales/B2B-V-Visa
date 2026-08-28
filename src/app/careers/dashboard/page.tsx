@@ -1,192 +1,35 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowRight, BadgeCheck, BriefcaseBusiness, CheckCircle2, Clock3, FileText, Gauge, Globe2, Layers3, ShieldCheck, Sparkles, UserRound } from 'lucide-react';
+import { Activity, ArrowRight, BriefcaseBusiness, CheckCircle2, Clock3, FileText, Gauge, LogOut, Orbit, Radar, Settings2, ShieldCheck } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requireSession } from '@/server/auth/session';
-import { careerCandidateFacingStatus } from '@/server/careers/onboarding';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { CareerCheckoutPanel } from '@/components/careers/CareerCheckoutPanel';
 import { careersFeatureSnapshot } from '@/server/careers/feature-flags';
-import { careerActivationDisplayStatus } from '@/server/careers/activation-policy';
+import { careerCandidateFacingStatus } from '@/server/careers/onboarding';
+import { MittoDashboardActions } from '@/components/careers/MittoDashboardActions';
 
-export default async function CareersDashboardPage() {
+export const metadata = { title: { absolute: 'Command center | Mitto Career' }, description: 'Your private Mitto Career automation workspace.' };
+
+export default async function MittoDashboardPage() {
   const session = await requireSession().catch(() => null);
   if (!session) redirect('/login');
+  const candidate = await db.careerCandidate.findFirst({ where: { userId: session.user.id }, include: { preferences: true, resumes: { orderBy: { createdAt: 'desc' }, take: 5 }, serviceRequests: { orderBy: { createdAt: 'desc' }, take: 1 }, statusEvents: { orderBy: { createdAt: 'desc' }, take: 6 } }, orderBy: { createdAt: 'desc' } });
+  const connections = await db.careerConnection.findMany({ where: { userId: session.user.id }, select: { provider: true, connected: true } }).catch(() => []);
   const flags = careersFeatureSnapshot();
-  const checkoutEnabled = flags.CAREERS_SAAS_ENABLED && flags.CAREERS_PACKAGES_ENABLED && flags.CAREERS_PAYMENTS_ENABLED && flags.CAREERS_CHECKOUT_ENABLED;
+  const analysisEvent = candidate?.statusEvents.find(event => event.label === 'CareerOps analysis ready');
+  const analysis = parseResumeAnalysis(analysisEvent?.detail);
 
-  const candidate = await db.careerCandidate.findFirst({
-    where: { userId: session.user.id },
-    include: {
-      preferences: true,
-      resumes: { orderBy: { createdAt: 'desc' }, take: 3 },
-      serviceRequests: { orderBy: { createdAt: 'desc' }, take: 1 },
-      paymentIntents: { orderBy: { createdAt: 'desc' }, take: 1 },
-      subscriptions: { orderBy: { createdAt: 'desc' }, take: 1 },
-      activationHandoffs: { orderBy: { createdAt: 'desc' }, take: 1 },
-      statusEvents: { orderBy: { createdAt: 'desc' }, take: 6 },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
-
-  return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_42%,#f4f8fb_100%)] px-5 py-8 text-foreground lg:py-12">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <div className="overflow-hidden rounded-2xl border border-vvisa-border-subtle bg-slate-950 text-white shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
-          <div className="grid gap-8 p-6 md:p-8 lg:grid-cols-[1fr_auto] lg:p-10">
-            <div>
-              <Badge className="bg-cyan-300 text-slate-950">
-                <Sparkles className="size-3.5" />
-                VVisa Careers command center
-              </Badge>
-              <h1 className="mt-5 text-4xl font-semibold leading-tight md:text-5xl">Candidate dashboard</h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
-                Track your profile, package, payment readiness, activation state, and next visible updates from one service workspace.
-              </p>
-            </div>
-            <div className="flex flex-col justify-end gap-3 sm:flex-row lg:flex-col">
-              <Button asChild className="bg-white text-slate-950 hover:bg-slate-100">
-                <Link href="/careers/onboarding">
-                  Update onboarding
-                  <ArrowRight className="size-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/15 hover:text-white">
-                <Link href="/careers">Careers home</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {!candidate ? (
-          <Card className="overflow-hidden rounded-2xl border-vvisa-border-subtle bg-white shadow-[var(--vvisa-shadow-sm)]">
-            <CardContent className="grid gap-6 p-8 md:grid-cols-[1fr_auto] md:items-center">
-              <div>
-                <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <UserRound className="size-6" />
-                </div>
-                <h2 className="mt-5 text-2xl font-semibold">No career profile yet</h2>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-vvisa-text-secondary">
-                  Start onboarding to create your managed Careers workspace. Your dashboard will show profile completion, package state, payment readiness, and activation progress.
-                </p>
-              </div>
-              <Button asChild size="lg">
-                <Link href="/careers/onboarding">Start onboarding</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            {candidate.serviceRequests[0] && candidate.paymentIntents[0] && (
-              <Card className="overflow-hidden rounded-2xl border-vvisa-border-subtle bg-white shadow-[var(--vvisa-shadow-sm)]">
-                <CardHeader className="border-b border-vvisa-border-subtle bg-[linear-gradient(135deg,#ffffff_0%,#eef7ff_100%)]">
-                  <CardTitle className="flex items-center gap-2 text-2xl">
-                    <BriefcaseBusiness className="size-5 text-primary" />
-                    Checkout handoff
-                  </CardTitle>
-                  <p className="text-sm text-vvisa-text-secondary">Create a secure checkout session for the selected Careers package.</p>
-                </CardHeader>
-                <CardContent>
-                  <CareerCheckoutPanel
-                    enabled={checkoutEnabled}
-                    serviceRequestId={candidate.serviceRequests[0].id}
-                    packageCode={candidate.serviceRequests[0].packageCode}
-                    currency={candidate.paymentIntents[0].currency}
-                    amountMinor={candidate.paymentIntents[0].amountMinor}
-                  />
-                </CardContent>
-              </Card>
-            )}
-
-            <div className="grid gap-4 md:grid-cols-3">
-              <Card className="rounded-2xl border-vvisa-border-subtle bg-white shadow-[var(--vvisa-shadow-sm)]">
-                <CardHeader><CardTitle className="flex items-center gap-2"><Gauge className="size-5 text-primary" /> Status</CardTitle></CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-semibold">{careerCandidateFacingStatus(candidate.status)}</p>
-                  <div className="mt-4 h-2 rounded-full bg-vvisa-surface-2">
-                    <div className="h-2 rounded-full bg-primary" style={{ width: `${candidate.profileCompletionPercent}%` }} />
-                  </div>
-                  <p className="mt-2 text-sm text-vvisa-text-secondary">Profile completion: {candidate.profileCompletionPercent}%</p>
-                </CardContent>
-              </Card>
-              <Card className="rounded-2xl border-vvisa-border-subtle bg-white shadow-[var(--vvisa-shadow-sm)]">
-                <CardHeader><CardTitle className="flex items-center gap-2"><Layers3 className="size-5 text-primary" /> Package</CardTitle></CardHeader>
-                <CardContent className="text-sm text-vvisa-text-secondary">
-                  <p className="text-base font-semibold text-foreground">{candidate.serviceRequests[0]?.packageCode.replaceAll('_', ' ') ?? 'Not selected'}</p>
-                  <StatusLine label="Payment" value={candidate.serviceRequests[0]?.paymentStatus ?? 'not_started'} />
-                  <StatusLine label="Subscription" value={candidate.subscriptions[0]?.status ?? 'draft'} />
-                  <StatusLine label="Activation" value={careerActivationDisplayStatus({
-                    paymentStatus: candidate.paymentIntents[0]?.status ?? null,
-                    subscriptionStatus: candidate.subscriptions[0]?.status ?? null,
-                    activationStatus: candidate.serviceRequests[0]?.activationStatus ?? null,
-                    handoffStatus: candidate.activationHandoffs[0]?.status ?? null,
-                  }).replaceAll('_', ' ')} />
-                </CardContent>
-              </Card>
-              <Card className="rounded-2xl border-vvisa-border-subtle bg-white shadow-[var(--vvisa-shadow-sm)]">
-                <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="size-5 text-primary" /> Resume</CardTitle></CardHeader>
-                <CardContent className="text-sm text-vvisa-text-secondary">
-                  <p className="text-base font-semibold text-foreground">{candidate.resumes.length ? `${candidate.resumes.length} upload(s) received` : 'No resume uploaded yet'}</p>
-                  <p className="mt-2 leading-6">Resume files remain private and are used for internal service review.</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card className="rounded-2xl border-vvisa-border-subtle bg-white shadow-[var(--vvisa-shadow-sm)]">
-              <CardHeader><CardTitle className="flex items-center gap-2"><Globe2 className="size-5 text-primary" /> Current preferences</CardTitle></CardHeader>
-              <CardContent className="grid gap-3 text-sm text-vvisa-text-secondary md:grid-cols-2">
-                <InfoTile label="Region" value={candidate.preferences?.targetRegion ?? '-'} />
-                <InfoTile label="Roles" value={Array.isArray(candidate.preferences?.targetRoles) ? candidate.preferences.targetRoles.join(', ') : '-'} />
-                <InfoTile label="Sponsorship" value={candidate.preferences?.sponsorshipRequired === true ? 'Required' : candidate.preferences?.sponsorshipRequired === false ? 'Not required' : '-'} />
-                <InfoTile label="Relocation" value={candidate.preferences?.relocationRequired === true ? 'Required' : candidate.preferences?.relocationRequired === false ? 'Not required' : '-'} />
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-2xl border-vvisa-border-subtle bg-white shadow-[var(--vvisa-shadow-sm)]">
-              <CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck className="size-5 text-primary" /> Payment readiness</CardTitle></CardHeader>
-              <CardContent className="grid gap-3 text-sm text-vvisa-text-secondary md:grid-cols-3">
-                <InfoTile label="Intent" value={candidate.paymentIntents[0]?.status ?? 'draft'} />
-                <InfoTile label="Currency" value={candidate.paymentIntents[0]?.currency ?? '-'} />
-                <InfoTile label="Amount" value={candidate.paymentIntents[0] ? String(candidate.paymentIntents[0].amountMinor / 100) : '-'} />
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-2xl border-vvisa-border-subtle bg-white shadow-[var(--vvisa-shadow-sm)]">
-              <CardHeader><CardTitle className="flex items-center gap-2"><Clock3 className="size-5 text-primary" /> Recent updates</CardTitle></CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                {candidate.statusEvents.length ? candidate.statusEvents.map((event) => (
-                  <div key={event.id} className="rounded-xl border border-vvisa-border-subtle bg-vvisa-surface-2 p-4">
-                    <p className="flex items-center gap-2 font-medium"><CheckCircle2 className="size-4 text-primary" /> {event.label}</p>
-                    <p className="text-vvisa-text-muted">{event.detail ?? 'No details'}</p>
-                  </div>
-                )) : (
-                  <div className="rounded-xl border border-dashed border-vvisa-border-subtle p-4 text-vvisa-text-muted">No visible status updates yet.</div>
-                )}
-              </CardContent>
-            </Card>
-          </>
-        )}
-      </div>
-    </main>
-  );
+  return <main className="mitto-career min-h-screen text-white"><div className="mitto-aurora" aria-hidden="true" /><header className="sticky top-0 z-50 border-b border-white/8 bg-[#070912]/85 backdrop-blur-2xl"><div className="mx-auto flex h-20 max-w-[1480px] items-center justify-between px-5 lg:px-8"><Link href="/" className="flex items-center gap-3"><span className="flex size-10 items-center justify-center rounded-2xl border border-cyan-300/25 bg-cyan-300/10 text-cyan-200"><Orbit className="size-5" /></span><span><b className="block">Mitto Career</b><small className="text-[10px] uppercase tracking-[.22em] text-slate-500">Command center</small></span></Link><div className="flex items-center gap-3"><span className="hidden text-sm text-slate-400 sm:block">{session.user.email}</span><a href="/api/auth/logout" className="rounded-full border border-white/10 p-2.5 text-slate-400 hover:text-white" aria-label="Log out"><LogOut className="size-4" /></a></div></div></header>
+    <div className="relative z-10 mx-auto max-w-[1480px] px-5 py-10 lg:px-8"><section className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end"><div><p className="mitto-eyebrow"><Activity className="size-4" /> Live workspace</p><h1 className="mt-5 text-4xl font-semibold tracking-[-.045em] sm:text-5xl">Good to see you, {candidate?.fullName?.split(' ')[0] ?? session.user.name?.split(' ')[0] ?? 'there'}.</h1><p className="mt-3 text-slate-400">Your profile, integrations, service state, and approval-controlled automation in one place.</p></div><Link href="/careers/onboarding" className="mitto-button">{candidate ? 'Edit career profile' : 'Complete career profile'} <ArrowRight className="size-4" /></Link></section>
+    {!candidate ? <section className="mitto-glass mt-10 rounded-[1.6rem] p-8"><BriefcaseBusiness className="size-7 text-cyan-200" /><h2 className="mt-6 text-2xl font-semibold">Build your candidate profile first</h2><p className="mt-3 max-w-2xl text-slate-400">This unlocks private resume uploads, matching preferences, connection records, packages, and the CareerOps workspace.</p><Link href="/careers/onboarding" className="mitto-button mt-6">Start profile <ArrowRight className="size-4" /></Link></section> : <>
+      <section className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4"><Metric icon={Gauge} label="Profile" value={`${candidate.profileCompletionPercent}%`} detail={careerCandidateFacingStatus(candidate.status)} /><Metric icon={FileText} label="Resumes" value={String(candidate.resumes.length)} detail={candidate.resumes[0]?.status.replaceAll('_',' ') ?? 'Upload required'} /><Metric icon={Radar} label="Discovery" value={flags.CAREERS_DISCOVERY_ENABLED ? 'Enabled' : 'Gated'} detail={flags.CAREERS_LIVE_DISCOVERY_ENABLED ? 'Live provider allowed' : 'Fixture or review mode'} /><Metric icon={ShieldCheck} label="Execution" value={flags.CAREERS_BROWSER_EXECUTION_ENABLED ? 'Controlled' : 'Disabled'} detail={flags.CAREERS_AUTO_SUBMIT_ENABLED ? 'Approval policy applies' : 'No automatic submission'} /></section>
+      <section className="mt-8"><div className="mb-5 flex items-end justify-between"><div><p className="text-xs uppercase tracking-[.2em] text-cyan-200">Workspace setup</p><h2 className="mt-2 text-2xl font-semibold">Resume and connections</h2></div><Link href="/careers/dashboard/connections" className="text-sm text-slate-400 hover:text-white">Manage connections</Link></div><MittoDashboardActions candidateId={candidate.id} initialConnections={connections.map(item => ({ provider: item.provider, connected: item.connected }))} /></section>
+      <section className="mt-8"><div className="mb-5"><p className="text-xs uppercase tracking-[.2em] text-cyan-700">CareerOps intelligence</p><h2 className="mt-2 text-2xl font-semibold">Your resume outcomes</h2><p className="mt-2 text-sm text-slate-600">Generated after each resume upload from readable resume evidence and your saved career preferences.</p></div>{analysis ? <div className="grid gap-4 md:grid-cols-3"><Insight title="ATS readiness" value={analysis.atsScore === null ? 'OCR required' : `${analysis.atsScore}/100`} copy={analysis.improvements[0] ?? 'Resume structure is ready for targeted job matching.'} /><Insight title="Eligibility" value={analysis.status === 'ready' ? 'Profile assessed' : 'Review needed'} copy={analysis.eligibility} /><Insight title="Country opportunities" value={analysis.opportunityCountries.length ? `${analysis.opportunityCountries.length} markets` : 'Add preferences'} copy={analysis.opportunityCountries.join(', ') || 'Add target countries to your career profile.'} /></div> : <div className="mitto-glass rounded-[1.4rem] p-6 text-sm text-slate-600">Upload a text-based PDF resume to start ATS, eligibility, and country-opportunity analysis.</div>}</section>
+      <section className="mt-8 grid gap-4 lg:grid-cols-[1.1fr_.9fr]"><div className="mitto-glass rounded-[1.5rem] p-6"><div className="flex items-center gap-2"><Settings2 className="size-5 text-cyan-200" /><h2 className="font-semibold">Automation readiness</h2></div><div className="mt-6 grid gap-3">{[['Profile intelligence',candidate.resumes.length ? 'Ready for review' : 'Waiting for resume'],['Opportunity discovery',flags.CAREERS_DISCOVERY_ENABLED ? 'Enabled' : 'Behind feature flag'],['Application kit',flags.CAREERS_APPLICATION_KIT_ENABLED ? 'Enabled' : 'Behind feature flag'],['Browser execution',flags.CAREERS_BROWSER_EXECUTION_ENABLED ? 'Approval controlled' : 'Disabled'],['Employer response sync',flags.CAREERS_EMPLOYER_RESPONSE_SYNC_ENABLED ? 'Enabled' : 'Coming next']].map(([label,value]) => <div key={label} className="flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-black/20 p-4 text-sm"><span className="text-slate-300">{label}</span><span className="text-right text-slate-500">{value}</span></div>)}</div></div><div className="mitto-glass rounded-[1.5rem] p-6"><div className="flex items-center gap-2"><Clock3 className="size-5 text-violet-200" /><h2 className="font-semibold">Recent activity</h2></div><div className="mt-6 space-y-3">{candidate.statusEvents.length ? candidate.statusEvents.map(event => <div key={event.id} className="rounded-2xl border border-white/8 bg-black/20 p-4"><p className="flex items-center gap-2 text-sm font-medium"><CheckCircle2 className="size-4 text-emerald-300" />{event.label}</p><p className="mt-2 text-xs leading-5 text-slate-500">{event.detail ?? 'Status recorded'}</p></div>) : <p className="rounded-2xl border border-dashed border-white/10 p-5 text-sm text-slate-500">Activity appears as your profile and automation move forward.</p>}</div></div></section>
+    </>}</div></main>;
 }
 
-function StatusLine({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-vvisa-surface-2 px-3 py-2">
-      <span>{label}</span>
-      <Badge variant="outline" className="max-w-[12rem] truncate">{value}</Badge>
-    </div>
-  );
-}
+function Metric({ icon: Icon, label, value, detail }: { icon: typeof Gauge; label: string; value: string; detail: string }) { return <div className="mitto-glass rounded-[1.4rem] p-5"><div className="flex items-center justify-between"><span className="rounded-xl bg-white/5 p-2.5 text-cyan-200"><Icon className="size-5" /></span><span className="text-[10px] uppercase tracking-[.18em] text-slate-600">{label}</span></div><p className="mt-7 text-3xl font-semibold">{value}</p><p className="mt-2 text-xs text-slate-500">{detail}</p></div>; }
 
-function InfoTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-vvisa-border-subtle bg-vvisa-surface-2 p-4">
-      <p className="text-xs font-medium uppercase tracking-[0.16em] text-vvisa-text-muted">{label}</p>
-      <p className="mt-2 font-medium text-foreground">{value}</p>
-    </div>
-  );
-}
+type ResumeAnalysis = { status: 'ready' | 'needs_ocr'; atsScore: number | null; eligibility: string; opportunityCountries: string[]; strengths: string[]; improvements: string[] };
+function parseResumeAnalysis(detail?: string | null): ResumeAnalysis | null { if (!detail) return null; try { const value = JSON.parse(detail) as ResumeAnalysis; return value && Array.isArray(value.opportunityCountries) ? value : null; } catch { return null; } }
+function Insight({ title, value, copy }: { title: string; value: string; copy: string }) { return <div className="mitto-glass rounded-[1.4rem] p-6"><p className="text-xs font-semibold uppercase tracking-[.18em] text-cyan-700">{title}</p><p className="mt-5 text-2xl font-semibold text-slate-950">{value}</p><p className="mt-3 text-sm leading-6 text-slate-600">{copy}</p></div>; }

@@ -12,7 +12,10 @@ export type CareersFeatureFlag =
   | 'CAREERS_ONBOARDING_ENABLED'
   | 'CAREERS_RESUME_UPLOAD_ENABLED'
   | 'CAREERS_INTERNAL_CONSOLE_ENABLED'
+  | 'CAREERS_DISCOVERY_ENABLED'
+  | 'CAREERS_FIXTURE_DISCOVERY_ENABLED'
   | 'CAREERS_LIVE_DISCOVERY_ENABLED'
+  | 'CAREERS_FIRECRAWL_DISCOVERY_ENABLED'
   | 'CAREERS_APPLICATION_KIT_ENABLED'
   | 'CAREERS_BROWSER_EXECUTION_ENABLED'
   | 'CAREERS_AUTO_SUBMIT_ENABLED'
@@ -46,7 +49,10 @@ export const CAREERS_FEATURE_FLAGS: CareersFeatureFlag[] = [
   'CAREERS_ONBOARDING_ENABLED',
   'CAREERS_RESUME_UPLOAD_ENABLED',
   'CAREERS_INTERNAL_CONSOLE_ENABLED',
+  'CAREERS_DISCOVERY_ENABLED',
+  'CAREERS_FIXTURE_DISCOVERY_ENABLED',
   'CAREERS_LIVE_DISCOVERY_ENABLED',
+  'CAREERS_FIRECRAWL_DISCOVERY_ENABLED',
   'CAREERS_APPLICATION_KIT_ENABLED',
   'CAREERS_BROWSER_EXECUTION_ENABLED',
   'CAREERS_AUTO_SUBMIT_ENABLED',
@@ -91,4 +97,31 @@ export function careersServiceActivationEnabled() {
     careersFeatureEnabled('CAREERS_SUBSCRIPTION_ACTIVATION_ENABLED') &&
     careersFeatureEnabled('CAREERS_ACTIVATION_HANDOFF_ENABLED')
   );
+}
+
+export function careersHeavyAgentKitEnabled() {
+  return careersApplicationKitEnabled() && careersFeatureEnabled('CAREERS_BROWSER_EXECUTION_ENABLED');
+}
+
+export function careersApplicationKitEnabled() {
+  return (
+    careersFeatureEnabled('CAREERS_SAAS_ENABLED') &&
+    careersFeatureEnabled('CAREERS_APPLICATION_KIT_ENABLED')
+  );
+}
+
+export function careersDiscoveryEnabled() {
+  return careersFeatureEnabled('CAREERS_DISCOVERY_ENABLED') && careersFeatureEnabled('CAREERS_SAAS_ENABLED');
+}
+
+export function careersFixtureDiscoveryEnabled() {
+  return careersDiscoveryEnabled() && careersFeatureEnabled('CAREERS_FIXTURE_DISCOVERY_ENABLED');
+}
+
+export function careersLiveDiscoveryEnabled() {
+  return careersDiscoveryEnabled() && careersFeatureEnabled('CAREERS_LIVE_DISCOVERY_ENABLED');
+}
+
+export function careersFirecrawlDiscoveryEnabled() {
+  return careersLiveDiscoveryEnabled() && careersFeatureEnabled('CAREERS_FIRECRAWL_DISCOVERY_ENABLED');
 }
