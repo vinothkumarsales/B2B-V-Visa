@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { after } from 'next/server';
 import { db } from '@/lib/db';
-import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { adminDb } from '@/lib/firebase-admin';
+import { verifyFirebaseIdToken } from '@/lib/firebase-verify';
 import { apiError, isApiResponse } from '@/lib/api-response';
 import { auditLog } from '@/server/audit/audit-log';
 import { createSession } from '@/server/auth/session';
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
     } = parsed.data;
 
     // Verify Firebase Token
-    const decodedToken = await adminAuth.verifyIdToken(token);
+    const decodedToken = await verifyFirebaseIdToken(token);
     if (!decodedToken.email_verified) {
       return apiError('FORBIDDEN', 'Your email address is not verified yet.', 403);
     }
