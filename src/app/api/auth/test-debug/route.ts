@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyFirebaseIdToken } from '@/lib/firebase-verify';
-import { POST as registerHandler } from '../register/route';
 
 export async function GET(request: NextRequest) {
   const diagnostics: any = {
@@ -30,8 +29,9 @@ export async function GET(request: NextRequest) {
     diagnostics.firebaseVerify = { success: false, error: e.message, stack: e.stack };
   }
 
-  // Test invoking register handler with dummy request
+  // Test invoking register handler with dummy request using dynamic import
   try {
+    const { POST: registerHandler } = await import('../register/route');
     const dummyReq = new NextRequest('https://business.vvisa.in/api/auth/register', {
       method: 'POST',
       body: JSON.stringify({
