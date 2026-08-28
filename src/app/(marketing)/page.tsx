@@ -10,8 +10,15 @@ import {
   Wallet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Section, SectionHeader, Eyebrow } from '@/components/marketing/Section';
 import { productionApprovedProducts } from '@/lib/production-approved-products';
+import { mockFAQs } from '@/lib/mock-data';
 
 export const metadata: Metadata = {
   title: 'B2B visa operations for travel agencies',
@@ -227,6 +234,31 @@ export default function HomePage() {
             </Link>
           ))}
         </div>
+      </Section>
+
+      {/* ─────────────── FAQ ─────────────── */}
+      <Section id="faq" tone="panel" className="scroll-mt-20">
+        <SectionHeader
+          eyebrow="Questions"
+          title="Frequently asked questions"
+          lead="Everything you need to know about running visas on V-VISA."
+        />
+        <Accordion type="single" collapsible className="mt-12 w-full max-w-3xl">
+          {mockFAQs.map((faq) => (
+            <AccordionItem
+              key={faq.id}
+              value={`faq-${faq.id}`}
+              className="border-[var(--mk-rule)]"
+            >
+              <AccordionTrigger className="mk-h3 py-5 text-left text-foreground hover:no-underline">
+                {faq.question}
+              </AccordionTrigger>
+              <AccordionContent className="mk-prose text-sm leading-relaxed text-vvisa-text-secondary">
+                {faq.answer}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </Section>
 
       {/* ─────────────── Closing CTA ─────────────── */}
