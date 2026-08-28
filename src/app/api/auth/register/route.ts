@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { after } from 'next/server';
 import { db } from '@/lib/db';
-import { adminDb } from '@/lib/firebase-admin';
 import { verifyFirebaseIdToken } from '@/lib/firebase-verify';
 import { apiError, isApiResponse } from '@/lib/api-response';
 import { auditLog } from '@/server/audit/audit-log';
@@ -154,34 +153,6 @@ export async function POST(request: NextRequest) {
         return { user, agency };
       }
     });
-
-    // Mirror/sync User and Agency details with extended onboarding profile fields to Firestore
-    try {
-      await adminDb.collection('users').doc(result.user.id).set({
-        name: result.user.name ?? '',
-        firstName,
-        lastName,
-        gender,
-        designation,
-        email: result.user.email,
-        phone: result.user.phone ?? '',
-        createdAt: result.user.createdAt.toISOString(),
-      });
-
-      await adminDb.collection('agencies').doc(result.agency.id).set({
-        name: result.agency.name,
-        email: result.agency.email,
-        phone: result.agency.phone ?? '',
-        status: result.agency.status,
-        country,
-        operatingCountry: operatingCountry ?? country,
-        billingType,
-        gstNumber: result.agency.gstNumber ?? '',
-        createdAt: result.agency.createdAt.toISOString(),
-      });
-    } catch (firestoreError) {
-      console.error('FIRESTORE_SYNC_FAILED', firestoreError);
-    }
 
     await createSession(result.user.id);
 

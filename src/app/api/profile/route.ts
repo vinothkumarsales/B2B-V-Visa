@@ -7,7 +7,6 @@ import { mockAgency } from '@/lib/mock-data';
 import { auditLog } from '@/server/audit/audit-log';
 import { requireAgencyMembership } from '@/server/auth/session';
 import { queueTravelAgentCrmSync } from '@/server/integrations/zoho/travel-agent-sync';
-import { adminDb } from '@/lib/firebase-admin';
 
 const profileSchema = z.object({
   // Agency fields
@@ -140,33 +139,6 @@ export async function PATCH(request: NextRequest) {
 
     // Run non-blocking integrations asynchronously after HTTP response is sent
     after(async () => {
-      // Mirror updates to Firestore collections
-      try {
-        await adminDb.collection('users').doc(session.user.id).set({
-          firstName: firstName ?? '',
-          lastName: lastName ?? '',
-          gender: gender ?? '',
-          designation: designation ?? '',
-          aadhaarNumber: aadhaarNumber ?? '',
-          aadhaarName: aadhaarName ?? '',
-          aadhaarAddress: aadhaarAddress ?? '',
-          name: `${firstName || ''} ${lastName || ''}`.trim(),
-          email: session.user.email,
-          phone: phone ?? '',
-        }, { merge: true });
-
-        await adminDb.collection('agencies').doc(session.agencyId).set({
-          name: agency.name,
-          phone: agency.phone ?? '',
-          country: country ?? 'India',
-          billingType: billingType ?? 'NON_GST',
-          gstNumber: agency.gstNumber ?? '',
-          logoUrl: logoUrl ?? '',
-        }, { merge: true });
-      } catch (firestoreError) {
-        console.error('FIRESTORE_PROFILE_SYNC_FAILED', firestoreError);
-      }
-
       try {
         await auditLog({
           agencyId: session.agencyId,

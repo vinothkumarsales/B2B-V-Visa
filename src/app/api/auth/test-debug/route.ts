@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     diagnostics.apiErrorTest = { 
       success: true, 
       status: res.status, 
-      isResponse: res instanceof Response || res instanceof NextResponse 
+      isResponse: (res as any) instanceof Response || (res as any) instanceof NextResponse 
     };
   } catch (e: any) {
     diagnostics.apiErrorTest = { success: false, error: e.message, stack: e.stack };

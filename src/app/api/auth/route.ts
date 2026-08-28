@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { after } from 'next/server';
 import { randomUUID } from 'crypto';
 import { db } from '@/lib/db';
-import { adminDb } from '@/lib/firebase-admin';
 import { verifyFirebaseIdToken } from '@/lib/firebase-verify';
 import { apiError, isApiResponse } from '@/lib/api-response';
 import { loginSchema } from '@/lib/auth/login-schema';
@@ -161,27 +160,6 @@ export async function POST(request: NextRequest) {
             include: { memberships: { include: { agency: true } } },
           });
         });
-      }
-
-      // Sync user profile to Firestore
-      try {
-        await adminDb.collection('users').doc(user.id).set({
-          name: user.name ?? '',
-          email: user.email,
-          phone: user.phone ?? '',
-          createdAt: user.createdAt.toISOString(),
-        }, { merge: true });
-        const membership = user.memberships[0] ?? null;
-        if (membership?.agency) {
-          await adminDb.collection('agencies').doc(membership.agency.id).set({
-            name: membership.agency.name,
-            email: membership.agency.email,
-            status: membership.agency.status,
-            createdAt: membership.agency.createdAt.toISOString(),
-          }, { merge: true });
-        }
-      } catch (firestoreError) {
-        console.error('FIRESTORE_SYNC_FAILED', firestoreError);
       }
 
       await createSession(user.id);
