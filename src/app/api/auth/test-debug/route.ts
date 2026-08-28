@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyFirebaseIdToken } from '@/lib/firebase-verify';
+import { apiError } from '@/lib/api-response';
 
 export async function GET(request: NextRequest) {
   const diagnostics: any = {
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
     },
     database: null,
     firebaseVerify: null,
-    registerMockTest: null,
+    apiErrorTest: null,
   };
 
   // Test database connection
@@ -22,43 +23,28 @@ export async function GET(request: NextRequest) {
     diagnostics.database = { success: false, error: e.message, stack: e.stack };
   }
 
-  // Test verifyFirebaseIdToken imports
+  // Test verifyFirebaseIdToken imports & execution
   try {
-    diagnostics.firebaseVerify = { success: true, type: typeof verifyFirebaseIdToken };
+    const res = await verifyFirebaseIdToken('test-token').catch((err) => err);
+    diagnostics.firebaseVerify = { 
+      success: true, 
+      errorType: res instanceof Error ? res.constructor.name : typeof res,
+      errorMessage: res instanceof Error ? res.message : String(res)
+    };
   } catch (e: any) {
     diagnostics.firebaseVerify = { success: false, error: e.message, stack: e.stack };
   }
 
-  // Test invoking register handler with dummy request using dynamic import
+  // Test apiError function
   try {
-    const { POST: registerHandler } = await import('../register/route');
-    const dummyReq = new NextRequest('https://business.vvisa.in/api/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({
-        token: 'test-token',
-        phone: '1234567890',
-        firstName: 'Test',
-        lastName: 'User',
-        gender: 'Male',
-        designation: 'Manager',
-        country: 'IN',
-        businessName: 'Test Business',
-        billingType: 'NON_GST',
-      }),
-      headers: {
-        'content-type': 'application/json',
-      },
-    });
-
-    const res = await registerHandler(dummyReq);
-    const status = res.status;
-    let bodyText = '';
-    try {
-      bodyText = await res.text();
-    } catch {}
-    diagnostics.registerMockTest = { success: true, status, body: bodyText };
+    const res = apiError('INVALID_INPUT', 'Test message', 400);
+    diagnostics.apiErrorTest = { 
+      success: true, 
+      status: res.status, 
+      isResponse: res instanceof Response || res instanceof NextResponse 
+    };
   } catch (e: any) {
-    diagnostics.registerMockTest = { success: false, error: e.message, stack: e.stack };
+    diagnostics.apiErrorTest = { success: false, error: e.message, stack: e.stack };
   }
 
   return NextResponse.json(diagnostics);
