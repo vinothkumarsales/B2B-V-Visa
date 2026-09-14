@@ -40,6 +40,9 @@ import {
   Phone,
   Mail,
   ShieldCheck,
+  Store,
+  Sparkles,
+  Users,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -181,15 +184,18 @@ function SidebarContent({
 
   const initials = agency ? getInitials(agency.name) : 'AG';
 
-  // Ordered by how often the desk reaches for them: daily work first,
-  // then money, then account settings.
   const navItems: NavItem[] = [
-    { label: 'Dashboard', icon: LayoutDashboard, route: 'dashboard' as ViewRoute },
-    { label: 'Applications', icon: Archive, route: 'applications' as ViewRoute },
-    { label: 'Explore Visas', icon: Zap, route: 'explore' },
+    { label: 'Profile', icon: User, route: 'profile' },
+    { label: 'Dashboard', icon: LayoutDashboard, route: 'dashboard' },
+    { label: 'Explore Services', icon: Zap, route: 'explore' },
+    { label: 'Applications', icon: Archive, route: 'applications' },
     { label: 'Wallet', icon: Wallet, route: 'wallet', badge: `INR ${walletBalance.toLocaleString('en-IN')}` },
+    { label: 'Referral Program', icon: Handshake, route: 'referrals' },
+    { label: 'List Your Products', icon: Store, route: 'partner-marketplace' },
+    { label: 'Clarify AI', icon: Sparkles, route: 'clarify' },
+    { label: 'Community — Coming Soon', icon: Users, route: 'community', disabled: true, badge: 'Soon' },
     { label: 'Overstay', icon: FileText, route: 'overstay' },
-    { label: 'Alliance Dashboard', icon: Handshake, route: 'alliance' },
+    { label: 'Change Password', icon: Lock, route: 'change-password' },
   ];
 
   return (
@@ -322,7 +328,11 @@ const routeToPath: Record<string, string> = {
   applications: '/applications',
   'application-detail': '/application-detail',
   wallet: '/wallet',
-  alliance: '/alliance',
+  referrals: '/referrals',
+  alliance: '/referrals',
+  'partner-marketplace': '/partner-marketplace',
+  clarify: '/clarify',
+  community: '/community',
   overstay: '/overstay',
   profile: '/profile',
   'change-password': '/change-password',
@@ -400,12 +410,16 @@ export default function DashboardShell({ children, basePath = '' }: { children: 
 
   const pageTitle: Record<string, string> = {
     dashboard: 'Dashboard',
-    explore: 'Explore Visas',
+    explore: 'Explore Services',
     apply: 'Apply for Visa',
     applications: 'Applications',
     'application-detail': 'Application Details',
     wallet: 'Wallet',
-    alliance: 'Alliance Dashboard',
+    referrals: 'Referral Program',
+    alliance: 'Referral Program',
+    'partner-marketplace': 'List Your Products',
+    clarify: 'Clarify AI',
+    community: 'Partner Community',
     overstay: 'Overstay Cases',
     profile: 'Agency Profile',
     'change-password': 'Change Password',

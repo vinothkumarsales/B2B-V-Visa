@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { after } from 'next/server';
 import { db } from '@/lib/db';
+import { ensureDatabaseSchema } from '@/lib/db-bootstrap';
 import { verifyFirebaseIdToken } from '@/lib/firebase-verify';
 import { apiError, isApiResponse } from '@/lib/api-response';
 import { auditLog } from '@/server/audit/audit-log';
@@ -30,6 +31,8 @@ const registerSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    await ensureDatabaseSchema();
+
     const parsed = registerSchema.safeParse(await request.json());
     if (!parsed.success) {
       return apiError('INVALID_INPUT', parsed.error.issues[0]?.message ?? 'Invalid onboarding details', 400);
@@ -59,12 +62,6 @@ export async function POST(request: NextRequest) {
     if (!email) return apiError('INVALID_INPUT', 'Invalid auth token', 400);
 
     // ── SYNCHRONOUS ZOHO EMAIL LOOKUP ──────────────────────────────────────
-    // Search Zoho Travel Agents by email BEFORE creating local DB record.
-    // This ensures:
-    //   1. We reuse any existing UID from Zoho.
-    //   2. We don't create a duplicate Travel Agent in Zoho.
-    // If Zoho is unavailable, we fail clean (503) rather than create an
-    // inconsistent record.
     let zohoMatch: { zohoRecordId: string; vvisaUid: string | null } | null = null;
     try {
       zohoMatch = await findZohoTravelAgentByEmail(email);
@@ -84,101 +81,84 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── EXISTING USER LOOKUP ───────────────────────────────────────────────
-    const existingUser = await db.user.findUnique({
-      where: { email },
-      include: { memberships: { include: { agency: true } } },
-    });
+    // ── EXISTING USER & AGENCY LOOKUP ──────────────────────────────────────
+    const [existingUser, existingAgencyByEmail] = await Promise.all([
+      db.user.findUnique({
+        where: { email },
+        include: { memberships: { include: { agency: true } } },
+      }),
+      db.agency.findUnique({
+        where: { email },
+        include: { memberships: true },
+      }),
+    ]);
 
     const fullName = `${firstName} ${lastName}`;
 
     const result = await db.$transaction(async (tx) => {
-      if (existingUser) {
-        const existingAgency = existingUser.memberships[0]?.agency ?? null;
-        const agencyId = existingAgency?.id;
+      const existingAgency = existingUser?.memberships[0]?.agency ?? existingAgencyByEmail ?? null;
+      const agencyId = existingAgency?.id;
 
-        // ── UID CONFLICT CHECK ─────────────────────────────────────────────
-        if (
-          existingAgency?.vvisaUid &&
-          zohoMatch?.vvisaUid &&
-          existingAgency.vvisaUid !== zohoMatch.vvisaUid
-        ) {
-          console.error('[VVISA_UID_SYNC_CONFLICT]', {
-            email,
-            localVvisaUid: existingAgency.vvisaUid,
-            zohoVvisaUid: zohoMatch.vvisaUid,
-            zohoRecordId: zohoMatch.zohoRecordId,
-          });
-          throw apiError(
-            'INVALID_INPUT',
-            'A UID synchronization conflict was detected for this account. Please contact support to resolve this.',
-            409,
-          );
-        }
-
-        // Determine UID: prefer Zoho UID, then existing local UID, then generate new
-        const resolvedUid =
-          zohoMatch?.vvisaUid ??
-          existingAgency?.vvisaUid ??
-          generateAgencyUid();
-
-        const user = await tx.user.update({
-          where: { id: existingUser.id },
-          data: { name: fullName, phone, firstName, lastName, gender, designation },
+      // ── UID CONFLICT CHECK ─────────────────────────────────────────────
+      if (
+        existingAgency?.vvisaUid &&
+        zohoMatch?.vvisaUid &&
+        existingAgency.vvisaUid !== zohoMatch.vvisaUid
+      ) {
+        console.warn('[VVISA_UID_SYNC_CONFLICT]', {
+          email,
+          localVvisaUid: existingAgency.vvisaUid,
+          zohoVvisaUid: zohoMatch.vvisaUid,
+          zohoRecordId: zohoMatch.zohoRecordId,
         });
+      }
 
-        let agency;
-        if (agencyId) {
-          agency = await tx.agency.update({
-            where: { id: agencyId },
-            data: {
-              name: businessName,
-              phone,
-              gstNumber: billingType === 'GST' ? gstNumber : null,
-              billingType,
-              country,
-              // Assign vvisaUid if not yet set
-              ...(!existingAgency?.vvisaUid ? { vvisaUid: resolvedUid } : {}),
-            },
-          });
-        } else {
-          agency = await tx.agency.create({
-            data: {
-              name: businessName,
-              email,
-              phone,
-              status: 'DRAFT',
-              gstNumber: billingType === 'GST' ? gstNumber : null,
-              billingType,
-              country,
-              vvisaUid: resolvedUid,
-              memberships: {
-                create: { userId: user.id, role: 'AGENCY_OWNER', isDefault: true },
-              },
-              wallets: { create: { currency: 'INR' } },
-            },
-          });
-        }
-        return { user, agency, existingPartner: true };
-      } else {
-        // ── NEW USER + AGENCY ──────────────────────────────────────────────
-        // Determine UID: prefer Zoho UID if we found one, else generate fresh
-        const resolvedUid = zohoMatch?.vvisaUid ?? generateAgencyUid();
+      // Determine UID: prefer Zoho UID, then existing local UID, then generate new
+      const resolvedUid =
+        zohoMatch?.vvisaUid ??
+        existingAgency?.vvisaUid ??
+        generateAgencyUid();
 
-        const user = await tx.user.create({
+      // Upsert User
+      const user = await tx.user.upsert({
+        where: { email },
+        create: {
+          name: fullName,
+          email,
+          phone,
+          firstName,
+          lastName,
+          gender,
+          designation,
+          passwordHash: '', // managed by Firebase
+        },
+        update: {
+          name: fullName,
+          phone,
+          firstName,
+          lastName,
+          gender,
+          designation,
+        },
+      });
+
+      // Upsert Agency
+      let agency;
+      if (agencyId) {
+        agency = await tx.agency.update({
+          where: { id: agencyId },
           data: {
-            name: fullName,
-            email,
+            name: businessName,
             phone,
-            firstName,
-            lastName,
-            gender,
-            designation,
-            passwordHash: '', // managed by Firebase
+            gstNumber: billingType === 'GST' ? gstNumber : null,
+            billingType,
+            country,
+            ...(zohoMatch?.zohoRecordId ? { zohoRecordId: zohoMatch.zohoRecordId } : {}),
+            ...(!existingAgency?.vvisaUid ? { vvisaUid: resolvedUid } : {}),
           },
         });
-
-        const agency = await tx.agency.create({
+      } else {
+        agency = await tx.agency.create({
           data: {
             name: businessName,
             email,
@@ -188,15 +168,47 @@ export async function POST(request: NextRequest) {
             billingType,
             country,
             vvisaUid: resolvedUid,
+            zohoRecordId: zohoMatch?.zohoRecordId ?? null,
             memberships: {
               create: { userId: user.id, role: 'AGENCY_OWNER', isDefault: true },
             },
             wallets: { create: { currency: 'INR' } },
           },
         });
-
-        return { user, agency, existingPartner: false };
       }
+
+      // Ensure membership exists
+      await tx.agencyMembership.upsert({
+        where: {
+          userId_agencyId: {
+            userId: user.id,
+            agencyId: agency.id,
+          },
+        },
+        create: {
+          userId: user.id,
+          agencyId: agency.id,
+          role: 'AGENCY_OWNER',
+          isDefault: true,
+        },
+        update: {},
+      });
+
+      // Ensure wallet exists
+      const existingWallet = await tx.wallet.findFirst({
+        where: { agencyId: agency.id },
+      });
+      if (!existingWallet) {
+        await tx.wallet.create({
+          data: { agencyId: agency.id, currency: 'INR' },
+        });
+      }
+
+      return {
+        user,
+        agency,
+        existingPartner: Boolean(existingUser || existingAgencyByEmail || zohoMatch),
+      };
     });
 
     await createSession(result.user.id);
@@ -246,15 +258,9 @@ export async function POST(request: NextRequest) {
       message: 'Registration successful',
     });
   } catch (error) {
-    if (error instanceof Error) {
-      console.error('REGISTER_FAILED_ERROR', {
-        name: error.name,
-        message: error.message,
-      });
-    } else {
-      console.error('REGISTER_FAILED_ERROR', String(error));
-    }
     if (isApiResponse(error)) return error;
-    return apiError('INVALID_INPUT', 'Unable to complete onboarding', 400);
+    const message = error instanceof Error ? error.message : 'Unable to complete onboarding';
+    console.error('REGISTER_FAILED_ERROR', error);
+    return apiError('INVALID_INPUT', `Unable to complete onboarding: ${message}`, 400);
   }
 }

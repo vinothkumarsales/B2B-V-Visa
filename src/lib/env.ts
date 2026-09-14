@@ -134,7 +134,9 @@ const envSchema = z.object({
   DIGIO_BASE_URL: z.string().url().default('https://api.digio.in'),
   DIGIO_ENVIRONMENT: z.enum(['sandbox', 'production']).default('sandbox'),
   DIGIO_TEMPLATE_NAME: z.string().optional(),
+  DIGIO_VENDOR_TEMPLATE_NAME: z.string().optional(),
   DIGIO_TEMPLATE_ID: z.string().optional(),
+  DIGIO_VENDOR_TEMPLATE_ID: z.string().optional(),
 
   STORAGE_PROVIDER: z.enum(['local', 'supabase', 's3', 'gcs', 'azure']).default('local'),
   STORAGE_PRIVATE_ROOT: z.string().default('upload/private'),

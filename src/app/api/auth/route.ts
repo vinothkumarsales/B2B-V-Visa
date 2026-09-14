@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { after } from 'next/server';
 import { randomUUID } from 'crypto';
 import { db } from '@/lib/db';
+import { ensureDatabaseSchema } from '@/lib/db-bootstrap';
 import { verifyFirebaseIdToken } from '@/lib/firebase-verify';
 import { apiError, isApiResponse } from '@/lib/api-response';
 import { loginSchema } from '@/lib/auth/login-schema';
@@ -11,7 +12,7 @@ import { auditLog } from '@/server/audit/audit-log';
 import { isBootstrapAdminEmail } from '@/server/admin/permissions';
 import { queueTravelAgentCrmSync } from '@/server/integrations/zoho/travel-agent-sync';
 import { drainZohoCrmOutbox } from '@/server/integrations/zoho/crm-outbox-worker';
-import { serializeAgency } from '@/lib/uid';
+import { generateAgencyUid, serializeAgency } from '@/lib/uid';
 
 const BOOTSTRAP_LOCKOUT_MS = 15 * 60 * 1000;
 const BOOTSTRAP_MAX_FAILURES = 5;
@@ -118,9 +119,11 @@ export async function POST(request: NextRequest) {
 
     // Firebase Authentication Token Flow
     if (body && typeof body === 'object' && 'token' in body) {
+      await ensureDatabaseSchema();
+
       const token = body.token;
       const decodedToken = await verifyFirebaseIdToken(token);
-      const email = decodedToken.email?.toLowerCase();
+      const email = decodedToken.email?.toLowerCase().trim();
       if (!email) return loginError('INVALID_TOKEN', 'Token has no email address', 400);
 
       let user = await db.user.findUnique({
@@ -128,34 +131,53 @@ export async function POST(request: NextRequest) {
         include: { memberships: { include: { agency: true } } },
       });
 
-      if (!user) {
+      if (!user || !user.memberships || user.memberships.length === 0) {
         const name = decodedToken.name ?? email.split('@')[0];
         user = await db.$transaction(async (tx) => {
-          const u = await tx.user.create({
-            data: {
+          const u = await tx.user.upsert({
+            where: { email },
+            create: {
               name,
               email,
               phone: decodedToken.phone_number ?? null,
               passwordHash: '',
             },
+            update: {
+              name,
+              phone: decodedToken.phone_number ?? undefined,
+            },
           });
-          const agency = await tx.agency.create({
-            data: {
+
+          const agency = await tx.agency.upsert({
+            where: { email },
+            create: {
               name: `${name}'s Agency`,
               email,
               status: 'DRAFT',
-              memberships: {
-                create: {
-                  userId: u.id,
-                  role: 'AGENCY_OWNER',
-                  isDefault: true,
-                },
-              },
+              vvisaUid: generateAgencyUid(),
               wallets: {
                 create: { currency: 'INR' },
               },
             },
+            update: {},
           });
+
+          await tx.agencyMembership.upsert({
+            where: {
+              userId_agencyId: {
+                userId: u.id,
+                agencyId: agency.id,
+              },
+            },
+            create: {
+              userId: u.id,
+              agencyId: agency.id,
+              role: 'AGENCY_OWNER',
+              isDefault: true,
+            },
+            update: {},
+          });
+
           return tx.user.findUniqueOrThrow({
             where: { id: u.id },
             include: { memberships: { include: { agency: true } } },

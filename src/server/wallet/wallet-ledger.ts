@@ -25,6 +25,7 @@ export async function createLedgerEntry(
     agencyId: string;
     applicationId?: string;
     paymentOrderId?: string;
+    referralId?: string;
     type:
       | 'DEPOSIT_PENDING'
       | 'DEPOSIT_CONFIRMED'
@@ -34,7 +35,8 @@ export async function createLedgerEntry(
       | 'WITHDRAWAL_HOLD'
       | 'WITHDRAWAL_COMPLETED'
       | 'WITHDRAWAL_RELEASED'
-      | 'MANUAL_ADJUSTMENT';
+      | 'MANUAL_ADJUSTMENT'
+      | 'REFERRAL_REWARD';
     amountMinor: number;
     currency?: string;
     idempotencyKey: string;
@@ -50,6 +52,7 @@ export async function createLedgerEntry(
       walletId: wallet.id,
       applicationId: input.applicationId,
       paymentOrderId: input.paymentOrderId,
+      referralId: input.referralId,
       type: input.type,
       amountMinor: input.amountMinor,
       currency,

@@ -290,7 +290,11 @@ export type ViewRoute =
   | 'applications'
   | 'application-detail'
   | 'wallet'
+  | 'referrals'
   | 'alliance'
+  | 'partner-marketplace'
+  | 'clarify'
+  | 'community'
   | 'overstay'
   | 'profile'
   | 'change-password';

@@ -1,12 +1,12 @@
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import { RouteScreen } from '@/components/RouteScreen';
-import ReferralsView from '@/views/ReferralsView';
+import MarketplaceView from '@/views/MarketplaceView';
 
-export default function AlliancePage() {
+export default function PartnerMarketplacePage() {
   return (
-    <RouteScreen view="referrals" authenticated>
+    <RouteScreen view="partner-marketplace" authenticated>
       <DashboardShell>
-        <ReferralsView />
+        <MarketplaceView />
       </DashboardShell>
     </RouteScreen>
   );

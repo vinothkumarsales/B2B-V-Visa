@@ -47,6 +47,7 @@ model User {
   careerCandidates CareerCandidate[]
   connections      CareerConnection[]
   sessions         Session[]
+  vendorAgreements VendorAgreementAcceptance[]
 }
 
 model Session {
@@ -109,6 +110,10 @@ model Agency {
   applications           VisaApplication[]
   visaInterests          VisaInterest[]
   wallets                Wallet[]
+  referrals              Referral[]
+  referralLinks          ReferralLink[]
+  vendorProfile          VendorProfile?
+  marketplaceBuyerOrders MarketplaceOrder[]          @relation("MarketplaceBuyerAgency")
 }
 
 model PartnerAdminNote {
@@ -258,6 +263,8 @@ model VisaProduct {
   processingOptions             VisaProcessingOption[]
   country                       Country?                   @relation(fields: [countryId], references: [id])
   versions                      VisaProductVersion[]
+  referrals                     Referral[]
+  referralLinks                 ReferralLink[]
 
   @@index([destination, isActive])
 }
@@ -787,6 +794,7 @@ model WalletLedgerEntry {
   walletId       String
   applicationId  String?
   paymentOrderId String?
+  referralId     String?
   type           WalletLedgerType
   amountMinor    Int
   currency       String           @default("INR")
@@ -795,6 +803,7 @@ model WalletLedgerEntry {
   createdAt      DateTime         @default(now())
   application    VisaApplication? @relation(fields: [applicationId], references: [id])
   paymentOrder   PaymentOrder?    @relation(fields: [paymentOrderId], references: [id])
+  referral       Referral?        @relation(fields: [referralId], references: [id])
   wallet         Wallet           @relation(fields: [walletId], references: [id], onDelete: Cascade)
 }
 
@@ -1292,6 +1301,7 @@ enum WalletLedgerType {
   WITHDRAWAL_COMPLETED
   WITHDRAWAL_RELEASED
   MANUAL_ADJUSTMENT
+  REFERRAL_REWARD
 }
 
 enum PaymentOrderStatus {
@@ -1469,3 +1479,330 @@ enum CareerSubscriptionStatus {
   cancelled
   expired
 }
+
+enum ReferralStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  ONBOARDED
+  IN_PROGRESS
+  COMPLETED
+  CLOSED
+}
+
+enum ReferralRewardStatus {
+  ESTIMATED
+  PENDING
+  APPROVED
+  CREDITED
+  REVERSED
+  DISPUTED
+  REJECTED
+}
+
+enum ReferralRewardCondition {
+  ONBOARDING
+  INITIAL_PAYMENT
+  FULL_PAYMENT
+  SERVICE_SUBMISSION
+  SERVICE_COMPLETION
+  MANUAL_APPROVAL
+}
+
+model Referral {
+  id                 String                  @id @default(cuid())
+  referralCode       String                  @unique
+  partnerAgencyId    String
+  partnerUid         String
+  productId          String
+  referralLinkId     String?
+  clientName         String
+  clientMobile       String
+  clientWhatsapp     String?
+  clientEmail        String
+  clientCountry      String?
+  clientCity         String?
+  clientNationality  String?                 @default("Indian")
+  clientLanguage     String?
+  notes              String?
+  consent            Boolean                 @default(true)
+  travelDate         DateTime?
+  numberOfApplicants Int?                    @default(1)
+  urgency            String?
+  passportAvailable  Boolean?
+  budget             String?
+  existingRefusal    Boolean?
+  attachments        Json?
+  status             ReferralStatus          @default(NEW)
+  internalStatus     String?
+  duplicateFlag      Boolean                 @default(false)
+  assignedAdvisor    String?
+  nextAction         String?
+  rewardAmountMinor  Int                     @default(0)
+  rewardStatus       ReferralRewardStatus    @default(ESTIMATED)
+  rewardRuleId       String?
+  rewardCondition    ReferralRewardCondition @default(FULL_PAYMENT)
+  rewardApprovedAt   DateTime?
+  rewardCreditedAt   DateTime?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  agency             Agency                  @relation(fields: [partnerAgencyId], references: [id], onDelete: Cascade)
+  product            VisaProduct             @relation(fields: [productId], references: [id])
+  referralLink       ReferralLink?           @relation(fields: [referralLinkId], references: [id])
+  rewardRule         ReferralRewardRule?     @relation(fields: [rewardRuleId], references: [id])
+  events             ReferralEvent[]
+  ledgerEntries      WalletLedgerEntry[]
+
+  @@index([partnerAgencyId, status])
+  @@index([partnerUid])
+  @@index([clientEmail])
+  @@index([clientMobile])
+}
+
+model ReferralEvent {
+  id                 String          @id @default(cuid())
+  referralId         String
+  stage              ReferralStatus?
+  event              String
+  actor              String
+  partnerVisibleNote String?
+  internalNote       String?
+  nextAction         String?
+  createdAt          DateTime        @default(now())
+  referral           Referral        @relation(fields: [referralId], references: [id], onDelete: Cascade)
+
+  @@index([referralId, createdAt])
+}
+
+model ReferralLink {
+  id              String       @id @default(cuid())
+  code            String       @unique
+  partnerAgencyId String
+  partnerUid      String
+  productId       String?
+  campaign        String?
+  clicks          Int          @default(0)
+  uniqueVisitors  Int          @default(0)
+  submittedLeads  Int          @default(0)
+  conversions     Int          @default(0)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  agency          Agency       @relation(fields: [partnerAgencyId], references: [id], onDelete: Cascade)
+  product         VisaProduct? @relation(fields: [productId], references: [id])
+  referrals       Referral[]
+
+  @@index([partnerAgencyId])
+  @@index([partnerUid])
+}
+
+model ReferralRewardRule {
+  id                String                  @id @default(cuid())
+  productId         String?
+  productCategory   String?
+  rewardType        String                  @default("FIXED")
+  rewardAmountMinor Int                     @default(0)
+  rewardCondition   ReferralRewardCondition @default(FULL_PAYMENT)
+  isActive          Boolean                 @default(true)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  referrals         Referral[]
+
+  @@index([productId, isActive])
+  @@index([productCategory, isActive])
+}
+
+// --------------------------------------------------
+// PHASE 2: PARTNER MARKETPLACE & VENDOR ONBOARDING
+// --------------------------------------------------
+
+enum VendorKycStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  SUBMITTED
+  VERIFICATION_PENDING
+  COMPLETED
+  FAILED
+  EXPIRED
+}
+
+enum VendorStatus {
+  DRAFT
+  VERIFICATION_PENDING
+  APPROVED
+  ACTIVE
+  SUSPENDED
+  REJECTED
+  DEACTIVATED
+}
+
+enum MarketplaceProductStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  REJECTED
+  SUSPENDED
+  EXPIRED
+}
+
+enum MarketplaceSourceType {
+  PLATFORM
+  VENDOR
+}
+
+enum MarketplaceOrderStatus {
+  REQUESTED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+model VendorProfile {
+  id                   String                      @id @default(cuid())
+  agencyId             String                      @unique
+  businessName         String
+  businessType         String?                     @default("PVT_LTD")
+  contactPerson        String?
+  contactEmail         String
+  contactPhone         String?
+  addressLine1         String?
+  addressLine2         String?
+  city                 String?
+  state                String?
+  pincode              String?
+  gstNumber            String?
+  panCard              String?
+  categories           Json?
+  kycStatus            VendorKycStatus             @default(NOT_STARTED)
+  vendorStatus         VendorStatus                @default(DRAFT)
+  digioKycId           String?
+  digioKycStatus       String?
+  digioWorkflowName    String?                     @default("Vendor Onboarding")
+  kycStartedAt         DateTime?
+  kycCompletedAt       DateTime?
+  kycExpiresAt         DateTime?
+  kycFailureReason     String?
+  approvedAt           DateTime?
+  suspendedAt          DateTime?
+  reputationScore      Int                         @default(100)
+  totalOrdersFulfilled Int                         @default(0)
+  averageRating        Float                       @default(5.0)
+  totalReviews         Int                         @default(0)
+  createdAt            DateTime                    @default(now())
+  updatedAt            DateTime                    @updatedAt
+  agency               Agency                      @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  agreements           VendorAgreementAcceptance[]
+  products             MarketplaceProduct[]
+  orders               MarketplaceOrder[]
+  ratings              VendorRating[]
+
+  @@index([kycStatus])
+  @@index([vendorStatus])
+}
+
+model VendorAgreementAcceptance {
+  id                       String        @id @default(cuid())
+  vendorProfileId          String
+  userId                   String
+  agreementVersion         String        @default("v1.0-vendor-marketplace")
+  penaltyMaxAmountMinor    BigInt        @default(100000000)
+  termsAccepted            Boolean       @default(true)
+  fraudDeclarationAccepted Boolean       @default(true)
+  ipAddress                String?
+  userAgent                String?
+  acceptedAt               DateTime      @default(now())
+  vendorProfile            VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  user                     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([vendorProfileId])
+  @@index([userId])
+}
+
+model MarketplaceProduct {
+  id                 String                   @id @default(cuid())
+  vendorProfileId    String?
+  sourceType         MarketplaceSourceType    @default(VENDOR)
+  status             MarketplaceProductStatus @default(PENDING_REVIEW)
+  category           String
+  title              String
+  tagline            String?
+  description        String
+  inclusions         Json?
+  exclusions         Json?
+  destinationCountry String?
+  cityOrRegion       String?
+  validityDays       Int?                     @default(30)
+  processingTimeDays Int?                     @default(3)
+  cancellationPolicy String?
+  termsAndConditions String?
+  basePriceMinor     Int
+  gstMinor           Int
+  platformFeeMinor   Int
+  sellingPriceMinor  Int
+  priceUnit          String                   @default("PER_PERSON")
+  minQuantity        Int                      @default(1)
+  maxQuantity        Int                      @default(100)
+  isAvailable        Boolean                  @default(true)
+  featured           Boolean                  @default(false)
+  viewCount          Int                      @default(0)
+  bookingCount       Int                      @default(0)
+  rejectionReason    String?
+  reviewedAt         DateTime?
+  reviewedBy         String?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  vendorProfile      VendorProfile?           @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  orders             MarketplaceOrder[]
+
+  @@index([category, status])
+  @@index([sourceType, status])
+  @@index([vendorProfileId])
+}
+
+model MarketplaceOrder {
+  id                 String                 @id @default(cuid())
+  orderNumber        String                 @unique
+  productId          String
+  vendorProfileId    String?
+  buyerAgencyId      String
+  buyerUserId        String
+  status             MarketplaceOrderStatus @default(REQUESTED)
+  quantity           Int                    @default(1)
+  basePriceMinor     Int
+  gstMinor           Int
+  platformFeeMinor   Int
+  totalAmountMinor   Int
+  travellerDetails   Json?
+  notes              String?
+  fulfilledAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  product            MarketplaceProduct     @relation(fields: [productId], references: [id])
+  vendorProfile      VendorProfile?         @relation(fields: [vendorProfileId], references: [id])
+  buyerAgency        Agency                 @relation("MarketplaceBuyerAgency", fields: [buyerAgencyId], references: [id], onDelete: Cascade)
+  rating             VendorRating?
+
+  @@index([buyerAgencyId, status])
+  @@index([vendorProfileId, status])
+}
+
+model VendorRating {
+  id                   String           @id @default(cuid())
+  vendorProfileId      String
+  orderId              String           @unique
+  authorAgencyId       String
+  serviceQualityRating Int
+  responseTimeRating   Int
+  accuracyRating       Int
+  overallRating        Float
+  reviewText           String?
+  createdAt            DateTime         @default(now())
+  vendorProfile        VendorProfile    @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  order                MarketplaceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([vendorProfileId])
+}
+
