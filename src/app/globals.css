@@ -1,0 +1,830 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-vvisa-bg: var(--vvisa-bg);
+  --color-vvisa-surface: var(--vvisa-surface);
+  --color-vvisa-surface-2: var(--vvisa-surface-2);
+  --color-vvisa-border: var(--vvisa-border-color);
+  --color-vvisa-border-subtle: var(--vvisa-border-subtle);
+  --color-vvisa-border-active: var(--vvisa-border-active);
+  --color-vvisa-brand: #2563eb;
+  --color-vvisa-brand-light: #60a5fa;
+  --color-vvisa-gold: var(--vvisa-premium);
+  --color-vvisa-green: var(--vvisa-success);
+  --color-vvisa-red: var(--vvisa-danger);
+  --color-vvisa-blue: var(--vvisa-info);
+  --color-vvisa-text: var(--foreground);
+  --color-vvisa-text-secondary: var(--vvisa-text-secondary);
+  --color-vvisa-text-muted: var(--vvisa-text-muted);
+  --color-vvisa-surface-elevated: var(--vvisa-surface-elevated);
+  --color-vvisa-surface-interactive: var(--vvisa-surface-interactive);
+  --color-vvisa-surface-muted: var(--vvisa-surface-muted);
+  --color-vvisa-warning: var(--vvisa-warning);
+
+  --radius-2xl: calc(var(--radius) + 10px);
+  --radius-3xl: calc(var(--radius) + 18px);
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: #f7f8fb;
+  --foreground: #151821;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f4f8;
+  --secondary-foreground: #1f2937;
+  --muted: #f1f4f8;
+  --muted-foreground: #667085;
+  --accent: #eef5ff;
+  --accent-foreground: #1f2937;
+  --destructive: #dc2626;
+  --border: #e1e7ef;
+  --input: #d8e1ec;
+  --ring: #2563eb;
+  --chart-1: #2563eb;
+  --chart-2: #16a34a;
+  --chart-3: #b7791f;
+  --chart-4: #0891b2;
+  --chart-5: #dc2626;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #102033;
+  --sidebar-primary: #2563eb;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f1f5fa;
+  --sidebar-accent-foreground: #1f2937;
+  --sidebar-border: #e1e7ef;
+  --sidebar-ring: #2563eb;
+
+  --vvisa-bg: #f7f8fb;
+  --vvisa-surface: #ffffff;
+  --vvisa-surface-2: #f1f5fa;
+  --vvisa-surface-elevated: #ffffff;
+  --vvisa-surface-interactive: #fbfcff;
+  --vvisa-surface-muted: #f1f4f8;
+  --vvisa-border-color: #dde5ef;
+  --vvisa-border-subtle: #e8edf4;
+  --vvisa-border-active: #a8bdd7;
+  --vvisa-text-secondary: #4b5565;
+  --vvisa-text-muted: #727b8c;
+  --vvisa-primary-hover: #1d4ed8;
+  --vvisa-premium: #b7791f;
+  --vvisa-success: #16a34a;
+  --vvisa-warning: #d97706;
+  --vvisa-danger: #dc2626;
+  --vvisa-info: #0284c7;
+  --vvisa-shadow-sm: 0 2px 8px rgba(21, 24, 33, 0.05);
+  --vvisa-shadow-md: 0 14px 34px rgba(21, 24, 33, 0.09);
+  --vvisa-shadow-lg: 0 26px 76px rgba(21, 24, 33, 0.13);
+  --vvisa-overlay: rgba(15, 23, 42, 0.45);
+  --vvisa-backdrop: rgba(247, 248, 251, 0.88);
+  --motion-fast: 140ms;
+  --motion-normal: 220ms;
+  --motion-slow: 420ms;
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Fluid type scale — clamp(min, preferred, max) */
+  --text-display: clamp(2.5rem, 1.4rem + 4.4vw, 4.25rem);
+  --text-h1: clamp(2rem, 1.35rem + 2.6vw, 3rem);
+  --text-h2: clamp(1.6rem, 1.2rem + 1.6vw, 2.25rem);
+  --text-h3: clamp(1.2rem, 1.05rem + 0.7vw, 1.5rem);
+  --text-lead: clamp(1rem, 0.95rem + 0.3vw, 1.175rem);
+
+  /* Section rhythm */
+  --section-y: clamp(4rem, 2.5rem + 6vw, 7.5rem);
+  --gutter: clamp(1rem, 0.5rem + 2vw, 2rem);
+}
+
+.dark {
+  --background: #08111f;
+  --foreground: #f8fafc;
+  --card: #101b2d;
+  --card-foreground: #f8fafc;
+  --popover: #101b2d;
+  --popover-foreground: #f8fafc;
+  --primary: #60a5fa;
+  --primary-foreground: #061121;
+  --secondary: #16243a;
+  --secondary-foreground: #f8fafc;
+  --muted: #16243a;
+  --muted-foreground: #9aa8bb;
+  --accent: #172b48;
+  --accent-foreground: #f8fafc;
+  --destructive: #ef4444;
+  --border: #223551;
+  --input: #223551;
+  --ring: #60a5fa;
+  --chart-1: #60a5fa;
+  --chart-2: #10b981;
+  --chart-3: #d6a24a;
+  --chart-4: #38bdf8;
+  --chart-5: #ef4444;
+  --sidebar: #0c1829;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #60a5fa;
+  --sidebar-primary-foreground: #061121;
+  --sidebar-accent: #14243b;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #223551;
+  --sidebar-ring: #60a5fa;
+
+  --vvisa-bg: #08111f;
+  --vvisa-surface: #101b2d;
+  --vvisa-surface-2: #16243a;
+  --vvisa-surface-elevated: #14243b;
+  --vvisa-surface-interactive: #182b46;
+  --vvisa-surface-muted: #0d1a2b;
+  --vvisa-border-color: #223551;
+  --vvisa-border-subtle: #1b2b43;
+  --vvisa-border-active: #34557f;
+  --vvisa-text-secondary: #c6d0de;
+  --vvisa-text-muted: #8fa0b4;
+  --vvisa-primary-hover: #3b82f6;
+  --vvisa-premium: #d6a24a;
+  --vvisa-success: #22c55e;
+  --vvisa-warning: #f59e0b;
+  --vvisa-danger: #f87171;
+  --vvisa-info: #38bdf8;
+  --vvisa-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.22);
+  --vvisa-shadow-md: 0 18px 45px rgba(0, 0, 0, 0.32);
+  --vvisa-shadow-lg: 0 28px 90px rgba(0, 0, 0, 0.42);
+  --vvisa-overlay: rgba(2, 6, 23, 0.62);
+  --vvisa-backdrop: rgba(8, 17, 31, 0.82);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--vvisa-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vvisa-border-color);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vvisa-border-active);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    overflow-x: clip;
+    /* keep anchored sections clear of the fixed header */
+    scroll-padding-top: 5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    /* Nothing should ever scroll the page sideways. `clip` (not `hidden`)
+       keeps `position: sticky` working on descendants. */
+    overflow-x: clip;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4 {
+    text-wrap: balance;
+    letter-spacing: -0.022em;
+  }
+
+  p, li {
+    text-wrap: pretty;
+  }
+
+  /* One consistent, visible keyboard focus ring across the whole app */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 24%, transparent);
+  }
+}
+
+@layer utilities {
+  /* Admin console: a denser skin over the same token system.
+     Previously this forced light-only hex values, which broke the
+     theme toggle that lives in the admin header. */
+  .admin-console {
+    letter-spacing: 0;
+    --radius: 0.625rem;
+    --background: #f5f6f8;
+    --foreground: #17191d;
+    --card: #ffffff;
+    --card-foreground: #17191d;
+    --popover: #ffffff;
+    --popover-foreground: #17191d;
+    --muted: #eef1f5;
+    --muted-foreground: #697180;
+    --border: #e3e6eb;
+    --input: #dfe3e9;
+
+    --vvisa-bg: #f5f6f8;
+    --vvisa-surface: #ffffff;
+    --vvisa-surface-2: #eef1f5;
+    --vvisa-surface-elevated: #ffffff;
+    --vvisa-border-color: #e3e6eb;
+    --vvisa-border-subtle: #eaedf2;
+    --vvisa-border-active: #c2cad6;
+    --vvisa-text-secondary: #4a5261;
+    --vvisa-text-muted: #7a8290;
+    --admin-nav-active-bg: #e8f0ff;
+    --admin-nav-active-fg: #155bd7;
+    --admin-hover: rgba(15, 23, 42, 0.04);
+    --admin-hairline: rgba(15, 23, 42, 0.08);
+  }
+
+  .dark .admin-console {
+    --background: #0b1421;
+    --foreground: #f1f5f9;
+    --card: #111d2e;
+    --card-foreground: #f1f5f9;
+    --popover: #111d2e;
+    --popover-foreground: #f1f5f9;
+    --muted: #17253a;
+    --muted-foreground: #93a1b5;
+    --border: #223551;
+    --input: #223551;
+
+    --vvisa-bg: #0b1421;
+    --vvisa-surface: #111d2e;
+    --vvisa-surface-2: #17253a;
+    --vvisa-surface-elevated: #16243b;
+    --vvisa-border-color: #223551;
+    --vvisa-border-subtle: #1c2c44;
+    --vvisa-border-active: #34557f;
+    --vvisa-text-secondary: #c3cdda;
+    --vvisa-text-muted: #8b9bb0;
+    --admin-nav-active-bg: rgba(96, 165, 250, 0.14);
+    --admin-nav-active-fg: #7db1ff;
+    --admin-hover: rgba(255, 255, 255, 0.05);
+    --admin-hairline: rgba(255, 255, 255, 0.09);
+  }
+
+  .admin-console main > div {
+    gap: 1rem;
+  }
+
+  .admin-console main h2 {
+    font-size: 1.25rem;
+    line-height: 1.5rem;
+    letter-spacing: 0;
+  }
+
+  .admin-console [data-slot="card"] {
+    border-color: var(--admin-hairline);
+    border-radius: 0.625rem;
+    box-shadow: var(--vvisa-shadow-sm);
+  }
+
+  .admin-console [data-slot="card-header"] {
+    padding: 1rem 1.1rem 0.65rem;
+  }
+
+  .admin-console [data-slot="card-content"] {
+    padding: 0.85rem 1.1rem 1.1rem;
+  }
+
+  .admin-console [data-slot="input"],
+  .admin-console [data-slot="select-trigger"],
+  .admin-console textarea {
+    border-color: var(--admin-hairline);
+    background: var(--vvisa-surface);
+    border-radius: 0.5rem;
+  }
+
+  .admin-console [data-slot="tabs-list"] {
+    border-radius: 0.5rem;
+    background: var(--vvisa-surface-2);
+    padding: 0.2rem;
+  }
+
+  .admin-console table {
+    font-size: 0.8125rem;
+  }
+
+  .admin-console th {
+    color: var(--vvisa-text-muted);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .vv-page {
+    background:
+      radial-gradient(circle at top left, color-mix(in oklab, var(--primary) 12%, transparent), transparent 34rem),
+      linear-gradient(180deg, var(--vvisa-bg), color-mix(in oklab, var(--vvisa-bg) 92%, var(--vvisa-surface-2)));
+  }
+
+  .vv-surface {
+    background: var(--vvisa-surface);
+    border-color: var(--vvisa-border-subtle);
+    box-shadow: var(--vvisa-shadow-sm);
+  }
+
+  .vv-surface-elevated {
+    background: var(--vvisa-surface-elevated);
+    border-color: var(--vvisa-border-subtle);
+    box-shadow: var(--vvisa-shadow-md);
+  }
+
+  .vv-interactive {
+    transition:
+      background-color var(--motion-normal) var(--motion-ease),
+      border-color var(--motion-normal) var(--motion-ease),
+      color var(--motion-fast) var(--motion-ease),
+      box-shadow var(--motion-normal) var(--motion-ease),
+      transform var(--motion-normal) var(--motion-ease);
+  }
+
+  .vv-interactive:hover {
+    transform: translateY(-1px);
+  }
+
+  .vv-tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Layout rhythm ── */
+  .vv-section {
+    padding-block: var(--section-y);
+    padding-inline: var(--gutter);
+  }
+
+  .vv-container {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 80rem;
+  }
+
+  .vv-container-narrow {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 48rem;
+  }
+
+  /* ── Type scale helpers ── */
+  .vv-display { font-size: var(--text-display); line-height: 1.03; font-weight: 800; letter-spacing: -0.035em; }
+  .vv-h1 { font-size: var(--text-h1); line-height: 1.08; font-weight: 700; letter-spacing: -0.03em; }
+  .vv-h2 { font-size: var(--text-h2); line-height: 1.15; font-weight: 700; letter-spacing: -0.025em; }
+  .vv-h3 { font-size: var(--text-h3); line-height: 1.3; font-weight: 600; letter-spacing: -0.018em; }
+  .vv-lead { font-size: var(--text-lead); line-height: 1.6; color: var(--vvisa-text-secondary); }
+
+  /* ── Surfaces ── */
+  .vv-card {
+    background: var(--vvisa-surface);
+    border: 1px solid var(--vvisa-border-subtle);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--vvisa-shadow-sm);
+    transition:
+      border-color var(--motion-normal) var(--motion-ease),
+      box-shadow var(--motion-normal) var(--motion-ease),
+      transform var(--motion-normal) var(--motion-ease);
+  }
+
+  .vv-card-hover:hover {
+    border-color: var(--vvisa-border-active);
+    box-shadow: var(--vvisa-shadow-md);
+    transform: translateY(-3px);
+  }
+
+  /* Gradient hairline border, theme-safe */
+  .vv-ring-gradient {
+    position: relative;
+  }
+  .vv-ring-gradient::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      140deg,
+      color-mix(in oklab, var(--primary) 45%, transparent),
+      transparent 45%,
+      color-mix(in oklab, var(--vvisa-success) 28%, transparent)
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Ambient background wash for hero / feature bands */
+  .vv-aurora {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(42rem 26rem at 12% -10%, color-mix(in oklab, var(--primary) 16%, transparent), transparent 70%),
+      radial-gradient(34rem 22rem at 92% 6%, color-mix(in oklab, var(--vvisa-info) 13%, transparent), transparent 70%),
+      radial-gradient(30rem 20rem at 50% 108%, color-mix(in oklab, var(--vvisa-success) 9%, transparent), transparent 70%);
+  }
+
+  /* Subtle dot grid, fades out at the edges */
+  .vv-grid-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(color-mix(in oklab, var(--foreground) 13%, transparent) 1px, transparent 1px);
+    background-size: 28px 28px;
+    -webkit-mask-image: radial-gradient(70% 55% at 50% 40%, #000, transparent 100%);
+    mask-image: radial-gradient(70% 55% at 50% 40%, #000, transparent 100%);
+    opacity: 0.5;
+  }
+
+  .vv-text-gradient {
+    background: linear-gradient(120deg, var(--foreground) 22%, var(--primary) 78%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ── Scroll reveal ──
+     Elements are VISIBLE by default. Script arms `data-reveal="armed"` only on
+     content that is off-screen and only once it has confirmed it can animate it,
+     so a failed script, a missing observer, or reduced-motion can never leave
+     content permanently invisible. */
+  [data-reveal='armed'],
+  [data-reveal-scope='armed'] [data-reveal-child] {
+    opacity: 0;
+  }
+
+  [data-reveal='in'],
+  [data-reveal-scope='in'] [data-reveal-child] {
+    animation: vv-reveal-in var(--vv-reveal-duration, 0.55s) var(--motion-ease) var(--vv-reveal-delay, 0s) both;
+  }
+
+  .vv-hover-lift {
+    transition: transform var(--motion-normal) var(--motion-ease), box-shadow var(--motion-normal) var(--motion-ease);
+  }
+  .vv-hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--vvisa-shadow-md);
+  }
+}
+
+@keyframes vv-reveal-in {
+  from {
+    opacity: 0;
+    transform: translate3d(var(--vv-reveal-x, 0), var(--vv-reveal-y, 18px), 0) scale(var(--vv-reveal-scale, 1));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, var(--vvisa-surface-2) 25%, var(--vvisa-border-color) 50%, var(--vvisa-surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+.ticker-bar:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+.glow-indigo {
+  box-shadow: 0 18px 48px color-mix(in oklab, var(--primary) 18%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .vv-interactive:hover,
+  .vv-hover-lift:hover,
+  .vv-card-hover:hover {
+    transform: none;
+  }
+
+  [data-reveal],
+  [data-reveal-child] {
+    opacity: 1 !important;
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   MARKETING DESIGN SYSTEM — "Ruled Surface"
+   ────────────────────────────────────────────────────────────────────────
+   Scoped to `.mk`, the same way `.admin-console` scopes the admin skin.
+   Everything below is additive: nothing here can reach the portal, because
+   nothing outside `src/app/(marketing)` carries the class.
+
+   The language is structural rather than atmospheric — depth comes from
+   1px rules and background steps, never from shadow or glow. It should read
+   like a ledger or a filing system, which is what visa operations are.
+   ════════════════════════════════════════════════════════════════════════ */
+
+@layer utilities {
+  .mk {
+    /* Shared primitives inherit this, so every shadcn control in the
+       marketing tree picks up the tighter silhouette for free. */
+    --radius: 6px;
+
+    --mk-radius: 6px;
+    --mk-radius-lg: 10px;
+
+    --mk-canvas: #ffffff;
+    --mk-panel: #f6f7f9;
+    --mk-ink: #0d1117;
+    --mk-ink-fg: #f6f8fa;
+    --mk-ink-muted: #9aa7b8;
+
+    --mk-rule: color-mix(in oklab, var(--foreground) 10%, transparent);
+    --mk-rule-strong: color-mix(in oklab, var(--foreground) 18%, transparent);
+    /* The column grid sits behind content, so it needs to be quieter than a
+       structural divider or it reads as strikethrough on the text above it. */
+    --mk-rule-faint: color-mix(in oklab, var(--foreground) 5%, transparent);
+
+    --mk-col: 5rem;
+    --mk-max: 78rem;
+    --mk-measure: 68ch;
+    --mk-section-y: clamp(4.5rem, 3rem + 6vw, 8rem);
+    --mk-gutter: clamp(1.25rem, 0.5rem + 2.5vw, 2.5rem);
+
+    --mk-text-display: clamp(2.75rem, 1.6rem + 4.2vw, 4.75rem);
+    --mk-text-h1: clamp(2.15rem, 1.5rem + 2.6vw, 3.25rem);
+    --mk-text-h2: clamp(1.7rem, 1.3rem + 1.6vw, 2.4rem);
+    --mk-text-h3: clamp(1.15rem, 1.05rem + 0.5vw, 1.4rem);
+    --mk-text-lead: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem);
+
+    background: var(--mk-canvas);
+    color: var(--foreground);
+  }
+
+  .dark .mk {
+    --mk-canvas: #0a0f17;
+    --mk-panel: #10161f;
+    --mk-ink: #05080d;
+    --mk-ink-fg: #f6f8fa;
+    --mk-ink-muted: #8b99ab;
+    --mk-rule: color-mix(in oklab, var(--foreground) 15%, transparent);
+    --mk-rule-strong: color-mix(in oklab, var(--foreground) 26%, transparent);
+    --mk-rule-faint: color-mix(in oklab, var(--foreground) 8%, transparent);
+  }
+
+  /* ── Layout ── */
+  .mk-section {
+    padding-block: var(--mk-section-y);
+    padding-inline: var(--mk-gutter);
+  }
+
+  .mk-container {
+    margin-inline: auto;
+    width: 100%;
+    max-width: var(--mk-max);
+  }
+
+  .mk-prose {
+    max-width: var(--mk-measure);
+  }
+
+  /* ── Rules: the load-bearing element of the whole system ── */
+  .mk-rule-t { border-top: 1px solid var(--mk-rule); }
+  .mk-rule-b { border-bottom: 1px solid var(--mk-rule); }
+
+  /* Vertical column hairlines. The page's signature motif — a visible grid
+     the content sits inside, rather than a decorative wash behind it. */
+  .mk-ruled { position: relative; isolation: isolate; }
+  .mk-ruled::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      to right,
+      var(--mk-rule-faint) 0 1px,
+      transparent 1px var(--mk-col)
+    );
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+  }
+
+  /* Cards as cells in the grid: one shared 1px divider between them rather
+     than a border and radius per card. The gap reveals the backing colour. */
+  /* Dividers are drawn on the cells themselves rather than by letting a
+     background show through a 1px gap. The gap trick leaves any unfilled grid
+     area showing the divider colour as a solid block when the item count is
+     not a multiple of the column count. */
+  .mk-cells {
+    display: grid;
+    background: var(--mk-canvas);
+    border: 1px solid var(--mk-rule);
+    border-radius: var(--mk-radius);
+    overflow: hidden;
+  }
+  .mk-cells > * {
+    border-right: 1px solid var(--mk-rule);
+    border-bottom: 1px solid var(--mk-rule);
+  }
+
+  /* ── Type ── */
+  .mk-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--primary);
+  }
+
+  .mk-display {
+    font-size: var(--mk-text-display);
+    line-height: 1.02;
+    font-weight: 540;
+    letter-spacing: -0.035em;
+  }
+  .mk-h1 { font-size: var(--mk-text-h1); line-height: 1.06; font-weight: 540; letter-spacing: -0.03em; }
+  .mk-h2 { font-size: var(--mk-text-h2); line-height: 1.14; font-weight: 540; letter-spacing: -0.025em; }
+  .mk-h3 { font-size: var(--mk-text-h3); line-height: 1.32; font-weight: 560; letter-spacing: -0.015em; }
+
+  .mk-lead {
+    font-size: var(--mk-text-lead);
+    line-height: 1.65;
+    color: var(--vvisa-text-secondary);
+  }
+
+  /* Figures and data read as measurements, not marketing. */
+  .mk-numeral {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  /* ── Surfaces ── */
+  .mk-panel { background: var(--mk-panel); }
+
+  /* Inverted band. Replaces the old glow treatment for emphasis sections. */
+  .mk-ink {
+    background: var(--mk-ink);
+    color: var(--mk-ink-fg);
+    --mk-rule: color-mix(in oklab, #ffffff 16%, transparent);
+    --vvisa-text-secondary: var(--mk-ink-muted);
+  }
+
+  /* Product screenshots sit in a plain bezel — no tilt, no glow, no ring. */
+  .mk-frame {
+    border: 1px solid var(--mk-rule);
+    border-radius: var(--mk-radius-lg);
+    background: var(--mk-canvas);
+    overflow: hidden;
+  }
+  .mk-frame-chrome {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 28px;
+    padding-inline: 0.75rem;
+    border-bottom: 1px solid var(--mk-rule);
+    background: var(--mk-panel);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--vvisa-text-muted);
+  }
+
+  /* The single gradient permitted in the system. Max twice per page. */
+  .mk-accent-rule {
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--vvisa-info));
+  }
+
+  /* Marketing uses the solid `default` button variant, never the gradient
+     `brand` one, so the portal keeps the treatment it already has and no
+     override is needed here. This only normalises the silhouette. */
+  .mk [data-slot="button"] {
+    border-radius: var(--mk-radius);
+  }
+}
+
+@layer utilities {
+  .mitto-career {
+    position: relative;
+    isolation: isolate;
+    background: #070912;
+    color-scheme: dark;
+    --background: #070912;
+    --foreground: #f8fafc;
+    --card: rgba(255,255,255,.065);
+    --card-foreground: #f8fafc;
+    --muted: rgba(255,255,255,.06);
+    --muted-foreground: #94a3b8;
+    --border: rgba(255,255,255,.11);
+    --input: rgba(255,255,255,.12);
+  }
+  .mitto-aurora { position: fixed; inset: 0; z-index: -2; pointer-events: none; background: radial-gradient(circle at 12% 8%,rgba(34,211,238,.17),transparent 29rem),radial-gradient(circle at 82% 22%,rgba(139,92,246,.18),transparent 34rem),radial-gradient(circle at 58% 86%,rgba(16,185,129,.10),transparent 32rem),linear-gradient(145deg,#070912 0%,#0a0d19 48%,#070912 100%); }
+  .mitto-aurora::after { content:""; position:absolute; inset:0; opacity:.16; background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px); background-size:72px 72px; mask-image:linear-gradient(to bottom,black,transparent 85%); }
+  .mitto-glass { border:1px solid rgba(255,255,255,.11); border-radius:1.5rem; background:linear-gradient(145deg,rgba(255,255,255,.09),rgba(255,255,255,.035)); box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 28px 80px rgba(0,0,0,.28); backdrop-filter:blur(24px); }
+  .mitto-button { border-radius:999px; background:#f8fafc; color:#080b13; padding:.68rem 1rem; font-size:.875rem; font-weight:700; transition:transform .2s ease,box-shadow .2s ease; box-shadow:0 10px 30px rgba(255,255,255,.08); }
+  .mitto-button:hover { transform:translateY(-1px); box-shadow:0 14px 36px rgba(34,211,238,.16); }
+  .mitto-button-secondary { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border:1px solid rgba(255,255,255,.13); border-radius:999px; background:rgba(255,255,255,.055); padding:.68rem 1rem; font-size:.875rem; font-weight:600; color:#e2e8f0; backdrop-filter:blur(18px); }
+  .mitto-eyebrow { font-size:.7rem; font-weight:700; letter-spacing:.24em; text-transform:uppercase; color:#67e8f9; }
+  .mitto-career [data-slot="card"] { border-color:rgba(255,255,255,.1); background:rgba(255,255,255,.055); color:#f8fafc; box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 24px 70px rgba(0,0,0,.24); backdrop-filter:blur(22px); }
+  .mitto-career [data-slot="input"], .mitto-career textarea, .mitto-career select { border-color:rgba(255,255,255,.12)!important; background:rgba(4,7,14,.54)!important; color:#f8fafc!important; }
+  .mitto-career label { color:#cbd5e1; }
+
+  /* Mitto Career uses a high-contrast light workspace for long-form reading. */
+  .mitto-career { background:#f5f7fb; color-scheme:light; color:#0f172a!important; --background:#f5f7fb; --foreground:#0f172a; --card:rgba(255,255,255,.88); --card-foreground:#0f172a; }
+  .mitto-aurora { background:radial-gradient(circle at 12% 8%,rgba(34,211,238,.15),transparent 30rem),radial-gradient(circle at 82% 22%,rgba(139,92,246,.12),transparent 34rem),linear-gradient(145deg,#f8fafc 0%,#eef4ff 50%,#f8fafc 100%); }
+  .mitto-aurora::after { opacity:.32; background-image:linear-gradient(rgba(15,23,42,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,.045) 1px,transparent 1px); }
+  .mitto-glass { border-color:rgba(15,23,42,.1); background:rgba(255,255,255,.82); box-shadow:0 22px 60px rgba(30,64,175,.08); }
+  .mitto-button { background:#0f172a; color:#fff; box-shadow:0 10px 30px rgba(15,23,42,.16); }
+  .mitto-button-secondary { border-color:rgba(15,23,42,.14); background:#fff; color:#0f172a; }
+  .mitto-eyebrow { color:#0e7490; }
+  .mitto-career .text-white, .mitto-career.text-white { color:#0f172a!important; }
+  .mitto-career .text-slate-300, .mitto-career .text-slate-400, .mitto-career .text-slate-500, .mitto-career .text-slate-600 { color:#475569!important; }
+  .mitto-career .text-cyan-200, .mitto-career .text-cyan-50 { color:#0e7490!important; }
+  .mitto-career .bg-black\/20, .mitto-career .bg-black\/25 { background:rgba(255,255,255,.72)!important; }
+  .mitto-career header { background:rgba(255,255,255,.88)!important; border-color:rgba(15,23,42,.08)!important; }
+  .mitto-career [data-slot="input"], .mitto-career input, .mitto-career textarea, .mitto-career select { border-color:rgba(15,23,42,.16)!important; background:#fff!important; color:#0f172a!important; }
+  .mitto-career label { color:#334155; }
+}
+
+@keyframes mitto-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.mitto-float { animation:mitto-float 6s ease-in-out infinite; }

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>StampMyVisa UAE saved catalogue fixture</title>
+    <script id="supplier-catalogue-data" type="application/vnd.vvisa.supplier-catalogue+json">
+      {
+        "supplier": {
+          "id": "stampmyvisa",
+          "name": "StampMyVisa",
+          "source": "saved-html-fixture"
+        },
+        "capturedAt": "2026-06-26T00:00:00.000Z",
+        "products": [
+          {
+            "supplierProductId": "smv-fixture-uae-30",
+            "sourceReference": "fixture:create-visa:uae-tourist-30",
+            "destinationCountry": "United Arab Emirates",
+            "destinationIsoCode": "AE",
+            "travelPurpose": "Tourism",
+            "visaType": "E-Visa",
+            "title": "Dubai Tourist Visa - 30 Days",
+            "visaCategory": "Tourist",
+            "entryType": "single",
+            "validityDays": 60,
+            "stayDays": 30,
+            "processingTime": "3-5 working days",
+            "processingTimeMinDays": 3,
+            "processingTimeMaxDays": 5,
+            "currency": "INR",
+            "netPrice": 6400,
+            "visaFeeMinor": 290000,
+            "supplierServiceFeeMinor": 296610,
+            "gstMinor": 53390,
+            "finalDisplayedTotalMinor": 640000,
+            "documents": [
+              { "name": "Passport front page", "status": "MANDATORY", "uploadRequired": true },
+              { "name": "Recent photograph", "status": "MANDATORY", "uploadRequired": true },
+              { "name": "Bank statement", "status": "CONDITIONAL", "condition": "Required when asked by immigration.", "uploadRequired": true },
+              { "name": "Employment proof", "status": "OPTIONAL", "uploadRequired": true },
+              { "name": "Estimated processing time is not guaranteed", "status": "INFORMATIONAL", "uploadRequired": false }
+            ],
+            "classificationEvidence": [
+              { "matchedText": "Electronic Dubai tourist visa", "sourceSection": "Visa type", "confidence": "HIGH" }
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>Saved StampMyVisa UAE fixture.</body>
+</html>

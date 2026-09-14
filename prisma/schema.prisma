@@ -1,0 +1,1471 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CareerConnection {
+  id                String                   @id @default(cuid())
+  userId            String
+  provider          CareerConnectionProvider
+  status            CareerConnectionStatus   @default(idle)
+  connected         Boolean                  @default(false)
+  meta              Json?
+  scopes            String[]
+  lastSyncAt        DateTime?
+  tokenExpiresAt    DateTime?
+  providerAccountId String?
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, provider])
+}
+
+model User {
+  id               String             @id @default(cuid())
+  name             String?
+  email            String             @unique
+  phone            String?
+  passwordHash     String
+  isActive         Boolean            @default(true)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  designation      String?
+  firstName        String?
+  gender           String?
+  lastName         String?
+  aadhaarNumber    String?
+  aadhaarName      String?
+  aadhaarAddress   String?
+  adminUser        AdminUser?
+  memberships      AgencyMembership[]
+  auditLogs        AuditLog[]
+  careerCandidates CareerCandidate[]
+  connections      CareerConnection[]
+  sessions         Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Agency {
+  id                     String                      @id @default(cuid())
+  name                   String
+  email                  String                      @unique
+  phone                  String?
+  whatsapp               String?
+  country                String                      @default("India")
+  status                 AgencyStatus                @default(DRAFT)
+  gstNumber              String?
+  panCard                String?
+  addressLine1           String?
+  addressLine2           String?
+  city                   String?
+  state                  String?
+  zipCode                String?
+  partnerTier            String?
+  pricingPlan            String?
+  accountManager         String?
+  zohoRecordId           String?
+  syncStatus             IntegrationEventStatus?
+  lastSyncedAt           DateTime?
+  syncErrorCode          String?
+  syncAttemptCount       Int                         @default(0)
+  createdAt              DateTime                    @default(now())
+  updatedAt              DateTime                    @updatedAt
+  billingType            String?                     @default("NON_GST")
+  logoUrl                String?
+  vvisaUid               String?                     @unique
+  lastLoginAt            DateTime?
+  lastActiveAt           DateTime?
+  loginCount             Int                         @default(0)
+  lastActiveCountry      String?
+  lastActivePage         String?
+  lastSearchedCountry    String?
+  lastViewedProduct      String?
+  totalVisasSubmitted    Int                         @default(0)
+  totalRevenueMinor      BigInt                      @default(0)
+  disabledVisaCategories Json?
+  impersonationSessions  AdminImpersonationSession[]
+  memberships            AgencyMembership[]
+  verification           AgencyVerification?
+  documents              ApplicationDocument[]
+  auditLogs              AuditLog[]
+  crmMappings            CrmEntityMapping[]
+  integrationEvents      IntegrationEvent[]
+  adminNotes             PartnerAdminNote[]
+  priceOverrides         PartnerPriceOverride[]
+  paymentOrders          PaymentOrder[]
+  applications           VisaApplication[]
+  visaInterests          VisaInterest[]
+  wallets                Wallet[]
+}
+
+model PartnerAdminNote {
+  id          String   @id @default(cuid())
+  agencyId    String
+  authorUid   String
+  authorEmail String
+  note        String
+  createdAt   DateTime @default(now())
+  agency      Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+
+  @@index([agencyId, createdAt])
+}
+
+model DashboardSection {
+  id              String                    @id @default(cuid())
+  key             String                    @unique
+  name            String
+  type            DashboardSectionType
+  status          AdminContentStatus        @default(draft)
+  targetAudience  Json
+  displayOrder    Int
+  isVisible       Boolean                   @default(true)
+  startsAt        DateTime?
+  endsAt          DateTime?
+  updatedByUserId String?
+  lastPublishedAt DateTime?
+  config          Json
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+  audienceRules   DashboardAudienceRule[]
+  versions        DashboardSectionVersion[]
+
+  @@index([status, displayOrder])
+  @@index([type, isVisible])
+}
+
+model DashboardSectionVersion {
+  id                 String             @id @default(cuid())
+  dashboardSectionId String
+  version            Int
+  status             AdminContentStatus @default(draft)
+  snapshot           Json
+  createdByUserId    String?
+  publishedAt        DateTime?
+  createdAt          DateTime           @default(now())
+  dashboardSection   DashboardSection   @relation(fields: [dashboardSectionId], references: [id], onDelete: Cascade)
+
+  @@unique([dashboardSectionId, version])
+}
+
+model DashboardAudienceRule {
+  id                 String           @id @default(cuid())
+  dashboardSectionId String
+  ruleType           String
+  operator           String
+  value              Json
+  createdAt          DateTime         @default(now())
+  dashboardSection   DashboardSection @relation(fields: [dashboardSectionId], references: [id], onDelete: Cascade)
+
+  @@index([dashboardSectionId, ruleType])
+}
+
+model AgencyMembership {
+  id        String         @id @default(cuid())
+  userId    String
+  agencyId  String
+  role      MembershipRole
+  isDefault Boolean        @default(false)
+  createdAt DateTime       @default(now())
+  agency    Agency         @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, agencyId])
+  @@index([agencyId, role])
+}
+
+model AgencyVerification {
+  id                      String       @id @default(cuid())
+  agencyId                String       @unique
+  status                  AgencyStatus @default(DOCUMENTS_PENDING)
+  digioRequestId          String?
+  digioVerificationStatus String?
+  submittedAt             DateTime?
+  reviewedAt              DateTime?
+  reviewedByUserId        String?
+  rejectionReason         String?
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+  agency                  Agency       @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+}
+
+model VisaProduct {
+  id                            String                     @id @default(cuid())
+  countryId                     String?
+  destination                   String
+  destinationCode               String?
+  name                          String
+  publicTitle                   String?
+  internalCode                  String?                    @unique
+  category                      String
+  subcategory                   String?
+  entry                         String
+  entryType                     String?
+  visaKind                      String?
+  purpose                       String?
+  nationalityEligibility        Json?
+  validity                      String
+  visaValidityDays              Int?
+  duration                      String
+  maximumStayDays               Int?
+  processingTime                String
+  expressProcessingTime         String?
+  processingTimeMinDays         Int?
+  processingTimeMaxDays         Int?
+  processingTimeLabel           String?
+  currency                      String                     @default("INR")
+  amountMinor                   Int
+  documents                     Json
+  badges                        Json?
+  shortDescription              String?
+  detailedDescription           String?
+  importantNotes                String?
+  eligibility                   String?
+  refundPolicy                  String?
+  cancellationPolicy            String?
+  isFeatured                    Boolean                    @default(false)
+  displayOrder                  Int                        @default(0)
+  minimumPassportValidityMonths Int?
+  passportValidityRuleCode      String?
+  cutoffTime                    String?
+  pricingVersion                String
+  validFrom                     DateTime                   @default(now())
+  validUntil                    DateTime?
+  isActive                      Boolean                    @default(true)
+  createdAt                     DateTime                   @default(now())
+  requirements                  DocumentRequirement[]
+  partnerPriceOverrides         PartnerPriceOverride[]
+  stickerRoutes                 StickerVisaRoute[]
+  importRecords                 SupplierImportRecord[]
+  supplierReferences            SupplierProductReference[]
+  applications                  VisaApplication[]
+  courierRules                  VisaCourierRule[]
+  documentRules                 VisaDocumentRequirement[]
+  passportRules                 VisaPassportValidityRule[]
+  prices                        VisaPrice[]
+  processingOptions             VisaProcessingOption[]
+  country                       Country?                   @relation(fields: [countryId], references: [id])
+  versions                      VisaProductVersion[]
+
+  @@index([destination, isActive])
+}
+
+model AdminUser {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  role      AdminRole @default(support_admin)
+  isActive  Boolean   @default(true)
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AdminImpersonationSession {
+  id              String                 @id @default(cuid())
+  actorAdminUid   String
+  actorAdminEmail String
+  subjectAgencyId String
+  mode            AdminImpersonationMode
+  reason          String
+  startedAt       DateTime               @default(now())
+  lastActivityAt  DateTime               @default(now())
+  expiresAt       DateTime
+  endedAt         DateTime?
+  status          AdminSessionStatus     @default(active)
+  ipAddress       String?
+  userAgent       String?
+  subjectAgency   Agency                 @relation(fields: [subjectAgencyId], references: [id], onDelete: Cascade)
+
+  @@index([actorAdminUid, status])
+  @@index([subjectAgencyId, status])
+}
+
+model PartnerPriceOverride {
+  id                    String                     @id @default(cuid())
+  partnerUid            String
+  productId             String?
+  countryCode           String?
+  serviceCode           String?
+  overrideType          String
+  valueMinor            Int
+  currency              String                     @default("INR")
+  startsAt              DateTime?
+  endsAt                DateTime?
+  status                PartnerPriceOverrideStatus @default(draft)
+  reason                String
+  internalNotes         String?
+  createdByAdminUserId  String
+  approvedByAdminUserId String?
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+  partner               Agency                     @relation(fields: [partnerUid], references: [id], onDelete: Cascade)
+  product               VisaProduct?               @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([partnerUid, status])
+  @@index([productId, status])
+}
+
+model Country {
+  id           String        @id @default(cuid())
+  code         String        @unique
+  name         String
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  visaProducts VisaProduct[]
+}
+
+model VisaProductVersion {
+  id            String                @id @default(cuid())
+  visaProductId String
+  version       Int
+  snapshot      Json
+  reviewStatus  CatalogueReviewStatus @default(REVIEW_REQUIRED)
+  approvedBy    String?
+  approvedAt    DateTime?
+  createdAt     DateTime              @default(now())
+  visaProduct   VisaProduct           @relation(fields: [visaProductId], references: [id], onDelete: Cascade)
+
+  @@unique([visaProductId, version])
+}
+
+model VisaDocumentRequirement {
+  id                       String                @id @default(cuid())
+  visaProductId            String
+  documentCode             String
+  documentName             String
+  description              String?
+  isMandatory              Boolean               @default(true)
+  isOptional               Boolean               @default(false)
+  appliesToAdult           Boolean               @default(true)
+  appliesToMinor           Boolean               @default(true)
+  appliesToStickerVisa     Boolean               @default(false)
+  appliesToEVisa           Boolean               @default(false)
+  uploadRequired           Boolean               @default(true)
+  physicalOriginalRequired Boolean               @default(false)
+  courierRequired          Boolean               @default(false)
+  sampleAvailable          Boolean               @default(false)
+  requirementStatus        CatalogueReviewStatus @default(REVIEW_REQUIRED)
+  notes                    String?
+  requirementType          String                @default("required")
+  acceptedFormats          Json?
+  maximumFileSizeBytes     Int?
+  sampleDocumentUrl        String?
+  templateDocumentUrl      String?
+  translationRequired      Boolean               @default(false)
+  notarisationRequired     Boolean               @default(false)
+  apostilleRequired        Boolean               @default(false)
+  attestationRequired      Boolean               @default(false)
+  displayOrder             Int                   @default(0)
+  internalVerificationNote String?
+  visaProduct              VisaProduct           @relation(fields: [visaProductId], references: [id], onDelete: Cascade)
+}
+
+model VisaProcessingOption {
+  id            String      @id @default(cuid())
+  visaProductId String
+  label         String
+  minDays       Int?
+  maxDays       Int?
+  isActive      Boolean     @default(true)
+  visaProduct   VisaProduct @relation(fields: [visaProductId], references: [id], onDelete: Cascade)
+}
+
+model VisaPrice {
+  id                   String          @id @default(cuid())
+  visaProductId        String
+  currency             String          @default("INR")
+  visaFeeMinor         Int             @default(0)
+  vvisaServiceFeeMinor Int             @default(0)
+  courierFeeMinor      Int             @default(0)
+  insuranceFeeMinor    Int             @default(0)
+  convenienceFeeMinor  Int             @default(0)
+  otherFeeMinor        Int             @default(0)
+  discountMinor        Int             @default(0)
+  gstMinor             Int             @default(0)
+  totalAmountMinor     Int
+  adultPriceMinor      Int?
+  childPriceMinor      Int?
+  infantPriceMinor     Int?
+  supplierCostMinor    Int?
+  markupMinor          Int?
+  suggestedB2cMinor    Int?
+  entryType            String?
+  processingType       String?
+  travellerType        String?
+  isActive             Boolean         @default(true)
+  validFrom            DateTime        @default(now())
+  validUntil           DateTime?
+  visaProduct          VisaProduct     @relation(fields: [visaProductId], references: [id], onDelete: Cascade)
+  lines                VisaPriceLine[]
+}
+
+model VisaPriceLine {
+  id          String    @id @default(cuid())
+  visaPriceId String
+  type        String
+  label       String
+  amountMinor Int
+  taxable     Boolean   @default(false)
+  visaPrice   VisaPrice @relation(fields: [visaPriceId], references: [id], onDelete: Cascade)
+}
+
+model ApplicationPricingSnapshot {
+  id               String                   @id @default(cuid())
+  applicationId    String                   @unique
+  currency         String                   @default("INR")
+  totalAmountMinor Int
+  snapshot         Json
+  createdAt        DateTime                 @default(now())
+  lines            ApplicationPricingLine[]
+  application      VisaApplication          @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model ApplicationPricingLine {
+  id          String                     @id @default(cuid())
+  snapshotId  String
+  type        String
+  label       String
+  amountMinor Int
+  taxable     Boolean                    @default(false)
+  snapshot    ApplicationPricingSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+}
+
+model StickerVisaRoute {
+  id                        String      @id @default(cuid())
+  visaProductId             String
+  originCityCode            String
+  originCityLabel           String
+  processingCentreCity      String
+  processingCentreAddress   String?
+  courierFeeMinor           Int         @default(0)
+  serviceFeeAdjustmentMinor Int         @default(0)
+  estimatedOutboundDays     Int?
+  estimatedReturnDays       Int?
+  deliveryInstructions      String?
+  isActive                  Boolean     @default(true)
+  visaProduct               VisaProduct @relation(fields: [visaProductId], references: [id], onDelete: Cascade)
+}
+
+model VisaCourierRule {
+  id                          String      @id @default(cuid())
+  visaProductId               String
+  physicalSubmissionRequired  Boolean     @default(false)
+  courierRequired             Boolean     @default(false)
+  courierDirection            String
+  submissionCentreName        String?
+  submissionAddress           String?
+  submissionCity              String?
+  returnCourierAvailable      Boolean     @default(false)
+  returnCourierFeeMinor       Int?
+  outboundCourierFeeMinor     Int?
+  courierInstructions         String?
+  passportCollectionAvailable Boolean     @default(false)
+  passportCollectionCities    Json?
+  visaProduct                 VisaProduct @relation(fields: [visaProductId], references: [id], onDelete: Cascade)
+}
+
+model VisaPassportValidityRule {
+  id                            String      @id @default(cuid())
+  visaProductId                 String
+  minimumPassportValidityMonths Int
+  passportValidityRule          String
+  blocksWhenViolated            Boolean     @default(false)
+  manualReviewWhenUnknown       Boolean     @default(true)
+  visaProduct                   VisaProduct @relation(fields: [visaProductId], references: [id], onDelete: Cascade)
+}
+
+model SupplierProductReference {
+  id                  String                @id @default(cuid())
+  visaProductId       String
+  supplier            String
+  supplierProductId   String
+  sourceCapturedAt    DateTime
+  sourceLastCheckedAt DateTime
+  sourceReference     String?
+  normalizedHash      String
+  reviewStatus        CatalogueReviewStatus @default(REVIEW_REQUIRED)
+  approvedBy          String?
+  approvedAt          DateTime?
+  visaProduct         VisaProduct           @relation(fields: [visaProductId], references: [id], onDelete: Cascade)
+
+  @@unique([supplier, supplierProductId])
+}
+
+model SupplierImportBatch {
+  id         String                    @id @default(cuid())
+  supplier   String
+  mode       String
+  sourceFile String?
+  status     CatalogueReviewStatus     @default(EXTRACTED)
+  createdAt  DateTime                  @default(now())
+  decisions  CatalogueReviewDecision[]
+  records    SupplierImportRecord[]
+}
+
+model SupplierImportRecord {
+  id                String                @id @default(cuid())
+  batchId           String
+  visaProductId     String?
+  supplier          String
+  supplierProductId String
+  normalizedHash    String
+  changeType        CatalogueChangeType
+  reviewStatus      CatalogueReviewStatus @default(REVIEW_REQUIRED)
+  normalizedData    Json
+  createdAt         DateTime              @default(now())
+  batch             SupplierImportBatch   @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  visaProduct       VisaProduct?          @relation(fields: [visaProductId], references: [id])
+}
+
+model CatalogueReviewDecision {
+  id        String                @id @default(cuid())
+  batchId   String
+  recordId  String?
+  decision  CatalogueReviewStatus
+  reason    String?
+  decidedBy String?
+  decidedAt DateTime              @default(now())
+  batch     SupplierImportBatch   @relation(fields: [batchId], references: [id], onDelete: Cascade)
+}
+
+model VisaApplication {
+  id                    String                      @id @default(cuid())
+  agencyId              String
+  visaProductId         String
+  internalId            String?
+  destination           String
+  visaType              String
+  status                ApplicationStatus           @default(DRAFT)
+  pricingSnapshot       Json
+  totalAmountMinor      Int
+  currency              String                      @default("INR")
+  version               Int                         @default(1)
+  zohoRecordId          String?
+  syncStatus            IntegrationEventStatus?
+  lastSyncedAt          DateTime?
+  syncErrorCode         String?
+  syncAttemptCount      Int                         @default(0)
+  createdByAdminUid     String?
+  submittedByAdminUid   String?
+  createdOnBehalfOfUid  String?
+  adminSupportSessionId String?
+  adminSubmissionReason String?
+  submittedAt           DateTime?
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
+  applicants            Applicant[]
+  documents             ApplicationDocument[]
+  pricingDetail         ApplicationPricingSnapshot?
+  statusEvents          ApplicationStatusEvent[]
+  paymentOrders         PaymentOrder[]
+  agency                Agency                      @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  visaProduct           VisaProduct                 @relation(fields: [visaProductId], references: [id])
+  visaInterests         VisaInterest[]
+  ledgerEntries         WalletLedgerEntry[]
+
+  @@index([agencyId, status])
+}
+
+model ApplicationStatusConfig {
+  id                   String                           @id @default(cuid())
+  code                 ApplicationStatus                @unique
+  adminLabel           String
+  partnerLabel         String
+  partnerDescription   String?
+  internalDescription  String?
+  icon                 String?
+  colorToken           String
+  displayOrder         Int
+  progressPercent      Int
+  isPartnerVisible     Boolean                          @default(true)
+  isAdminVisible       Boolean                          @default(true)
+  isTerminal           Boolean                          @default(false)
+  isSuccess            Boolean                          @default(false)
+  isFailure            Boolean                          @default(false)
+  isActive             Boolean                          @default(true)
+  paymentStatusEffect  String?
+  documentStatusEffect String?
+  createdAt            DateTime                         @default(now())
+  updatedAt            DateTime                         @updatedAt
+  slaRules             ApplicationSlaRule[]
+  versions             ApplicationStatusConfigVersion[]
+  mappings             ApplicationStatusMapping[]
+  transitionsFrom      ApplicationStatusTransition[]    @relation("TransitionFrom")
+  transitionsTo        ApplicationStatusTransition[]    @relation("TransitionTo")
+}
+
+model ApplicationStatusConfigVersion {
+  id              String                  @id @default(cuid())
+  statusConfigId  String
+  version         Int
+  status          AdminContentStatus      @default(draft)
+  snapshot        Json
+  createdByUserId String?
+  publishedAt     DateTime?
+  createdAt       DateTime                @default(now())
+  statusConfig    ApplicationStatusConfig @relation(fields: [statusConfigId], references: [id], onDelete: Cascade)
+
+  @@unique([statusConfigId, version])
+  @@index([status, createdAt])
+}
+
+model ApplicationMilestone {
+  id               String                     @id @default(cuid())
+  key              String                     @unique
+  label            String
+  description      String?
+  displayOrder     Int
+  progressPercent  Int
+  isPartnerVisible Boolean                    @default(true)
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+  mappings         ApplicationStatusMapping[]
+}
+
+model ApplicationStatusTransition {
+  id                   String                  @id @default(cuid())
+  fromStatusCode       ApplicationStatus
+  toStatusCode         ApplicationStatus
+  requiredRole         String?
+  requiresPayment      Boolean                 @default(false)
+  requiresDocuments    Boolean                 @default(false)
+  requiresNotes        Boolean                 @default(false)
+  partnerNotification  Boolean                 @default(false)
+  internalNotification Boolean                 @default(false)
+  crmSync              Boolean                 @default(false)
+  isActive             Boolean                 @default(true)
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  fromStatus           ApplicationStatusConfig @relation("TransitionFrom", fields: [fromStatusCode], references: [code], onDelete: Cascade)
+  toStatus             ApplicationStatusConfig @relation("TransitionTo", fields: [toStatusCode], references: [code], onDelete: Cascade)
+
+  @@unique([fromStatusCode, toStatusCode])
+}
+
+model ApplicationStatusMapping {
+  id              String                  @id @default(cuid())
+  statusCode      ApplicationStatus
+  milestoneId     String?
+  zohoModule      String?
+  zohoField       String?
+  zohoStatusValue String?
+  supplierStatus  String?
+  syncDirection   String                  @default("PORTAL_SOURCE_OF_TRUTH")
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  milestone       ApplicationMilestone?   @relation(fields: [milestoneId], references: [id])
+  status          ApplicationStatusConfig @relation(fields: [statusCode], references: [code], onDelete: Cascade)
+
+  @@index([statusCode])
+}
+
+model ApplicationSlaRule {
+  id                     String                  @id @default(cuid())
+  statusCode             ApplicationStatus
+  countryCode            String?
+  visaProductId          String?
+  expectedDurationHours  Int
+  warningAfterHours      Int
+  overdueAfterHours      Int
+  escalationRecipient    String?
+  partnerNotification    Boolean                 @default(false)
+  operationsNotification Boolean                 @default(true)
+  isActive               Boolean                 @default(true)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  status                 ApplicationStatusConfig @relation(fields: [statusCode], references: [code], onDelete: Cascade)
+
+  @@index([statusCode, countryCode])
+}
+
+model Applicant {
+  id               String                @id @default(cuid())
+  applicationId    String
+  firstName        String
+  lastName         String
+  passportNumber   String
+  nationality      String                @default("Indian")
+  sex              String?
+  dateOfBirth      DateTime?
+  placeOfBirth     String?
+  placeOfIssue     String?
+  maritalStatus    String?
+  dateOfIssue      DateTime?
+  dateOfExpiry     DateTime?
+  isChild          Boolean               @default(false)
+  verifiedByUserId String?
+  verifiedAt       DateTime?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  application      VisaApplication       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  documents        ApplicationDocument[]
+}
+
+model DocumentRequirement {
+  id            String      @id @default(cuid())
+  visaProductId String
+  documentType  String
+  isRequired    Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  visaProduct   VisaProduct @relation(fields: [visaProductId], references: [id], onDelete: Cascade)
+}
+
+model ApplicationDocument {
+  id             String                  @id @default(cuid())
+  agencyId       String
+  applicationId  String?
+  applicantId    String?
+  documentType   String
+  fileName       String
+  mimeType       String
+  sizeBytes      Int
+  storageKey     String
+  status         DocumentStatus          @default(UPLOADED)
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  agency         Agency                  @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  applicant      Applicant?              @relation(fields: [applicantId], references: [id])
+  application    VisaApplication?        @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  crmAttachments DocumentCrmAttachment[]
+  ocrExtractions OcrExtraction[]
+
+  @@index([agencyId, applicationId])
+}
+
+model OcrExtraction {
+  id                   String              @id @default(cuid())
+  documentId           String
+  provider             IntegrationProvider @default(DIGIO)
+  providerRequestId    String?
+  rawExtraction        Json
+  normalizedExtraction Json
+  confidence           String?
+  userCorrections      Json?
+  verifiedByUserId     String?
+  verifiedAt           DateTime?
+  createdAt            DateTime            @default(now())
+  document             ApplicationDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+}
+
+model ApplicationStatusEvent {
+  id             String             @id @default(cuid())
+  applicationId  String
+  previousStatus ApplicationStatus?
+  nextStatus     ApplicationStatus
+  actorUserId    String?
+  reason         String?
+  createdAt      DateTime           @default(now())
+  application    VisaApplication    @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model Wallet {
+  id        String              @id @default(cuid())
+  agencyId  String
+  currency  String              @default("INR")
+  createdAt DateTime            @default(now())
+  agency    Agency              @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  entries   WalletLedgerEntry[]
+
+  @@unique([agencyId, currency])
+}
+
+model WalletLedgerEntry {
+  id             String           @id @default(cuid())
+  walletId       String
+  applicationId  String?
+  paymentOrderId String?
+  type           WalletLedgerType
+  amountMinor    Int
+  currency       String           @default("INR")
+  idempotencyKey String           @unique
+  description    String?
+  createdAt      DateTime         @default(now())
+  application    VisaApplication? @relation(fields: [applicationId], references: [id])
+  paymentOrder   PaymentOrder?    @relation(fields: [paymentOrderId], references: [id])
+  wallet         Wallet           @relation(fields: [walletId], references: [id], onDelete: Cascade)
+}
+
+model PaymentOrder {
+  id                 String               @id @default(cuid())
+  agencyId           String
+  applicationId      String?
+  amountMinor        Int
+  currency           String               @default("INR")
+  status             PaymentOrderStatus   @default(CREATED)
+  provider           IntegrationProvider  @default(ZOHO_PAYMENTS)
+  providerOrderId    String?
+  providerSessionUrl String?
+  idempotencyKey     String               @unique
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  agency             Agency               @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  application        VisaApplication?     @relation(fields: [applicationId], references: [id])
+  transactions       PaymentTransaction[]
+  ledgerEntries      WalletLedgerEntry[]
+}
+
+model PaymentTransaction {
+  id                String              @id @default(cuid())
+  paymentOrderId    String
+  provider          IntegrationProvider @default(ZOHO_PAYMENTS)
+  providerPaymentId String?
+  webhookEventId    String?             @unique
+  amountMinor       Int
+  currency          String              @default("INR")
+  status            String
+  rawWebhook        Json?
+  createdAt         DateTime            @default(now())
+  paymentOrder      PaymentOrder        @relation(fields: [paymentOrderId], references: [id], onDelete: Cascade)
+}
+
+model IntegrationEvent {
+  id                String                 @id @default(cuid())
+  agencyId          String
+  provider          IntegrationProvider
+  eventType         String
+  idempotencyKey    String                 @unique
+  entityType        String?
+  entityId          String?
+  aggregateId       String?
+  correlationId     String?
+  payloadVersion    Int                    @default(1)
+  payloadHash       String?
+  payload           Json
+  status            IntegrationEventStatus @default(PENDING)
+  attemptCount      Int                    @default(0)
+  nextAttemptAt     DateTime?
+  lockedAt          DateTime?
+  lockedBy          String?
+  lastErrorCode     String?
+  lastErrorCategory String?
+  providerRecordId  String?
+  completedAt       DateTime?
+  externalRecordId  String?
+  syncErrorCode     String?
+  syncAttemptCount  Int                    @default(0)
+  lastAttemptedAt   DateTime?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  agency            Agency                 @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextAttemptAt])
+  @@index([entityType, entityId])
+  @@index([aggregateId])
+}
+
+model CrmEntityMapping {
+  id                        String                 @id @default(cuid())
+  agencyId                  String
+  portalEntityType          String
+  portalEntityId            String
+  zohoModule                String
+  zohoRecordId              String
+  syncStatus                IntegrationEventStatus @default(PENDING)
+  lastSyncedAt              DateTime?
+  lastAttemptAt             DateTime?
+  lastSuccessfulPayloadHash String?
+  lastProviderResponseCode  String?
+  retryCount                Int                    @default(0)
+  correlationId             String?
+  createdAt                 DateTime               @default(now())
+  updatedAt                 DateTime               @updatedAt
+  agency                    Agency                 @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+
+  @@unique([portalEntityType, portalEntityId, zohoModule])
+  @@index([zohoModule, zohoRecordId])
+}
+
+model VisaInterest {
+  id                 String                  @id @default(cuid())
+  agencyId           String
+  userId             String?
+  countryCode        String?
+  countryName        String
+  visaTypeId         String?
+  visaTypeName       String?
+  category           String?
+  citizenship        String?
+  travelDate         DateTime?
+  numberOfTravellers Int?
+  applicantName      String?
+  applicantMobile    String?
+  applicantEmail     String?
+  sourceRoute        String?
+  searchSessionId    String
+  status             VisaInterestStatus      @default(SEARCHED)
+  paymentOrderId     String?
+  applicationId      String?
+  firstViewedAt      DateTime                @default(now())
+  lastActivityAt     DateTime                @default(now())
+  leadEligibleAt     DateTime?
+  crmLeadId          String?
+  crmSyncStatus      IntegrationEventStatus?
+  convertedAt        DateTime?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  agency             Agency                  @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  application        VisaApplication?        @relation(fields: [applicationId], references: [id])
+
+  @@index([agencyId, status])
+  @@index([agencyId, searchSessionId, countryName, visaTypeId])
+}
+
+model DocumentCrmAttachment {
+  id                String                 @id @default(cuid())
+  portalDocumentId  String
+  crmModule         String
+  crmRecordId       String
+  crmAttachmentId   String?
+  checksum          String
+  syncStatus        IntegrationEventStatus @default(PENDING)
+  lastSyncAttemptAt DateTime?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  document          ApplicationDocument    @relation(fields: [portalDocumentId], references: [id], onDelete: Cascade)
+
+  @@unique([portalDocumentId, crmModule, crmRecordId, checksum])
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  agencyId     String?
+  actorUserId  String?
+  action       String
+  resourceType String
+  resourceId   String?
+  metadata     Json?
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+  actorUser    User?    @relation(fields: [actorUserId], references: [id])
+  agency       Agency?  @relation(fields: [agencyId], references: [id])
+
+  @@index([agencyId, resourceType, resourceId])
+}
+
+model CareerCandidate {
+  id                       String                    @id @default(cuid())
+  userId                   String
+  status                   CareerCandidateStatus     @default(onboarding_started)
+  fullName                 String
+  email                    String
+  phone                    String?
+  currentCountry           String?
+  nationality              String?
+  currentTitle             String?
+  experienceYears          Int?
+  assignedConsultantName   String?
+  assignedConsultantEmail  String?
+  profileCompletionPercent Int                       @default(0)
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  activationHandoffs       CareerActivationHandoff[]
+  user                     User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentIntents           CareerPaymentIntent[]
+  resumes                  CareerResume[]
+  preferences              CareerSearchPreference?
+  serviceRequests          CareerServiceRequest[]
+  statusEvents             CareerStatusEvent[]
+  subscriptions            CareerSubscription[]
+
+  @@index([userId, status])
+  @@index([email])
+}
+
+model CareerServicePackage {
+  id               String                   @id @default(cuid())
+  code             CareerServicePackageCode @unique
+  name             String
+  description      String
+  status           CareerPackageStatus      @default(draft)
+  displayOrder     Int                      @default(0)
+  features         Json
+  quotas           Json
+  supportedRegions Json
+  isPublic         Boolean                  @default(false)
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  prices           CareerPackagePrice[]
+  serviceRequests  CareerServiceRequest[]
+
+  @@index([status, displayOrder])
+  @@index([isPublic, status])
+}
+
+model CareerPackagePrice {
+  id          String               @id @default(cuid())
+  packageId   String
+  currency    String
+  amountMinor Int
+  billingMode String               @default("one_time")
+  isActive    Boolean              @default(true)
+  validFrom   DateTime             @default(now())
+  validUntil  DateTime?
+  createdAt   DateTime             @default(now())
+  package     CareerServicePackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@index([packageId, currency, isActive])
+}
+
+model CareerSearchPreference {
+  id                  String          @id @default(cuid())
+  candidateId         String          @unique
+  targetRegion        String?
+  targetCountries     Json
+  targetRoles         Json
+  excludedRoles       Json
+  workModes           Json
+  salaryExpectation   String?
+  sponsorshipRequired Boolean?
+  relocationRequired  Boolean?
+  minimumFitScore     Float           @default(4.0)
+  portalPreferences   Json
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  candidate           CareerCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+}
+
+model CareerResume {
+  id          String             @id @default(cuid())
+  candidateId String
+  version     Int
+  fileName    String
+  mimeType    String
+  sizeBytes   Int
+  storageKey  String
+  checksum    String
+  status      CareerResumeStatus @default(uploaded)
+  createdAt   DateTime           @default(now())
+  candidate   CareerCandidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, version])
+  @@index([candidateId, status])
+}
+
+model CareerServiceRequest {
+  id                 String                    @id @default(cuid())
+  candidateId        String
+  packageCode        CareerServicePackageCode
+  packageId          String?
+  status             String                    @default("draft")
+  paymentStatus      String                    @default("not_started")
+  activationStatus   String                    @default("not_started")
+  dashboardStatus    String                    @default("Payment pending")
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  activationHandoffs CareerActivationHandoff[]
+  paymentIntents     CareerPaymentIntent[]
+  pricingSnapshots   CareerPricingSnapshot[]
+  candidate          CareerCandidate           @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  package            CareerServicePackage?     @relation(fields: [packageId], references: [id])
+  subscriptions      CareerSubscription[]
+
+  @@index([candidateId, status])
+  @@index([packageId])
+  @@index([paymentStatus, activationStatus])
+}
+
+model CareerStatusEvent {
+  id          String                @id @default(cuid())
+  candidateId String
+  status      CareerCandidateStatus
+  label       String
+  detail      String?
+  createdAt   DateTime              @default(now())
+  candidate   CareerCandidate       @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId, createdAt])
+}
+
+model CareerPricingSnapshot {
+  id               String                   @id @default(cuid())
+  serviceRequestId String
+  packageCode      CareerServicePackageCode
+  packageName      String
+  currency         String
+  amountMinor      Int
+  billingMode      String
+  features         Json
+  quotas           Json
+  sourcePriceId    String?
+  createdAt        DateTime                 @default(now())
+  serviceRequest   CareerServiceRequest     @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+
+  @@index([serviceRequestId, createdAt])
+}
+
+model CareerPaymentIntent {
+  id                      String                      @id @default(cuid())
+  candidateId             String
+  serviceRequestId        String
+  status                  CareerPaymentIntentStatus   @default(draft)
+  provider                String                      @default("configuration_only")
+  amountMinor             Int
+  currency                String
+  idempotencyKey          String                      @unique
+  pricingSnapshot         Json
+  providerMode            String                      @default("fixture")
+  providerCheckoutId      String?
+  providerPaymentIntentId String?
+  providerPaymentId       String?
+  checkoutUrl             String?
+  expiresAt               DateTime?
+  checkoutCreatedAt       DateTime?
+  failureCode             String?
+  failureMessageSafe      String?
+  attemptGroupKey         String?
+  attemptNumber           Int                         @default(1)
+  createdAt               DateTime                    @default(now())
+  updatedAt               DateTime                    @updatedAt
+  activationHandoffs      CareerActivationHandoff[]
+  candidate               CareerCandidate             @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  serviceRequest          CareerServiceRequest        @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  webhookEvents           CareerPaymentWebhookEvent[]
+  subscription            CareerSubscription?
+
+  @@index([candidateId, status])
+  @@index([serviceRequestId, status])
+  @@index([attemptGroupKey, attemptNumber])
+  @@index([providerPaymentId])
+}
+
+model CareerPaymentWebhookEvent {
+  id                      String               @id @default(cuid())
+  provider                String
+  providerEventId         String
+  eventType               String
+  paymentIntentId         String?
+  providerCheckoutId      String?
+  providerPaymentIntentId String?
+  providerPaymentId       String?
+  amountMinor             Int?
+  currency                String?
+  occurredAt              DateTime
+  receivedAt              DateTime             @default(now())
+  processingStatus        String
+  signatureVerified       Boolean              @default(false)
+  duplicate               Boolean              @default(false)
+  safeReference           String?
+  failureCode             String?
+  failureMessageSafe      String?
+  payloadChecksum         String
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+  paymentIntent           CareerPaymentIntent? @relation(fields: [paymentIntentId], references: [id])
+
+  @@unique([provider, providerEventId])
+  @@index([paymentIntentId, receivedAt])
+  @@index([processingStatus, receivedAt])
+}
+
+model CareerSubscription {
+  id                 String                    @id @default(cuid())
+  candidateId        String
+  serviceRequestId   String
+  paymentIntentId    String?                   @unique
+  status             CareerSubscriptionStatus  @default(draft)
+  packageCode        CareerServicePackageCode
+  packageName        String?
+  currency           String
+  amountMinor        Int
+  startedAt          DateTime?
+  activatedAt        DateTime?
+  currentPeriodEnd   DateTime?
+  cancelledAt        DateTime?
+  pricingSnapshotId  String?
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  activationHandoffs CareerActivationHandoff[]
+  candidate          CareerCandidate           @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  paymentIntent      CareerPaymentIntent?      @relation(fields: [paymentIntentId], references: [id])
+  serviceRequest     CareerServiceRequest      @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId, status])
+  @@index([serviceRequestId, status])
+  @@index([paymentIntentId])
+}
+
+model CareerActivationHandoff {
+  id                 String               @id @default(cuid())
+  candidateId        String
+  serviceRequestId   String
+  subscriptionId     String
+  paymentIntentId    String
+  eventType          String               @default("career_subscription_activated")
+  status             String               @default("pending")
+  idempotencyKey     String               @unique
+  correlationId      String?
+  attemptCount       Int                  @default(0)
+  nextAttemptAt      DateTime?
+  processedAt        DateTime?
+  failureCode        String?
+  failureMessageSafe String?
+  payloadVersion     Int                  @default(1)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  candidate          CareerCandidate      @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  paymentIntent      CareerPaymentIntent  @relation(fields: [paymentIntentId], references: [id], onDelete: Cascade)
+  serviceRequest     CareerServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  subscription       CareerSubscription   @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextAttemptAt])
+  @@index([paymentIntentId, status])
+}
+
+enum AppMode {
+  demo
+  production
+}
+
+enum MembershipRole {
+  AGENCY_OWNER
+  AGENCY_ADMIN
+  AGENCY_OPERATOR
+  AGENCY_FINANCE
+  AGENCY_VIEWER
+  ACCOUNT_MANAGER
+  VVISAS_OPERATIONS
+  VVISAS_FINANCE
+  VVISAS_ADMIN
+}
+
+enum AgencyStatus {
+  DRAFT
+  EMAIL_VERIFICATION_PENDING
+  DOCUMENTS_PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum ApplicationStatus {
+  DRAFT
+  DOCUMENTS_PENDING
+  READY_FOR_REVIEW
+  UNDER_INTERNAL_REVIEW
+  PAYMENT_PENDING
+  PAID
+  SUBMISSION_PENDING
+  SUBMITTED
+  PROCESSING
+  ADDITIONAL_DOCUMENTS_REQUIRED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum DocumentStatus {
+  REQUESTED
+  UPLOADED
+  EXTRACTION_PENDING
+  EXTRACTED
+  EXTRACTION_FAILED
+  MANUAL_REVIEW_REQUIRED
+  VERIFIED
+  OCR_PENDING
+  OCR_COMPLETE
+  USER_CONFIRMED
+  REJECTED
+}
+
+enum WalletLedgerType {
+  DEPOSIT_PENDING
+  DEPOSIT_CONFIRMED
+  APPLICATION_DEBIT
+  APPLICATION_REVERSAL
+  REFUND_CREDIT
+  WITHDRAWAL_HOLD
+  WITHDRAWAL_COMPLETED
+  WITHDRAWAL_RELEASED
+  MANUAL_ADJUSTMENT
+}
+
+enum PaymentOrderStatus {
+  CREATED
+  PROVIDER_SESSION_CREATED
+  PENDING
+  CONFIRMED
+  FAILED
+  CANCELLED
+}
+
+enum IntegrationProvider {
+  ZOHO_CRM
+  ZOHO_PAYMENTS
+  DIGIO
+}
+
+enum CareerConnectionProvider {
+  mail
+  linkedin
+}
+
+enum CareerConnectionStatus {
+  idle
+  connecting
+  connected
+  limited
+  error
+  revoked
+}
+
+enum IntegrationEventStatus {
+  PENDING
+  PROCESSING
+  RETRY
+  COMPLETED
+  SYNCED
+  FAILED
+  NEEDS_REVIEW
+  MANUAL_REVIEW_REQUIRED
+  FAILED_TERMINAL
+}
+
+enum VisaInterestStatus {
+  SEARCHED
+  SELECTED
+  DETAILS_STARTED
+  CHECKLIST_VIEWED
+  PAYMENT_STARTED
+  PAYMENT_PENDING
+  PAYMENT_FAILED
+  PAID
+  APPLICATION_CREATED
+  CONVERTED
+  EXPIRED
+  CANCELLED
+}
+
+enum CatalogueReviewStatus {
+  EXTRACTED
+  NORMALIZED
+  REVIEW_REQUIRED
+  CONFLICT_REVIEW_REQUIRED
+  APPROVED
+  REJECTED
+  PUBLISHED
+}
+
+enum CatalogueChangeType {
+  NEW_PRODUCT
+  PRICE_CHANGED
+  DOCUMENTS_CHANGED
+  PROCESSING_TIME_CHANGED
+  COURIER_RULE_CHANGED
+  CITY_ROUTING_CHANGED
+  PRODUCT_REMOVED
+  NO_CHANGE
+  CONTENT_CHANGED
+}
+
+enum AdminRole {
+  super_admin
+  catalog_admin
+  operations_admin
+  finance_admin
+  support_admin
+}
+
+enum AdminImpersonationMode {
+  view_only
+  support
+  operations
+}
+
+enum AdminSessionStatus {
+  active
+  expired
+  revoked
+  ended
+}
+
+enum PartnerPriceOverrideStatus {
+  draft
+  active
+  expired
+  archived
+}
+
+enum AdminContentStatus {
+  draft
+  published
+  archived
+}
+
+enum DashboardSectionType {
+  welcome
+  quick_actions
+  summary_cards
+  recent_applications
+  wallet_summary
+  featured_visas
+  featured_services
+  partner_offers
+  referral_program
+  support
+  announcements
+  important_updates
+}
+
+enum CareerCandidateStatus {
+  onboarding_started
+  profile_processing
+  profile_needs_information
+  profile_ready
+  payment_pending
+  subscription_active
+  blocked
+  closed
+}
+
+enum CareerResumeStatus {
+  uploaded
+  approved_for_processing
+  rejected
+}
+
+enum CareerServicePackageCode {
+  EUROPE_JOB_SEARCH_ASSIST
+  EUROPE_JOB_SEARCH_PRO
+  EUROPE_JOB_SEARCH_PREMIUM
+}
+
+enum CareerPackageStatus {
+  draft
+  active
+  archived
+}
+
+enum CareerPaymentIntentStatus {
+  draft
+  awaiting_checkout
+  checkout_created
+  payment_pending
+  paid
+  failed
+  cancelled
+  expired
+}
+
+enum CareerSubscriptionStatus {
+  draft
+  pending_payment
+  active
+  past_due
+  cancelled
+  expired
+}

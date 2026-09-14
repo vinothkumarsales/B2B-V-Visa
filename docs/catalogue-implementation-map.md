@@ -1,0 +1,17 @@
+# Catalogue Implementation Map
+
+| Existing module | Current responsibility | Source currently used | Missing behaviour | Required extension |
+|---|---|---|---|---|
+| `scripts/supplier-catalogue/run-supplier-import.ts` | Runs supplier import, normalization, validation and review export | StampMyVisa saved HTML/live provider | Public-web providers, official verification handoff, production proof destinations | Extend supplier names/modes and keep one runner for all sources |
+| `scripts/supplier-catalogue/types.ts` | Supplier and normalized import contracts | StampMyVisa-oriented product, documents, pricing and routes | Jurisdictions, official verification status, publication metadata, public source names | Add first-class jurisdiction and verification fields without creating UI-specific models |
+| `scripts/supplier-catalogue/normalize.ts` | Converts source inputs to normalized products | Supplier fixtures and provider outputs | Jurisdiction normalization, richer visa categories, source evidence preservation | Normalize jurisdiction rules and carry review-required fields forward |
+| `scripts/supplier-catalogue/review-export.ts` | Creates human review JSON | Current supplier import result | Source comparison, jurisdiction changes, official verification summary | Extend report metadata and uncertain-field summaries |
+| `scripts/supplier-catalogue/providers/stamp-my-visa.ts` | StampMyVisa saved/live extraction | Saved HTML and authorized browser session | More destination fixtures and shared contracts | Reuse existing provider for production proof set |
+| `src/lib/stampmyvisa-approved-products.ts` | Approved demo/local catalogue seed | Approved UAE StampMyVisa products | Multi-country proof catalogue, jurisdiction rules, publication metadata | Add published proof products and use same `VisaType` surface |
+| `src/lib/catalogue.ts` | Adapts approved products into UI `VisaType` records | Approved local products + fallback mock catalogue | Jurisdictions, production-mode fallback guard, publication fields | Map jurisdiction fields and stop mixing fallback products when published data exists |
+| `src/lib/checklist.ts` | Resolves document groups for dialog and Apply | Product document requirements | Jurisdiction document overrides and review warnings | Apply base rules first, then jurisdiction overrides |
+| `src/lib/pricing.ts` | Single pricing result for Explore and Apply | Product lines, route adjustment and GST | Jurisdiction adjustment, no courier fee in new totals, final/indicative status | Keep one pricing source and add optional jurisdiction adjustment later |
+| `src/views/ExploreView.tsx` | Visa discovery, filters, document dialog and selection | `mockVisaTypes` catalogue adapter | Jurisdiction-required signal and production proof catalogue | Keep compact cards, add badges and published products only |
+| `src/views/ApplyView.tsx` | Selected visa workflow, travellers, documents, pricing and sticker route | Selected `VisaType`, checklist and pricing helpers | Residence jurisdiction step and unresolved jurisdiction blocking | Add jurisdiction section only when selected product has active rules |
+| `src/components/pricing/PriceBreakdownPopover.tsx` | Shared price breakdown popover | `VisaPricingResult` | Final/indicative/manual quote messaging | Continue reading one pricing result object |
+| `src/components/visa/VisaAttributeBadges.tsx` | Shared compact visa attribute badges | `VisaType` fields | Jurisdiction/physical submission badges | Extend with production catalogue attributes |

@@ -1,0 +1,3413 @@
+{
+  "source": "sanitized-vvisas-countryData",
+  "generatedAt": "2026-07-18T12:15:41.298Z",
+  "countries": [
+    {
+      "id": "uae",
+      "name": "United Arab Emirates",
+      "shortName": "UAE",
+      "region": "Middle East",
+      "visas": {
+        "tourist": {
+          "id": "uae-tourist",
+          "title": "UAE Tourist Visa",
+          "governmentFee": 2700,
+          "serviceFee": 4050,
+          "fastTrackFee": 3240,
+          "type": "E-Visa",
+          "processing": "2 days",
+          "fastProcessing": "1 day",
+          "lengthOfStay": "30 days",
+          "validity": "60 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Flight Tickets",
+            "Hotel Booking"
+          ]
+        },
+        "work-visa": {
+          "id": "uae-work",
+          "title": "UAE Work Permit",
+          "governmentFee": 4500,
+          "serviceFee": 8500,
+          "type": "Work Permit",
+          "processing": "14 days",
+          "lengthOfStay": "2 years",
+          "validity": "2 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Job Offer",
+            "Education Certificate Attested",
+            "Medical Test",
+            "Emirates ID"
+          ]
+        },
+        "job-seeker": {
+          "id": "uae-jobseeker",
+          "title": "UAE Job Seeker Visa",
+          "governmentFee": 5000,
+          "serviceFee": 7000,
+          "type": "Job Seeker Visa",
+          "processing": "7 days",
+          "lengthOfStay": "60 days",
+          "validity": "60 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "University Degree",
+            "Bank Statement",
+            "CV"
+          ]
+        }
+      }
+    },
+    {
+      "id": "thailand",
+      "name": "Thailand",
+      "shortName": "Thailand",
+      "region": "Southeast Asia",
+      "visas": {
+        "study-visa": {
+          "id": "thailand-study",
+          "title": "Thailand Student Visa (ED)",
+          "governmentFee": 1500,
+          "serviceFee": 8000,
+          "type": "Student Visa",
+          "processing": "14 days",
+          "lengthOfStay": "1 year (renewable)",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Admission Letter",
+            "Bank Statement",
+            "Academic Documents",
+            "Medical Certificate"
+          ]
+        },
+        "tourist": {
+          "id": "thailand-tourist",
+          "title": "Thailand Tourist Visa",
+          "governmentFee": 1400,
+          "serviceFee": 2100,
+          "fastTrackFee": 1500,
+          "type": "E-Visa",
+          "processing": "4 days",
+          "fastProcessing": "2 days",
+          "lengthOfStay": "30 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement"
+          ]
+        }
+      }
+    },
+    {
+      "id": "usa",
+      "name": "United States",
+      "shortName": "USA",
+      "region": "North America",
+      "visas": {
+        "tourist": {
+          "id": "usa-tourist",
+          "title": "USA Tourist Visa (B1/B2)",
+          "governmentFee": 13600,
+          "serviceFee": 8000,
+          "type": "Sticker Visa",
+          "processing": "30 days",
+          "lengthOfStay": "180 days",
+          "validity": "10 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "DS-160 Form",
+            "Interview Appointment",
+            "Bank Statement",
+            "Travel Itinerary",
+            "Employment Letter"
+          ]
+        },
+        "study-visa": {
+          "id": "usa-study",
+          "title": "USA F-1 Student Visa",
+          "governmentFee": 12800,
+          "serviceFee": 15000,
+          "type": "Sticker Visa",
+          "processing": "45 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "5 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "I-20 Form",
+            "Bank Statement",
+            "Academic Documents",
+            "SEVIS Fee Receipt"
+          ]
+        },
+        "work-visa": {
+          "id": "usa-work",
+          "title": "USA H-1B Work Visa",
+          "governmentFee": 38000,
+          "serviceFee": 45000,
+          "type": "Work Visa",
+          "processing": "90 days",
+          "lengthOfStay": "3 years (extendable)",
+          "validity": "3 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "LCA",
+            "I-129 Petition",
+            "Job Offer",
+            "University Degree",
+            "Work Experience"
+          ]
+        }
+      }
+    },
+    {
+      "id": "canada",
+      "name": "Canada",
+      "shortName": "Canada",
+      "region": "North America",
+      "visas": {
+        "tourist": {
+          "id": "canada-tourist",
+          "title": "Canada Visitor Visa",
+          "governmentFee": 7500,
+          "serviceFee": 6000,
+          "type": "Visitor Visa",
+          "processing": "21 days",
+          "lengthOfStay": "6 months",
+          "validity": "10 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Travel Itinerary",
+            "Employment Letter",
+            "Travel History"
+          ]
+        },
+        "study-visa": {
+          "id": "canada-study",
+          "title": "Canada Study Permit",
+          "governmentFee": 11500,
+          "serviceFee": 12000,
+          "type": "Study Permit",
+          "processing": "35 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Letter of Acceptance",
+            "Bank Statement",
+            "Academic Documents",
+            "Medical Exam"
+          ]
+        },
+        "work-visa": {
+          "id": "canada-work",
+          "title": "Canada Work Permit",
+          "governmentFee": 11500,
+          "serviceFee": 18000,
+          "type": "Work Permit",
+          "processing": "35 days",
+          "lengthOfStay": "2 years",
+          "validity": "2 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "LMIA",
+            "Job Offer",
+            "Educational Documents",
+            "Work Experience",
+            "Medical Exam"
+          ]
+        },
+        "pr": {
+          "id": "canada-pr",
+          "title": "Canada PR - Express Entry",
+          "governmentFee": 90000,
+          "serviceFee": 150000,
+          "type": "Permanent Residency",
+          "processing": "6 months",
+          "lengthOfStay": "Permanent",
+          "validity": "Permanent",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "IELTS",
+            "ECA",
+            "Work Experience",
+            "Police Clearance",
+            "Medical Exam",
+            "Bank Statement"
+          ]
+        }
+      }
+    },
+    {
+      "id": "australia",
+      "name": "Australia",
+      "shortName": "Australia",
+      "region": "Oceania",
+      "visas": {
+        "tourist": {
+          "id": "australia-tourist",
+          "title": "Australia Visitor Visa (600)",
+          "governmentFee": 11000,
+          "serviceFee": 7000,
+          "type": "E-Visa",
+          "processing": "21 days",
+          "lengthOfStay": "90 days",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Travel Itinerary",
+            "Employment Letter",
+            "Health Insurance"
+          ]
+        },
+        "study-visa": {
+          "id": "australia-study",
+          "title": "Australia Student Visa (500)",
+          "governmentFee": 47000,
+          "serviceFee": 15000,
+          "type": "Student Visa",
+          "processing": "30 days",
+          "lengthOfStay": "Course Duration + 2 months",
+          "validity": "5 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "CoE",
+            "OSHC",
+            "Bank Statement",
+            "Academic Documents",
+            "English Test (IELTS/PTE)"
+          ]
+        },
+        "work-visa": {
+          "id": "australia-work",
+          "title": "Australia Temporary Skill Shortage (482)",
+          "governmentFee": 98000,
+          "serviceFee": 35000,
+          "type": "Work Visa",
+          "processing": "60 days",
+          "lengthOfStay": "4 years",
+          "validity": "4 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Skills Assessment",
+            "Nomination",
+            "English Test",
+            "Work Experience",
+            "Medical Exam"
+          ]
+        },
+        "pr": {
+          "id": "australia-pr",
+          "title": "Australia PR - Skilled Independent (189)",
+          "governmentFee": 320000,
+          "serviceFee": 180000,
+          "type": "Permanent Residency",
+          "processing": "12 months",
+          "lengthOfStay": "Permanent",
+          "validity": "Permanent",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Skills Assessment",
+            "IELTS/PTE",
+            "Work Experience",
+            "Police Clearance",
+            "Medical Exam"
+          ]
+        }
+      }
+    },
+    {
+      "id": "uk",
+      "name": "United Kingdom",
+      "shortName": "UK",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "uk-tourist",
+          "title": "UK Standard Visitor Visa",
+          "governmentFee": 9500,
+          "serviceFee": 6500,
+          "type": "Sticker Visa",
+          "processing": "21 days",
+          "lengthOfStay": "180 days",
+          "validity": "6 months",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Travel Itinerary",
+            "Hotel Booking",
+            "Employment Letter",
+            "TB Test"
+          ]
+        },
+        "study-visa": {
+          "id": "uk-study",
+          "title": "UK Student Visa (Tier 4)",
+          "governmentFee": 28000,
+          "serviceFee": 18000,
+          "type": "Sticker Visa",
+          "processing": "21 days",
+          "lengthOfStay": "Course Duration + 4 months",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "CAS Letter",
+            "Bank Statement",
+            "Academic Documents",
+            "TB Test Certificate"
+          ]
+        },
+        "work-visa": {
+          "id": "uk-work",
+          "title": "UK Skilled Worker Visa",
+          "governmentFee": 52000,
+          "serviceFee": 28000,
+          "type": "Work Visa",
+          "processing": "21 days",
+          "lengthOfStay": "5 years",
+          "validity": "5 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "CoS",
+            "Job Offer",
+            "English Test",
+            "Bank Statement",
+            "TB Test"
+          ]
+        }
+      }
+    },
+    {
+      "id": "germany",
+      "name": "Germany",
+      "shortName": "Germany",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "germany-tourist",
+          "title": "Germany Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 4500,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking",
+            "Cover Letter"
+          ]
+        },
+        "study-visa": {
+          "id": "germany-study",
+          "title": "Germany Student Visa",
+          "governmentFee": 6000,
+          "serviceFee": 30000,
+          "type": "Student Visa",
+          "processing": "60 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Admission Letter",
+            "Blocked Account (€11,208)",
+            "Health Insurance",
+            "Academic Documents",
+            "German Language (A1/B1)"
+          ]
+        },
+        "work-visa": {
+          "id": "germany-work",
+          "title": "Germany Work Visa",
+          "governmentFee": 6000,
+          "serviceFee": 35000,
+          "type": "Work Visa",
+          "processing": "60 days",
+          "lengthOfStay": "4 years",
+          "validity": "4 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Job Contract",
+            "University Degree",
+            "German Language (A1)",
+            "Health Insurance"
+          ]
+        },
+        "pr": {
+          "id": "germany-pr",
+          "title": "Germany PR - Blue Card",
+          "governmentFee": 8500,
+          "serviceFee": 80000,
+          "type": "EU Blue Card",
+          "processing": "90 days",
+          "lengthOfStay": "Permanent",
+          "validity": "4 years (path to PR)",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "University Degree",
+            "Job Offer",
+            "German Language (A1)",
+            "Health Insurance"
+          ]
+        },
+        "job-seeker": {
+          "id": "germany-jobseeker",
+          "title": "Germany Job Seeker Visa",
+          "governmentFee": 6000,
+          "serviceFee": 25000,
+          "type": "Job Seeker Visa",
+          "processing": "45 days",
+          "lengthOfStay": "6 months",
+          "validity": "6 months",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "University Degree",
+            "Bank Statement (€5,184)",
+            "Travel Insurance",
+            "CV",
+            "Cover Letter"
+          ]
+        }
+      }
+    },
+    {
+      "id": "switzerland",
+      "name": "Switzerland",
+      "shortName": "Switzerland",
+      "region": "Europe",
+      "visas": {
+        "study-visa": {
+          "id": "switzerland-study",
+          "title": "Switzerland Student Visa",
+          "governmentFee": 8000,
+          "serviceFee": 28000,
+          "type": "Student Visa",
+          "processing": "90 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Admission Letter",
+            "Bank Statement (CHF 21,000/year)",
+            "Health Insurance",
+            "Academic Documents",
+            "Motivation Letter"
+          ]
+        },
+        "tourist": {
+          "id": "switzerland-tourist",
+          "title": "Switzerland Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 4500,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "vietnam",
+      "name": "Vietnam",
+      "shortName": "Vietnam",
+      "region": "Southeast Asia",
+      "visas": {
+        "tourist": {
+          "id": "vietnam-tourist",
+          "title": "Vietnam Tourist Visa",
+          "governmentFee": 1000,
+          "serviceFee": 1500,
+          "fastTrackFee": 1000,
+          "type": "E-Visa",
+          "processing": "3 days",
+          "fastProcessing": "1 day",
+          "lengthOfStay": "30 days",
+          "validity": "30 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo"
+          ]
+        }
+      }
+    },
+    {
+      "id": "japan",
+      "name": "Japan",
+      "shortName": "Japan",
+      "region": "East Asia",
+      "visas": {
+        "study-visa": {
+          "id": "japan-study",
+          "title": "Japan Student Visa",
+          "governmentFee": 2700,
+          "serviceFee": 18000,
+          "type": "Student Visa",
+          "processing": "30 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "CoE (Certificate of Eligibility)",
+            "Admission Letter",
+            "Bank Statement",
+            "Academic Documents",
+            "Guarantor Documents"
+          ]
+        },
+        "tourist": {
+          "id": "japan-tourist",
+          "title": "Japan Tourist Visa",
+          "governmentFee": 2700,
+          "serviceFee": 2700,
+          "fastTrackFee": 1800,
+          "type": "Sticker Visa",
+          "processing": "7 days",
+          "fastProcessing": "4 days",
+          "lengthOfStay": "15 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Travel Itinerary"
+          ]
+        },
+        "work-visa": {
+          "id": "japan-work",
+          "title": "Japan Work Visa (Engineer/Specialist)",
+          "governmentFee": 2700,
+          "serviceFee": 22000,
+          "type": "Work Visa",
+          "processing": "60 days",
+          "lengthOfStay": "5 years",
+          "validity": "5 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "CoE (Certificate of Eligibility)",
+            "Job Contract",
+            "University Degree",
+            "Work Experience"
+          ]
+        }
+      }
+    },
+    {
+      "id": "austria",
+      "name": "Austria",
+      "shortName": "Austria",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "austria-tourist",
+          "title": "Austria Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 4500,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking",
+            "Cover Letter"
+          ]
+        },
+        "study-visa": {
+          "id": "austria-study",
+          "title": "Austria Student Visa",
+          "governmentFee": 7500,
+          "serviceFee": 24000,
+          "type": "Student Visa",
+          "processing": "90 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Admission Letter",
+            "Bank Statement (€12,816/year)",
+            "Health Insurance",
+            "Academic Documents",
+            "Accommodation Proof"
+          ]
+        },
+        "job-seeker": {
+          "id": "austria-jobseeker",
+          "title": "Austria Job Seeker Visa",
+          "governmentFee": 12000,
+          "serviceFee": 22000,
+          "type": "Job Seeker Visa",
+          "processing": "60 days",
+          "lengthOfStay": "6 months",
+          "validity": "6 months",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "University Degree",
+            "Bank Statement",
+            "Travel Insurance",
+            "Accommodation Proof"
+          ]
+        }
+      }
+    },
+    {
+      "id": "china",
+      "name": "China",
+      "shortName": "China",
+      "region": "East Asia",
+      "visas": {
+        "tourist": {
+          "id": "china-tourist",
+          "title": "China Tourist Visa (L)",
+          "governmentFee": 6800,
+          "serviceFee": 3500,
+          "type": "Sticker Visa",
+          "processing": "7 days",
+          "lengthOfStay": "30 days",
+          "validity": "3 months",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Hotel Booking",
+            "Flight Tickets",
+            "Bank Statement",
+            "Travel Itinerary"
+          ]
+        },
+        "work-visa": {
+          "id": "china-work",
+          "title": "China Work Visa (Z)",
+          "governmentFee": 8500,
+          "serviceFee": 18000,
+          "type": "Work Permit",
+          "processing": "30 days",
+          "lengthOfStay": "1 year",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Work Permit Notice",
+            "Invitation Letter",
+            "Health Certificate",
+            "Police Clearance"
+          ]
+        },
+        "study-visa": {
+          "id": "china-study",
+          "title": "China Student Visa (X1)",
+          "governmentFee": 6800,
+          "serviceFee": 12000,
+          "type": "Student Visa",
+          "processing": "14 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "JW201/JW202 Form",
+            "Admission Letter",
+            "Physical Examination Report"
+          ]
+        }
+      }
+    },
+    {
+      "id": "singapore",
+      "name": "Singapore",
+      "shortName": "Singapore",
+      "region": "Southeast Asia",
+      "visas": {
+        "tourist": {
+          "id": "singapore-tourist",
+          "title": "Singapore Tourist Visa",
+          "governmentFee": 2500,
+          "serviceFee": 2000,
+          "fastTrackFee": 1500,
+          "type": "E-Visa",
+          "processing": "3 days",
+          "fastProcessing": "1 day",
+          "lengthOfStay": "30 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Flight Tickets",
+            "Hotel Booking",
+            "Bank Statement"
+          ]
+        },
+        "work-visa": {
+          "id": "singapore-work",
+          "title": "Singapore Employment Pass",
+          "governmentFee": 18500,
+          "serviceFee": 25000,
+          "type": "Work Permit",
+          "processing": "21 days",
+          "lengthOfStay": "2 years",
+          "validity": "2 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Job Offer",
+            "University Degree",
+            "Work Experience",
+            "Medical Exam"
+          ]
+        },
+        "study-visa": {
+          "id": "singapore-study",
+          "title": "Singapore Student Pass",
+          "governmentFee": 2500,
+          "serviceFee": 8000,
+          "type": "Student Pass",
+          "processing": "14 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "IPA Letter",
+            "Admission Letter",
+            "Bank Statement",
+            "Medical Report"
+          ]
+        }
+      }
+    },
+    {
+      "id": "south-korea",
+      "name": "South Korea",
+      "shortName": "South Korea",
+      "region": "East Asia",
+      "visas": {
+        "tourist": {
+          "id": "korea-tourist",
+          "title": "South Korea Tourist Visa",
+          "governmentFee": 3100,
+          "serviceFee": 2500,
+          "type": "Sticker Visa",
+          "processing": "7 days",
+          "lengthOfStay": "90 days",
+          "validity": "3 months",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Flight Tickets",
+            "Hotel Booking",
+            "Travel Plan"
+          ]
+        },
+        "study-visa": {
+          "id": "korea-study",
+          "title": "South Korea Student Visa (D-2)",
+          "governmentFee": 5000,
+          "serviceFee": 12000,
+          "type": "Student Visa",
+          "processing": "14 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Certificate of Admission",
+            "Bank Statement",
+            "Academic Documents"
+          ]
+        },
+        "work-visa": {
+          "id": "korea-work",
+          "title": "South Korea Work Visa (E-7)",
+          "governmentFee": 5000,
+          "serviceFee": 15000,
+          "type": "Work Visa",
+          "processing": "21 days",
+          "lengthOfStay": "2 years",
+          "validity": "2 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Certificate of Confirmation",
+            "Job Contract",
+            "University Degree",
+            "Health Certificate"
+          ]
+        }
+      }
+    },
+    {
+      "id": "brazil",
+      "name": "Brazil",
+      "shortName": "Brazil",
+      "region": "South America",
+      "visas": {
+        "tourist": {
+          "id": "brazil-tourist",
+          "title": "Brazil Tourist Visa",
+          "governmentFee": 7700,
+          "serviceFee": 4500,
+          "type": "E-Visa",
+          "processing": "10 days",
+          "lengthOfStay": "90 days",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Hotel Reservation",
+            "Flight Tickets"
+          ]
+        },
+        "work-visa": {
+          "id": "brazil-work",
+          "title": "Brazil Work Visa (VITEM V)",
+          "governmentFee": 15000,
+          "serviceFee": 20000,
+          "type": "Work Visa",
+          "processing": "30 days",
+          "lengthOfStay": "2 years",
+          "validity": "2 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Work Authorization",
+            "Job Contract",
+            "Police Clearance",
+            "Health Certificate"
+          ]
+        }
+      }
+    },
+    {
+      "id": "russia",
+      "name": "Russia",
+      "shortName": "Russia",
+      "region": "Europe/Asia",
+      "visas": {
+        "tourist": {
+          "id": "russia-tourist",
+          "title": "Russia Tourist Visa",
+          "governmentFee": 4600,
+          "serviceFee": 3500,
+          "type": "Sticker Visa",
+          "processing": "10 days",
+          "lengthOfStay": "30 days",
+          "validity": "6 months",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Tourist Voucher",
+            "Hotel Confirmation",
+            "Travel Insurance"
+          ]
+        },
+        "work-visa": {
+          "id": "russia-work",
+          "title": "Russia Work Visa",
+          "governmentFee": 8500,
+          "serviceFee": 18000,
+          "type": "Work Visa",
+          "processing": "30 days",
+          "lengthOfStay": "1 year",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Work Invitation",
+            "Medical Certificate",
+            "HIV Test",
+            "Police Clearance"
+          ]
+        },
+        "study-visa": {
+          "id": "russia-study",
+          "title": "Russia Student Visa",
+          "governmentFee": 5500,
+          "serviceFee": 12000,
+          "type": "Student Visa",
+          "processing": "21 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Invitation from University",
+            "Admission Letter",
+            "Medical Certificate",
+            "HIV Test"
+          ]
+        }
+      }
+    },
+    {
+      "id": "egypt",
+      "name": "Egypt",
+      "shortName": "Egypt",
+      "region": "Middle East/Africa",
+      "visas": {
+        "tourist": {
+          "id": "egypt-tourist",
+          "title": "Egypt Tourist E-Visa",
+          "governmentFee": 2100,
+          "serviceFee": 1500,
+          "fastTrackFee": 1000,
+          "type": "E-Visa",
+          "processing": "3 days",
+          "fastProcessing": "1 day",
+          "lengthOfStay": "30 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Flight Tickets",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "turkey",
+      "name": "Turkey",
+      "shortName": "Turkey",
+      "region": "Europe/Asia",
+      "visas": {
+        "tourist": {
+          "id": "turkey-tourist",
+          "title": "Turkey E-Visa",
+          "governmentFee": 3900,
+          "serviceFee": 2000,
+          "fastTrackFee": 1500,
+          "type": "E-Visa",
+          "processing": "2 days",
+          "fastProcessing": "1 day",
+          "lengthOfStay": "90 days",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo"
+          ]
+        },
+        "study-visa": {
+          "id": "turkey-study",
+          "title": "Turkey Student Visa",
+          "governmentFee": 5000,
+          "serviceFee": 8000,
+          "type": "Student Visa",
+          "processing": "21 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Acceptance Letter",
+            "Bank Statement",
+            "Health Insurance"
+          ]
+        },
+        "work-visa": {
+          "id": "turkey-work",
+          "title": "Turkey Work Permit",
+          "governmentFee": 12000,
+          "serviceFee": 15000,
+          "type": "Work Permit",
+          "processing": "30 days",
+          "lengthOfStay": "1 year",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Work Permit Approval",
+            "Job Contract",
+            "University Degree"
+          ]
+        }
+      }
+    },
+    {
+      "id": "new-zealand",
+      "name": "New Zealand",
+      "shortName": "New Zealand",
+      "region": "Oceania",
+      "visas": {
+        "tourist": {
+          "id": "nz-tourist",
+          "title": "New Zealand Visitor Visa",
+          "governmentFee": 21000,
+          "serviceFee": 8000,
+          "type": "E-Visa",
+          "processing": "21 days",
+          "lengthOfStay": "90 days",
+          "validity": "18 months",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Travel Itinerary",
+            "Employment Letter",
+            "Health Insurance"
+          ]
+        },
+        "study-visa": {
+          "id": "nz-study",
+          "title": "New Zealand Student Visa",
+          "governmentFee": 22000,
+          "serviceFee": 15000,
+          "type": "Student Visa",
+          "processing": "30 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "4 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Offer of Place",
+            "Bank Statement",
+            "Medical Certificate",
+            "Police Certificate"
+          ]
+        },
+        "work-visa": {
+          "id": "nz-work",
+          "title": "New Zealand Work Visa",
+          "governmentFee": 40000,
+          "serviceFee": 25000,
+          "type": "Work Visa",
+          "processing": "60 days",
+          "lengthOfStay": "3 years",
+          "validity": "3 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Job Offer",
+            "Skills Assessment",
+            "Medical Certificate",
+            "Police Certificate"
+          ]
+        },
+        "pr": {
+          "id": "nz-pr",
+          "title": "New Zealand Skilled Migrant PR",
+          "governmentFee": 280000,
+          "serviceFee": 150000,
+          "type": "Permanent Residency",
+          "processing": "12 months",
+          "lengthOfStay": "Permanent",
+          "validity": "Permanent",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "EOI",
+            "IELTS",
+            "Skills Assessment",
+            "Work Experience",
+            "Medical",
+            "Police Clearance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "south-africa",
+      "name": "South Africa",
+      "shortName": "South Africa",
+      "region": "Africa",
+      "visas": {
+        "tourist": {
+          "id": "sa-tourist",
+          "title": "South Africa Tourist Visa",
+          "governmentFee": 4500,
+          "serviceFee": 3000,
+          "type": "Sticker Visa",
+          "processing": "14 days",
+          "lengthOfStay": "90 days",
+          "validity": "3 months",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Flight Tickets",
+            "Hotel Booking",
+            "Yellow Fever Certificate"
+          ]
+        },
+        "study-visa": {
+          "id": "sa-study",
+          "title": "South Africa Study Visa",
+          "governmentFee": 6000,
+          "serviceFee": 10000,
+          "type": "Study Permit",
+          "processing": "30 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Admission Letter",
+            "Bank Statement",
+            "Medical Certificate",
+            "Police Clearance"
+          ]
+        },
+        "work-visa": {
+          "id": "sa-work",
+          "title": "South Africa Work Visa",
+          "governmentFee": 8000,
+          "serviceFee": 15000,
+          "type": "Work Permit",
+          "processing": "45 days",
+          "lengthOfStay": "5 years",
+          "validity": "5 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Job Offer",
+            "Qualification Certificate",
+            "Medical Certificate",
+            "Police Clearance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "france",
+      "name": "France",
+      "shortName": "France",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "france-tourist",
+          "title": "France Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 4500,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking",
+            "Cover Letter"
+          ]
+        },
+        "study-visa": {
+          "id": "france-study",
+          "title": "France Student Visa",
+          "governmentFee": 4200,
+          "serviceFee": 18000,
+          "type": "Student Visa",
+          "processing": "21 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Campus France Approval",
+            "Admission Letter",
+            "Bank Statement",
+            "Academic Documents",
+            "French Test"
+          ]
+        },
+        "work-visa": {
+          "id": "france-work",
+          "title": "France Work Visa",
+          "governmentFee": 6500,
+          "serviceFee": 22000,
+          "type": "Work Visa",
+          "processing": "30 days",
+          "lengthOfStay": "1 year",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Work Authorization",
+            "Job Contract",
+            "Qualification Documents",
+            "Health Insurance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "spain",
+      "name": "Spain",
+      "shortName": "Spain",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "spain-tourist",
+          "title": "Spain Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 4500,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        },
+        "study-visa": {
+          "id": "spain-study",
+          "title": "Spain Student Visa",
+          "governmentFee": 5000,
+          "serviceFee": 15000,
+          "type": "Student Visa",
+          "processing": "30 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Admission Letter",
+            "Bank Statement",
+            "Health Insurance",
+            "Medical Certificate"
+          ]
+        },
+        "work-visa": {
+          "id": "spain-work",
+          "title": "Spain Work Visa",
+          "governmentFee": 6500,
+          "serviceFee": 20000,
+          "type": "Work Visa",
+          "processing": "45 days",
+          "lengthOfStay": "1 year",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Work Authorization",
+            "Job Contract",
+            "University Degree",
+            "Health Insurance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "italy",
+      "name": "Italy",
+      "shortName": "Italy",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "italy-tourist",
+          "title": "Italy Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 4500,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        },
+        "study-visa": {
+          "id": "italy-study",
+          "title": "Italy Student Visa",
+          "governmentFee": 4200,
+          "serviceFee": 16000,
+          "type": "Student Visa",
+          "processing": "30 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Declaration of Value",
+            "Admission Letter",
+            "Bank Statement",
+            "Health Insurance"
+          ]
+        },
+        "work-visa": {
+          "id": "italy-work",
+          "title": "Italy Work Visa",
+          "governmentFee": 6500,
+          "serviceFee": 19000,
+          "type": "Work Visa",
+          "processing": "60 days",
+          "lengthOfStay": "1 year",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Nulla Osta",
+            "Job Contract",
+            "Qualification Documents"
+          ]
+        }
+      }
+    },
+    {
+      "id": "netherlands",
+      "name": "Netherlands",
+      "shortName": "Netherlands",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "netherlands-tourist",
+          "title": "Netherlands Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 4500,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        },
+        "study-visa": {
+          "id": "netherlands-study",
+          "title": "Netherlands Student Visa (MVV)",
+          "governmentFee": 27000,
+          "serviceFee": 18000,
+          "type": "Student Visa",
+          "processing": "90 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Admission Letter",
+            "NUFFIC Certificate",
+            "Bank Statement",
+            "Tuberculosis Test"
+          ]
+        },
+        "work-visa": {
+          "id": "netherlands-work",
+          "title": "Netherlands Highly Skilled Migrant Visa",
+          "governmentFee": 35000,
+          "serviceFee": 25000,
+          "type": "Work Visa",
+          "processing": "90 days",
+          "lengthOfStay": "5 years",
+          "validity": "5 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Job Offer",
+            "University Degree",
+            "Salary Requirements",
+            "Tuberculosis Test"
+          ]
+        }
+      }
+    },
+    {
+      "id": "malaysia",
+      "name": "Malaysia",
+      "shortName": "Malaysia",
+      "region": "Southeast Asia",
+      "visas": {
+        "study-visa": {
+          "id": "malaysia-study",
+          "title": "Malaysia Student Pass",
+          "governmentFee": 2500,
+          "serviceFee": 6000,
+          "type": "Student Pass",
+          "processing": "30 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Admission Letter",
+            "Bank Statement",
+            "Medical Report",
+            "EMGS Approval"
+          ]
+        },
+        "work-visa": {
+          "id": "malaysia-work",
+          "title": "Malaysia Employment Pass",
+          "governmentFee": 8500,
+          "serviceFee": 12000,
+          "type": "Employment Pass",
+          "processing": "45 days",
+          "lengthOfStay": "2 years",
+          "validity": "2 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Job Offer",
+            "University Degree",
+            "Work Experience",
+            "Medical Exam"
+          ]
+        }
+      }
+    },
+    {
+      "id": "philippines",
+      "name": "Philippines",
+      "shortName": "Philippines",
+      "region": "Southeast Asia",
+      "visas": {
+        "tourist": {
+          "id": "philippines-tourist",
+          "title": "Philippines Tourist Visa",
+          "governmentFee": 5700,
+          "serviceFee": 3500,
+          "type": "Sticker Visa",
+          "processing": "7 days",
+          "lengthOfStay": "59 days",
+          "validity": "3 months",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Flight Tickets",
+            "Hotel Booking"
+          ]
+        },
+        "work-visa": {
+          "id": "philippines-work",
+          "title": "Philippines Work Visa (9G)",
+          "governmentFee": 12000,
+          "serviceFee": 18000,
+          "type": "Work Visa",
+          "processing": "60 days",
+          "lengthOfStay": "1 year",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "AEP",
+            "Job Contract",
+            "NBI Clearance",
+            "Medical Certificate"
+          ]
+        }
+      }
+    },
+    {
+      "id": "saudi-arabia",
+      "name": "Saudi Arabia",
+      "shortName": "Saudi Arabia",
+      "region": "Middle East",
+      "visas": {
+        "tourist": {
+          "id": "saudi-tourist",
+          "title": "Saudi Arabia Tourist E-Visa",
+          "governmentFee": 9000,
+          "serviceFee": 4000,
+          "fastTrackFee": 3000,
+          "type": "E-Visa",
+          "processing": "3 days",
+          "fastProcessing": "1 day",
+          "lengthOfStay": "90 days",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Hotel Booking"
+          ]
+        },
+        "work-visa": {
+          "id": "saudi-work",
+          "title": "Saudi Arabia Work Visa",
+          "governmentFee": 8000,
+          "serviceFee": 15000,
+          "type": "Work Visa",
+          "processing": "21 days",
+          "lengthOfStay": "2 years",
+          "validity": "2 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Block Visa Number",
+            "Job Contract",
+            "Medical Report",
+            "Police Clearance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "mexico",
+      "name": "Mexico",
+      "shortName": "Mexico",
+      "region": "North America",
+      "visas": {
+        "tourist": {
+          "id": "mexico-tourist",
+          "title": "Mexico Tourist Visa",
+          "governmentFee": 3000,
+          "serviceFee": 2500,
+          "type": "Sticker Visa",
+          "processing": "10 days",
+          "lengthOfStay": "180 days",
+          "validity": "6 months",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Flight Tickets",
+            "Hotel Booking",
+            "Invitation Letter"
+          ]
+        },
+        "work-visa": {
+          "id": "mexico-work",
+          "title": "Mexico Temporary Resident Work Visa",
+          "governmentFee": 8000,
+          "serviceFee": 12000,
+          "type": "Work Visa",
+          "processing": "30 days",
+          "lengthOfStay": "1 year",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Job Offer",
+            "Work Authorization",
+            "Bank Statement"
+          ]
+        }
+      }
+    },
+    {
+      "id": "israel",
+      "name": "Israel",
+      "shortName": "Israel",
+      "region": "Middle East",
+      "visas": {
+        "tourist": {
+          "id": "israel-tourist",
+          "title": "Israel Tourist Visa (B/2)",
+          "governmentFee": 2500,
+          "serviceFee": 2000,
+          "type": "Sticker Visa",
+          "processing": "14 days",
+          "lengthOfStay": "90 days",
+          "validity": "10 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Hotel Confirmation",
+            "Travel Insurance"
+          ]
+        },
+        "work-visa": {
+          "id": "israel-work",
+          "title": "Israel Work Visa (B/1)",
+          "governmentFee": 9000,
+          "serviceFee": 18000,
+          "type": "Work Visa",
+          "processing": "60 days",
+          "lengthOfStay": "5 years",
+          "validity": "5 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Work Permit",
+            "Job Contract",
+            "Police Clearance",
+            "Medical Certificate"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kenya",
+      "name": "Kenya",
+      "shortName": "Kenya",
+      "region": "Africa",
+      "visas": {
+        "tourist": {
+          "id": "kenya-tourist",
+          "title": "Kenya E-Visa",
+          "governmentFee": 2800,
+          "serviceFee": 1800,
+          "fastTrackFee": 1200,
+          "type": "E-Visa",
+          "processing": "3 days",
+          "fastProcessing": "1 day",
+          "lengthOfStay": "90 days",
+          "validity": "3 months",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Hotel Booking",
+            "Flight Tickets",
+            "Yellow Fever Certificate"
+          ]
+        },
+        "work-visa": {
+          "id": "kenya-work",
+          "title": "Kenya Work Permit",
+          "governmentFee": 25000,
+          "serviceFee": 30000,
+          "type": "Work Permit",
+          "processing": "90 days",
+          "lengthOfStay": "2 years",
+          "validity": "2 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Job Offer",
+            "Work Permit Approval",
+            "Academic Certificates",
+            "Medical Certificate"
+          ]
+        }
+      }
+    },
+    {
+      "id": "morocco",
+      "name": "Morocco",
+      "shortName": "Morocco",
+      "region": "Africa",
+      "visas": {
+        "tourist": {
+          "id": "morocco-tourist",
+          "title": "Morocco Tourist Visa",
+          "governmentFee": 7300,
+          "serviceFee": 4000,
+          "type": "Sticker Visa",
+          "processing": "10 days",
+          "lengthOfStay": "90 days",
+          "validity": "3 months",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Hotel Booking",
+            "Flight Tickets"
+          ]
+        }
+      }
+    },
+    {
+      "id": "cambodia",
+      "name": "Cambodia",
+      "shortName": "Cambodia",
+      "region": "Southeast Asia",
+      "visas": {
+        "tourist": {
+          "id": "cambodia-tourist",
+          "title": "Cambodia E-Visa",
+          "governmentFee": 2500,
+          "serviceFee": 1500,
+          "fastTrackFee": 1000,
+          "type": "E-Visa",
+          "processing": "3 days",
+          "fastProcessing": "1 day",
+          "lengthOfStay": "30 days",
+          "validity": "3 months",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo"
+          ]
+        },
+        "work-visa": {
+          "id": "cambodia-work",
+          "title": "Cambodia Business E-Visa",
+          "governmentFee": 3500,
+          "serviceFee": 5000,
+          "type": "Business Visa",
+          "processing": "7 days",
+          "lengthOfStay": "1 year (renewable)",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Business Letter",
+            "Work Permit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "portugal",
+      "name": "Portugal",
+      "shortName": "Portugal",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "portugal-tourist",
+          "title": "Portugal Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 4500,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        },
+        "study-visa": {
+          "id": "portugal-study",
+          "title": "Portugal Student Visa",
+          "governmentFee": 6500,
+          "serviceFee": 15000,
+          "type": "Student Visa",
+          "processing": "60 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Admission Letter",
+            "Bank Statement",
+            "Health Insurance",
+            "Accommodation Proof"
+          ]
+        },
+        "work-visa": {
+          "id": "portugal-work",
+          "title": "Portugal Work Visa",
+          "governmentFee": 8000,
+          "serviceFee": 18000,
+          "type": "Work Visa",
+          "processing": "90 days",
+          "lengthOfStay": "1 year",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Job Offer",
+            "Work Authorization",
+            "University Degree",
+            "Health Insurance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "belgium",
+      "name": "Belgium",
+      "shortName": "Belgium",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "belgium-tourist",
+          "title": "Belgium Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 5000,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sweden",
+      "name": "Sweden",
+      "shortName": "Sweden",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "sweden-tourist",
+          "title": "Sweden Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 5500,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        },
+        "work-visa": {
+          "id": "sweden-work",
+          "title": "Sweden Work Permit",
+          "governmentFee": 12000,
+          "serviceFee": 20000,
+          "type": "Work Permit",
+          "processing": "90 days",
+          "lengthOfStay": "2 years",
+          "validity": "2 years",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Job Offer",
+            "Work Permit",
+            "Health Insurance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "norway",
+      "name": "Norway",
+      "shortName": "Norway",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "norway-tourist",
+          "title": "Norway Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 5800,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        },
+        "work-visa": {
+          "id": "norway-work",
+          "title": "Norway Work Permit",
+          "governmentFee": 15000,
+          "serviceFee": 22000,
+          "type": "Work Permit",
+          "processing": "90 days",
+          "lengthOfStay": "1 year",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Job Offer",
+            "Work Permit Approval"
+          ]
+        }
+      }
+    },
+    {
+      "id": "denmark",
+      "name": "Denmark",
+      "shortName": "Denmark",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "denmark-tourist",
+          "title": "Denmark Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 5300,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "finland",
+      "name": "Finland",
+      "shortName": "Finland",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "finland-tourist",
+          "title": "Finland Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 5400,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "iceland",
+      "name": "Iceland",
+      "shortName": "Iceland",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "iceland-tourist",
+          "title": "Iceland Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 6000,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ireland",
+      "name": "Ireland",
+      "shortName": "Ireland",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "ireland-tourist",
+          "title": "Ireland Visit Visa",
+          "governmentFee": 6000,
+          "serviceFee": 5500,
+          "type": "Visit Visa",
+          "processing": "21 days",
+          "lengthOfStay": "90 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        },
+        "study-visa": {
+          "id": "ireland-study",
+          "title": "Ireland Student Visa",
+          "governmentFee": 6000,
+          "serviceFee": 14000,
+          "type": "Student Visa",
+          "processing": "60 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Admission Letter",
+            "Proof of Fees",
+            "Bank Statement",
+            "Health Insurance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "greece",
+      "name": "Greece",
+      "shortName": "Greece",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "greece-tourist",
+          "title": "Greece Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 4500,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "poland",
+      "name": "Poland",
+      "shortName": "Poland",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "poland-tourist",
+          "title": "Poland Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 4200,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        },
+        "work-visa": {
+          "id": "poland-work",
+          "title": "Poland Work Permit",
+          "governmentFee": 7000,
+          "serviceFee": 12000,
+          "type": "Work Permit",
+          "processing": "60 days",
+          "lengthOfStay": "1 year",
+          "validity": "1 year",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Job Offer",
+            "Work Permit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "czechrepublic",
+      "name": "Czech Republic",
+      "shortName": "Czech Rep.",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "czechrepublic-tourist",
+          "title": "Czech Republic Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 4500,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "hungary",
+      "name": "Hungary",
+      "shortName": "Hungary",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "hungary-tourist",
+          "title": "Hungary Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 4300,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "croatia",
+      "name": "Croatia",
+      "shortName": "Croatia",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "croatia-tourist",
+          "title": "Croatia Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 4500,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "romania",
+      "name": "Romania",
+      "shortName": "Romania",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "romania-tourist",
+          "title": "Romania Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 4000,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bulgaria",
+      "name": "Bulgaria",
+      "shortName": "Bulgaria",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "bulgaria-tourist",
+          "title": "Bulgaria Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 3800,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "malta",
+      "name": "Malta",
+      "shortName": "Malta",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "malta-tourist",
+          "title": "Malta Schengen Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 5000,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days (in 180 days)",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "cyprus",
+      "name": "Cyprus",
+      "shortName": "Cyprus",
+      "region": "Europe",
+      "visas": {
+        "tourist": {
+          "id": "cyprus-tourist",
+          "title": "Cyprus Tourist Visa",
+          "governmentFee": 6000,
+          "serviceFee": 4800,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Travel Insurance",
+            "Bank Statement",
+            "Flight Booking",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "southkorea",
+      "name": "South Korea",
+      "shortName": "South Korea",
+      "region": "East Asia",
+      "visas": {
+        "tourist": {
+          "id": "southkorea-tourist",
+          "title": "South Korea Tourist Visa",
+          "governmentFee": 3500,
+          "serviceFee": 4500,
+          "type": "Sticker Visa",
+          "processing": "7 days",
+          "lengthOfStay": "90 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Flight Booking"
+          ]
+        },
+        "study-visa": {
+          "id": "southkorea-study",
+          "title": "South Korea Student Visa (D-2)",
+          "governmentFee": 5000,
+          "serviceFee": 10000,
+          "type": "Student Visa",
+          "processing": "14 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Admission Letter",
+            "Bank Statement",
+            "Academic Documents"
+          ]
+        }
+      }
+    },
+    {
+      "id": "taiwan",
+      "name": "Taiwan",
+      "shortName": "Taiwan",
+      "region": "East Asia",
+      "visas": {
+        "tourist": {
+          "id": "taiwan-tourist",
+          "title": "Taiwan Visitor Visa",
+          "governmentFee": 3000,
+          "serviceFee": 4000,
+          "type": "Sticker Visa",
+          "processing": "5 days",
+          "lengthOfStay": "90 days",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Flight Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "hongkong",
+      "name": "Hong Kong",
+      "shortName": "Hong Kong",
+      "region": "East Asia",
+      "visas": {
+        "tourist": {
+          "id": "hongkong-tourist",
+          "title": "Hong Kong Visit Visa",
+          "governmentFee": 2500,
+          "serviceFee": 3500,
+          "type": "E-Visa",
+          "processing": "4 days",
+          "lengthOfStay": "14 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "indonesia",
+      "name": "Indonesia",
+      "shortName": "Indonesia",
+      "region": "Southeast Asia",
+      "visas": {
+        "tourist": {
+          "id": "indonesia-tourist",
+          "title": "Indonesia Tourist Visa on Arrival",
+          "governmentFee": 2500,
+          "serviceFee": 2000,
+          "fastTrackFee": 1500,
+          "type": "Visa on Arrival",
+          "processing": "2 days",
+          "fastProcessing": "1 day",
+          "lengthOfStay": "30 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Flight Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "maldives",
+      "name": "Maldives",
+      "shortName": "Maldives",
+      "region": "South Asia",
+      "visas": {
+        "tourist": {
+          "id": "maldives-tourist",
+          "title": "Maldives On-Arrival Visa",
+          "governmentFee": 1500,
+          "serviceFee": 1500,
+          "type": "Visa on Arrival",
+          "processing": "1 day",
+          "lengthOfStay": "30 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Hotel Booking",
+            "Return Ticket"
+          ]
+        }
+      }
+    },
+    {
+      "id": "srilanka",
+      "name": "Sri Lanka",
+      "shortName": "Sri Lanka",
+      "region": "South Asia",
+      "visas": {
+        "tourist": {
+          "id": "srilanka-tourist",
+          "title": "Sri Lanka ETA (E-Visa)",
+          "governmentFee": 2500,
+          "serviceFee": 2000,
+          "fastTrackFee": 1500,
+          "type": "E-Visa",
+          "processing": "2 days",
+          "fastProcessing": "1 day",
+          "lengthOfStay": "30 days",
+          "validity": "180 days",
+          "entry": "Double",
+          "requirements": [
+            "Passport",
+            "Photo"
+          ]
+        }
+      }
+    },
+    {
+      "id": "nepal",
+      "name": "Nepal",
+      "shortName": "Nepal",
+      "region": "South Asia",
+      "visas": {
+        "tourist": {
+          "id": "nepal-tourist",
+          "title": "Nepal Tourist Visa",
+          "governmentFee": 2000,
+          "serviceFee": 2500,
+          "type": "Visa on Arrival",
+          "processing": "2 days",
+          "lengthOfStay": "30 days",
+          "validity": "30 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bhutan",
+      "name": "Bhutan",
+      "shortName": "Bhutan",
+      "region": "South Asia",
+      "visas": {
+        "tourist": {
+          "id": "bhutan-tourist",
+          "title": "Bhutan Tourist Visa",
+          "governmentFee": 3000,
+          "serviceFee": 4000,
+          "type": "Tourist Visa",
+          "processing": "7 days",
+          "lengthOfStay": "15 days",
+          "validity": "15 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Tour Package Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bangladesh",
+      "name": "Bangladesh",
+      "shortName": "Bangladesh",
+      "region": "South Asia",
+      "visas": {
+        "tourist": {
+          "id": "bangladesh-tourist",
+          "title": "Bangladesh Tourist Visa",
+          "governmentFee": 3500,
+          "serviceFee": 4500,
+          "type": "Sticker Visa",
+          "processing": "10 days",
+          "lengthOfStay": "90 days",
+          "validity": "180 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Invitation Letter",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "myanmar",
+      "name": "Myanmar",
+      "shortName": "Myanmar",
+      "region": "Southeast Asia",
+      "visas": {
+        "tourist": {
+          "id": "myanmar-tourist",
+          "title": "Myanmar E-Visa",
+          "governmentFee": 3000,
+          "serviceFee": 3500,
+          "type": "E-Visa",
+          "processing": "5 days",
+          "lengthOfStay": "28 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Flight Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "laos",
+      "name": "Laos",
+      "shortName": "Laos",
+      "region": "Southeast Asia",
+      "visas": {
+        "tourist": {
+          "id": "laos-tourist",
+          "title": "Laos Tourist Visa",
+          "governmentFee": 2500,
+          "serviceFee": 3000,
+          "type": "Visa on Arrival",
+          "processing": "3 days",
+          "lengthOfStay": "30 days",
+          "validity": "60 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo"
+          ]
+        }
+      }
+    },
+    {
+      "id": "mongolia",
+      "name": "Mongolia",
+      "shortName": "Mongolia",
+      "region": "East Asia",
+      "visas": {
+        "tourist": {
+          "id": "mongolia-tourist",
+          "title": "Mongolia Tourist Visa",
+          "governmentFee": 3500,
+          "serviceFee": 4500,
+          "type": "Sticker Visa",
+          "processing": "7 days",
+          "lengthOfStay": "30 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Hotel Booking",
+            "Travel Insurance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kazakhstan",
+      "name": "Kazakhstan",
+      "shortName": "Kazakhstan",
+      "region": "Central Asia",
+      "visas": {
+        "tourist": {
+          "id": "kazakhstan-tourist",
+          "title": "Kazakhstan Tourist Visa",
+          "governmentFee": 4000,
+          "serviceFee": 5000,
+          "type": "E-Visa",
+          "processing": "5 days",
+          "lengthOfStay": "30 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "uzbekistan",
+      "name": "Uzbekistan",
+      "shortName": "Uzbekistan",
+      "region": "Central Asia",
+      "visas": {
+        "tourist": {
+          "id": "uzbekistan-tourist",
+          "title": "Uzbekistan Tourist E-Visa",
+          "governmentFee": 2000,
+          "serviceFee": 3000,
+          "type": "E-Visa",
+          "processing": "3 days",
+          "lengthOfStay": "30 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo"
+          ]
+        }
+      }
+    },
+    {
+      "id": "azerbaijan",
+      "name": "Azerbaijan",
+      "shortName": "Azerbaijan",
+      "region": "Caucasus",
+      "visas": {
+        "tourist": {
+          "id": "azerbaijan-tourist",
+          "title": "Azerbaijan E-Visa",
+          "governmentFee": 2500,
+          "serviceFee": 3500,
+          "type": "E-Visa",
+          "processing": "3 days",
+          "lengthOfStay": "30 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo"
+          ]
+        }
+      }
+    },
+    {
+      "id": "georgia",
+      "name": "Georgia",
+      "shortName": "Georgia",
+      "region": "Caucasus",
+      "visas": {
+        "tourist": {
+          "id": "georgia-tourist",
+          "title": "Georgia E-Visa",
+          "governmentFee": 1500,
+          "serviceFee": 2500,
+          "type": "E-Visa",
+          "processing": "3 days",
+          "lengthOfStay": "90 days",
+          "validity": "120 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo"
+          ]
+        }
+      }
+    },
+    {
+      "id": "armenia",
+      "name": "Armenia",
+      "shortName": "Armenia",
+      "region": "Caucasus",
+      "visas": {
+        "tourist": {
+          "id": "armenia-tourist",
+          "title": "Armenia E-Visa",
+          "governmentFee": 1500,
+          "serviceFee": 2500,
+          "type": "E-Visa",
+          "processing": "3 days",
+          "lengthOfStay": "120 days",
+          "validity": "120 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo"
+          ]
+        }
+      }
+    },
+    {
+      "id": "argentina",
+      "name": "Argentina",
+      "shortName": "Argentina",
+      "region": "South America",
+      "visas": {
+        "tourist": {
+          "id": "argentina-tourist",
+          "title": "Argentina Tourist Visa",
+          "governmentFee": 5000,
+          "serviceFee": 6000,
+          "type": "E-Visa",
+          "processing": "10 days",
+          "lengthOfStay": "90 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "chile",
+      "name": "Chile",
+      "shortName": "Chile",
+      "region": "South America",
+      "visas": {
+        "tourist": {
+          "id": "chile-tourist",
+          "title": "Chile Tourist Visa",
+          "governmentFee": 4000,
+          "serviceFee": 5000,
+          "type": "E-Visa",
+          "processing": "10 days",
+          "lengthOfStay": "90 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "peru",
+      "name": "Peru",
+      "shortName": "Peru",
+      "region": "South America",
+      "visas": {
+        "tourist": {
+          "id": "peru-tourist",
+          "title": "Peru Tourist Visa",
+          "governmentFee": 4500,
+          "serviceFee": 5500,
+          "type": "Sticker Visa",
+          "processing": "10 days",
+          "lengthOfStay": "183 days",
+          "validity": "183 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "colombia",
+      "name": "Colombia",
+      "shortName": "Colombia",
+      "region": "South America",
+      "visas": {
+        "tourist": {
+          "id": "colombia-tourist",
+          "title": "Colombia Tourist Visa",
+          "governmentFee": 3500,
+          "serviceFee": 4500,
+          "type": "E-Visa",
+          "processing": "10 days",
+          "lengthOfStay": "90 days",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ecuador",
+      "name": "Ecuador",
+      "shortName": "Ecuador",
+      "region": "South America",
+      "visas": {
+        "tourist": {
+          "id": "ecuador-tourist",
+          "title": "Ecuador Tourist Visa",
+          "governmentFee": 3000,
+          "serviceFee": 4000,
+          "type": "Tourist Visa",
+          "processing": "10 days",
+          "lengthOfStay": "90 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bolivia",
+      "name": "Bolivia",
+      "shortName": "Bolivia",
+      "region": "South America",
+      "visas": {
+        "tourist": {
+          "id": "bolivia-tourist",
+          "title": "Bolivia Tourist Visa",
+          "governmentFee": 4000,
+          "serviceFee": 5000,
+          "type": "Visa on Arrival",
+          "processing": "5 days",
+          "lengthOfStay": "90 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Yellow Fever Certificate"
+          ]
+        }
+      }
+    },
+    {
+      "id": "uruguay",
+      "name": "Uruguay",
+      "shortName": "Uruguay",
+      "region": "South America",
+      "visas": {
+        "tourist": {
+          "id": "uruguay-tourist",
+          "title": "Uruguay Tourist Visa",
+          "governmentFee": 4000,
+          "serviceFee": 5000,
+          "type": "Tourist Visa",
+          "processing": "10 days",
+          "lengthOfStay": "90 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "costarica",
+      "name": "Costa Rica",
+      "shortName": "Costa Rica",
+      "region": "Central America",
+      "visas": {
+        "tourist": {
+          "id": "costarica-tourist",
+          "title": "Costa Rica Tourist Visa",
+          "governmentFee": 3500,
+          "serviceFee": 4500,
+          "type": "Tourist Visa",
+          "processing": "10 days",
+          "lengthOfStay": "90 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "panama",
+      "name": "Panama",
+      "shortName": "Panama",
+      "region": "Central America",
+      "visas": {
+        "tourist": {
+          "id": "panama-tourist",
+          "title": "Panama Tourist Visa",
+          "governmentFee": 4000,
+          "serviceFee": 5000,
+          "type": "Tourist Visa",
+          "processing": "10 days",
+          "lengthOfStay": "180 days",
+          "validity": "180 days",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "guatemala",
+      "name": "Guatemala",
+      "shortName": "Guatemala",
+      "region": "Central America",
+      "visas": {
+        "tourist": {
+          "id": "guatemala-tourist",
+          "title": "Guatemala Tourist Visa",
+          "governmentFee": 3000,
+          "serviceFee": 4000,
+          "type": "Tourist Visa",
+          "processing": "10 days",
+          "lengthOfStay": "90 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement"
+          ]
+        }
+      }
+    },
+    {
+      "id": "newzealand",
+      "name": "New Zealand",
+      "shortName": "New Zealand",
+      "region": "Oceania",
+      "visas": {
+        "tourist": {
+          "id": "newzealand-tourist",
+          "title": "New Zealand Visitor Visa",
+          "governmentFee": 12000,
+          "serviceFee": 8000,
+          "type": "E-Visa",
+          "processing": "21 days",
+          "lengthOfStay": "9 months",
+          "validity": "9 months",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Travel Itinerary",
+            "Employment Letter"
+          ]
+        },
+        "study-visa": {
+          "id": "newzealand-study",
+          "title": "New Zealand Student Visa",
+          "governmentFee": 18000,
+          "serviceFee": 14000,
+          "type": "Student Visa",
+          "processing": "30 days",
+          "lengthOfStay": "Course Duration",
+          "validity": "Course Duration",
+          "entry": "Multiple",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Offer Letter",
+            "Financial Proof",
+            "Medical Certificate"
+          ]
+        }
+      }
+    },
+    {
+      "id": "tunisia",
+      "name": "Tunisia",
+      "shortName": "Tunisia",
+      "region": "North Africa",
+      "visas": {
+        "tourist": {
+          "id": "tunisia-tourist",
+          "title": "Tunisia Tourist Visa",
+          "governmentFee": 3500,
+          "serviceFee": 4500,
+          "type": "Sticker Visa",
+          "processing": "10 days",
+          "lengthOfStay": "90 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Hotel Booking",
+            "Travel Insurance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "jordan",
+      "name": "Jordan",
+      "shortName": "Jordan",
+      "region": "Middle East",
+      "visas": {
+        "tourist": {
+          "id": "jordan-tourist",
+          "title": "Jordan Tourist Visa",
+          "governmentFee": 3000,
+          "serviceFee": 3500,
+          "type": "Visa on Arrival",
+          "processing": "3 days",
+          "lengthOfStay": "30 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo"
+          ]
+        }
+      }
+    },
+    {
+      "id": "oman",
+      "name": "Oman",
+      "shortName": "Oman",
+      "region": "Middle East",
+      "visas": {
+        "tourist": {
+          "id": "oman-tourist",
+          "title": "Oman Tourist E-Visa",
+          "governmentFee": 3500,
+          "serviceFee": 4000,
+          "fastTrackFee": 2500,
+          "type": "E-Visa",
+          "processing": "4 days",
+          "fastProcessing": "2 days",
+          "lengthOfStay": "30 days",
+          "validity": "30 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "qatar",
+      "name": "Qatar",
+      "shortName": "Qatar",
+      "region": "Middle East",
+      "visas": {
+        "tourist": {
+          "id": "qatar-tourist",
+          "title": "Qatar Tourist E-Visa",
+          "governmentFee": 4000,
+          "serviceFee": 5000,
+          "fastTrackFee": 3000,
+          "type": "E-Visa",
+          "processing": "4 days",
+          "fastProcessing": "2 days",
+          "lengthOfStay": "30 days",
+          "validity": "30 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kuwait",
+      "name": "Kuwait",
+      "shortName": "Kuwait",
+      "region": "Middle East",
+      "visas": {
+        "tourist": {
+          "id": "kuwait-tourist",
+          "title": "Kuwait Tourist E-Visa",
+          "governmentFee": 3000,
+          "serviceFee": 4000,
+          "type": "E-Visa",
+          "processing": "5 days",
+          "lengthOfStay": "90 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Hotel Booking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bahrain",
+      "name": "Bahrain",
+      "shortName": "Bahrain",
+      "region": "Middle East",
+      "visas": {
+        "tourist": {
+          "id": "bahrain-tourist",
+          "title": "Bahrain Tourist E-Visa",
+          "governmentFee": 2500,
+          "serviceFee": 3000,
+          "fastTrackFee": 2000,
+          "type": "E-Visa",
+          "processing": "3 days",
+          "fastProcessing": "1 day",
+          "lengthOfStay": "14 days",
+          "validity": "30 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo"
+          ]
+        }
+      }
+    },
+    {
+      "id": "tanzania",
+      "name": "Tanzania",
+      "shortName": "Tanzania",
+      "region": "East Africa",
+      "visas": {
+        "tourist": {
+          "id": "tanzania-tourist",
+          "title": "Tanzania E-Visa",
+          "governmentFee": 3500,
+          "serviceFee": 4000,
+          "type": "E-Visa",
+          "processing": "7 days",
+          "lengthOfStay": "90 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Yellow Fever Certificate"
+          ]
+        }
+      }
+    },
+    {
+      "id": "southafrica",
+      "name": "South Africa",
+      "shortName": "South Africa",
+      "region": "Southern Africa",
+      "visas": {
+        "tourist": {
+          "id": "southafrica-tourist",
+          "title": "South Africa Tourist Visa",
+          "governmentFee": 5000,
+          "serviceFee": 6000,
+          "type": "Sticker Visa",
+          "processing": "15 days",
+          "lengthOfStay": "90 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Bank Statement",
+            "Travel Itinerary",
+            "Yellow Fever Certificate"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ethiopia",
+      "name": "Ethiopia",
+      "shortName": "Ethiopia",
+      "region": "East Africa",
+      "visas": {
+        "tourist": {
+          "id": "ethiopia-tourist",
+          "title": "Ethiopia E-Visa",
+          "governmentFee": 3500,
+          "serviceFee": 4000,
+          "type": "E-Visa",
+          "processing": "5 days",
+          "lengthOfStay": "90 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Yellow Fever Certificate"
+          ]
+        }
+      }
+    },
+    {
+      "id": "zimbabwe",
+      "name": "Zimbabwe",
+      "shortName": "Zimbabwe",
+      "region": "Southern Africa",
+      "visas": {
+        "tourist": {
+          "id": "zimbabwe-tourist",
+          "title": "Zimbabwe E-Visa",
+          "governmentFee": 4000,
+          "serviceFee": 4500,
+          "type": "E-Visa",
+          "processing": "7 days",
+          "lengthOfStay": "90 days",
+          "validity": "90 days",
+          "entry": "Single",
+          "requirements": [
+            "Passport",
+            "Photo",
+            "Yellow Fever Certificate"
+          ]
+        }
+      }
+    }
+  ]
+}

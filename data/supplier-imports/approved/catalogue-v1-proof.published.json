@@ -1,0 +1,1240 @@
+{
+  "metadata": {
+    "generatedAt": "2026-06-26T16:53:22.846Z",
+    "version": "catalogue-v1-proof",
+    "status": "PUBLISHED",
+    "approvedOnly": true,
+    "productionReadyGate": "jurisdiction-and-official-source-review-still-required-before-live-filing"
+  },
+  "products": [
+    {
+      "id": "stampmyvisa-ae-evisa-30",
+      "status": "APPROVED",
+      "destination": "United Arab Emirates",
+      "destinationCode": "AE",
+      "name": "Dubai Tourist Visa - 30 Days",
+      "category": "STANDARD",
+      "entry": "Single",
+      "entryType": "SINGLE",
+      "visaKind": "E_VISA",
+      "purpose": "Tourism",
+      "validity": "60 days",
+      "duration": "30 days",
+      "processingTime": "Estimated processing time: 3-5 working days",
+      "price": 6400,
+      "priceMinor": 640000,
+      "currency": "INR",
+      "documents": [
+        "Passport front page",
+        "Recent photograph",
+        "Bank statement",
+        "Employment proof"
+      ],
+      "documentRequirements": {
+        "mandatory": [
+          {
+            "id": "ae-evisa-passport-front",
+            "label": "Passport front page *",
+            "documentCode": "PASSPORT_FRONT",
+            "documentName": "Passport front page",
+            "description": "Upload passport front page.",
+            "requirement": "MANDATORY",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "appliesToEVisa": true
+          },
+          {
+            "id": "ae-evisa-photo",
+            "label": "Recent photograph *",
+            "documentCode": "PHOTO",
+            "documentName": "Recent photograph",
+            "description": "Upload a recent photograph.",
+            "requirement": "MANDATORY",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "appliesToEVisa": true
+          }
+        ],
+        "conditional": [
+          {
+            "id": "ae-evisa-bank-statement",
+            "label": "Bank statement",
+            "documentCode": "BANK_STATEMENT",
+            "documentName": "Bank statement",
+            "description": "Required when immigration asks for financial evidence.",
+            "requirement": "CONDITIONAL",
+            "conditionLabel": "When financial proof is requested",
+            "uploadRequired": true
+          }
+        ],
+        "optional": [
+          {
+            "id": "ae-evisa-employment-proof",
+            "label": "Employment proof",
+            "documentCode": "EMPLOYMENT_PROOF",
+            "documentName": "Employment proof",
+            "description": "Optional supporting document.",
+            "requirement": "OPTIONAL",
+            "uploadRequired": true,
+            "isOptional": true
+          }
+        ],
+        "informational": [
+          {
+            "id": "ae-evisa-processing-estimate",
+            "label": "Estimated processing time is not guaranteed",
+            "requirement": "INFORMATIONAL",
+            "description": "Supplier timelines are estimates only.",
+            "uploadRequired": false
+          }
+        ]
+      },
+      "pricingLineItems": [
+        {
+          "id": "ae-evisa-visa-fee",
+          "label": "Visa Fee",
+          "type": "VISA_FEE",
+          "amount": 2900,
+          "amountMinor": 290000,
+          "currency": "INR",
+          "taxable": false
+        },
+        {
+          "id": "ae-evisa-service-fee",
+          "label": "Service Fee",
+          "type": "SERVICE_FEE",
+          "amount": 2966.1,
+          "amountMinor": 296610,
+          "currency": "INR",
+          "taxable": true
+        },
+        {
+          "id": "ae-evisa-gst",
+          "label": "GST (18%)",
+          "type": "GST",
+          "amount": 533.9,
+          "amountMinor": 53390,
+          "currency": "INR",
+          "taxable": false
+        }
+      ],
+      "pricing": {
+        "visaFeeMinor": 290000,
+        "vvisaServiceFeeMinor": 296610,
+        "courierFeeMinor": 0,
+        "insuranceFeeMinor": 0,
+        "convenienceFeeMinor": 0,
+        "otherFeeMinor": 0,
+        "discountMinor": 0,
+        "gstMinor": 53390,
+        "totalAmountMinor": 640000,
+        "currency": "INR",
+        "lines": []
+      }
+    },
+    {
+      "id": "stampmyvisa-ae-sticker-90",
+      "status": "APPROVED",
+      "destination": "United Arab Emirates",
+      "destinationCode": "AE",
+      "name": "UAE E-Visa - 90 Days",
+      "category": "STANDARD",
+      "entry": "Single",
+      "entryType": "SINGLE",
+      "visaKind": "E_VISA",
+      "purpose": "Tourism",
+      "validity": "90 days",
+      "duration": "90 days",
+      "processingTime": "Estimated processing time: 7-10 working days",
+      "price": 9828,
+      "priceMinor": 982800,
+      "currency": "INR",
+      "documents": [
+        "Passport front page scan",
+        "Recent photograph",
+        "Invitation letter",
+        "Travel itinerary"
+      ],
+      "documentRequirements": {
+        "mandatory": [
+          {
+            "id": "ae-online-passport-front",
+            "label": "Passport front page scan *",
+            "documentCode": "PASSPORT_FRONT",
+            "documentName": "Passport front page scan",
+            "description": "Upload passport scan for the application record.",
+            "requirement": "MANDATORY",
+            "uploadRequired": true,
+            "physicalOriginalRequired": false,
+            "courierRequired": false,
+            "appliesToEVisa": true,
+            "isMandatory": true
+          },
+          {
+            "id": "ae-online-photo",
+            "label": "Recent photograph *",
+            "documentCode": "PHOTO",
+            "documentName": "Recent photograph",
+            "description": "Upload a recent photograph.",
+            "requirement": "MANDATORY",
+            "uploadRequired": true,
+            "appliesToEVisa": true,
+            "isMandatory": true
+          }
+        ],
+        "conditional": [
+          {
+            "id": "ae-sticker-invitation-letter",
+            "label": "Invitation letter",
+            "documentCode": "INVITATION_LETTER",
+            "documentName": "Invitation letter",
+            "description": "Required when invited by friend or family.",
+            "requirement": "CONDITIONAL",
+            "conditionLabel": "Invited by friend or family",
+            "uploadRequired": true
+          }
+        ],
+        "optional": [
+          {
+            "id": "ae-sticker-itinerary",
+            "label": "Travel itinerary",
+            "documentCode": "TRAVEL_ITINERARY",
+            "documentName": "Travel itinerary",
+            "description": "Optional travel plan.",
+            "requirement": "OPTIONAL",
+            "uploadRequired": true,
+            "isOptional": true
+          }
+        ],
+        "informational": [
+          {
+            "id": "ae-online-processing-instruction",
+            "label": "Estimated processing time is not guaranteed",
+            "requirement": "INFORMATIONAL",
+            "description": "Supplier timelines are estimates only.",
+            "uploadRequired": false,
+            "courierRequired": false
+          }
+        ]
+      },
+      "pricingLineItems": [
+        {
+          "id": "ae-online-visa-fee",
+          "label": "Visa Fee",
+          "type": "VISA_FEE",
+          "amount": 2900,
+          "amountMinor": 290000,
+          "currency": "INR",
+          "taxable": false
+        },
+        {
+          "id": "ae-online-vfs-fee",
+          "label": "VFS Fee / pax",
+          "type": "VFS_FEE",
+          "amount": 5158,
+          "amountMinor": 515800,
+          "currency": "INR",
+          "taxable": false
+        },
+        {
+          "id": "ae-online-service-fee",
+          "label": "Service Fee / pax",
+          "type": "SERVICE_FEE",
+          "amount": 1500,
+          "amountMinor": 150000,
+          "currency": "INR",
+          "taxable": true
+        },
+        {
+          "id": "ae-online-gst",
+          "label": "GST (18%)",
+          "type": "GST",
+          "amount": 270,
+          "amountMinor": 27000,
+          "currency": "INR",
+          "taxable": false
+        }
+      ],
+      "pricing": {
+        "visaFeeMinor": 290000,
+        "vvisaServiceFeeMinor": 150000,
+        "courierFeeMinor": 0,
+        "insuranceFeeMinor": 0,
+        "convenienceFeeMinor": 0,
+        "otherFeeMinor": 515800,
+        "discountMinor": 0,
+        "gstMinor": 27000,
+        "totalAmountMinor": 982800,
+        "currency": "INR",
+        "lines": []
+      },
+      "stickerRoutes": [],
+      "courierRules": {
+        "required": false,
+        "available": false,
+        "physicalSubmissionRequired": false,
+        "courierRequired": false,
+        "courierDirection": "NOT_REQUIRED",
+        "passportCollectionAvailable": false,
+        "passportCollectionCities": [],
+        "routes": []
+      }
+    },
+    {
+      "id": "prod-uk-standard-visitor-180-multiple",
+      "status": "APPROVED",
+      "destination": "United Kingdom",
+      "destinationCode": "GB",
+      "name": "UK Standard Visitor Visa - 180 Days",
+      "category": "STANDARD",
+      "entry": "Multiple",
+      "entryType": "MULTIPLE",
+      "visaKind": "STICKER_VISA",
+      "purpose": "Tourism",
+      "validity": "180 days",
+      "duration": "180 days",
+      "processingTime": "Estimated processing time: 15-30 working days",
+      "price": 15400,
+      "priceMinor": 1540000,
+      "currency": "INR",
+      "documents": [
+        "Passport front page",
+        "Recent photograph",
+        "Bank statement",
+        "Employment proof",
+        "Travel itinerary",
+        "Accommodation proof"
+      ],
+      "documentRequirements": {
+        "mandatory": [
+          {
+            "id": "passport-front",
+            "label": "Passport front page *",
+            "documentCode": "PASSPORT_FRONT",
+            "documentName": "Passport front page",
+            "requirement": "MANDATORY",
+            "description": "Clear passport bio page scan.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          },
+          {
+            "id": "photo",
+            "label": "Recent photograph *",
+            "documentCode": "PHOTO",
+            "documentName": "Recent photograph",
+            "requirement": "MANDATORY",
+            "description": "Recent colour photograph as per destination specification.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          },
+          {
+            "id": "uk-bank-statement",
+            "label": "Bank statement *",
+            "documentCode": "UK_BANK_STATEMENT",
+            "documentName": "Bank statement",
+            "requirement": "MANDATORY",
+            "description": "Recent bank statement or financial evidence.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          },
+          {
+            "id": "uk-travel-itinerary",
+            "label": "Travel itinerary *",
+            "documentCode": "UK_TRAVEL_ITINERARY",
+            "documentName": "Travel itinerary",
+            "requirement": "MANDATORY",
+            "description": "Planned travel dates and itinerary.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          },
+          {
+            "id": "uk-accommodation",
+            "label": "Accommodation proof *",
+            "documentCode": "UK_ACCOMMODATION",
+            "documentName": "Accommodation proof",
+            "requirement": "MANDATORY",
+            "description": "Hotel booking or host accommodation details.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          }
+        ],
+        "conditional": [
+          {
+            "id": "uk-employment-proof",
+            "label": "Employment proof",
+            "documentCode": "UK_EMPLOYMENT_PROOF",
+            "documentName": "Employment proof",
+            "requirement": "CONDITIONAL",
+            "description": "Required for employed travellers.",
+            "uploadRequired": true,
+            "isMandatory": false,
+            "isOptional": false,
+            "conditionLabel": "Employed travellers"
+          },
+          {
+            "id": "uk-minor-consent",
+            "label": "Minor consent letter",
+            "documentCode": "UK_MINOR_CONSENT",
+            "documentName": "Minor consent letter",
+            "requirement": "CONDITIONAL",
+            "description": "Required for applicants under 18 travelling without both parents.",
+            "uploadRequired": true,
+            "isMandatory": false,
+            "isOptional": false,
+            "appliesToMinor": true
+          }
+        ],
+        "optional": [
+          {
+            "id": "uk-cover-letter",
+            "label": "Cover letter",
+            "documentCode": "UK_COVER_LETTER",
+            "documentName": "Cover letter",
+            "requirement": "OPTIONAL",
+            "description": "Optional explanation of travel purpose.",
+            "uploadRequired": true,
+            "isMandatory": false,
+            "isOptional": true
+          }
+        ],
+        "informational": [
+          {
+            "id": "uk-biometrics-info",
+            "label": "Biometric appointment required",
+            "documentCode": "UK_BIOMETRICS_INFO",
+            "documentName": "Biometric appointment required",
+            "requirement": "INFORMATIONAL",
+            "description": "Applicant must attend biometric appointment at the assigned VAC.",
+            "uploadRequired": false,
+            "isMandatory": false,
+            "isOptional": false,
+            "biometricRelated": true,
+            "carryToAppointment": true
+          }
+        ]
+      },
+      "pricingLineItems": [
+        {
+          "id": "uk-visa-fee",
+          "label": "Visa Fee",
+          "type": "VISA_FEE",
+          "amount": 10200,
+          "amountMinor": 1020000,
+          "currency": "INR",
+          "taxable": false
+        },
+        {
+          "id": "uk-service-fee",
+          "label": "Service Fee",
+          "type": "SERVICE_FEE",
+          "amount": 4406.78,
+          "amountMinor": 440678,
+          "currency": "INR",
+          "taxable": true
+        },
+        {
+          "id": "uk-gst",
+          "label": "GST (18%)",
+          "type": "GST",
+          "amount": 793.22,
+          "amountMinor": 79322,
+          "currency": "INR",
+          "taxable": false
+        }
+      ],
+      "pricing": {
+        "visaFeeMinor": 1020000,
+        "vvisaServiceFeeMinor": 440678,
+        "courierFeeMinor": 0,
+        "insuranceFeeMinor": 0,
+        "convenienceFeeMinor": 0,
+        "otherFeeMinor": 0,
+        "discountMinor": 0,
+        "gstMinor": 79322,
+        "totalAmountMinor": 1540000,
+        "currency": "INR",
+        "lines": []
+      },
+      "courierRules": {
+        "required": true,
+        "available": true,
+        "physicalSubmissionRequired": true,
+        "courierRequired": false,
+        "courierDirection": "NOT_SPECIFIED",
+        "submissionCentreName": "UK Visa Application Centre",
+        "passportCollectionAvailable": true,
+        "routes": []
+      },
+      "jurisdictions": [
+        {
+          "id": "uk-india-countrywide-vac",
+          "visaProductId": "prod-uk-standard-visitor-180-multiple",
+          "jurisdictionCode": "UK_INDIA_VAC",
+          "jurisdictionLabel": "India VAC Jurisdiction",
+          "destinationCountry": "United Kingdom",
+          "applicantResidenceCountries": [
+            "India"
+          ],
+          "submissionCentreName": "UK Visa Application Centre",
+          "submissionCentreType": "VFS",
+          "submissionCentreCity": "Applicant selected VAC",
+          "biometricCentreCity": "Applicant selected VAC",
+          "courierAvailable": true,
+          "physicalAppearanceRequired": true,
+          "priority": 100,
+          "isFallback": true,
+          "isActive": true,
+          "sourceText": "UK visitor applications from India require online form and biometric appointment through visa application centre.",
+          "verificationStatus": "REVIEW_REQUIRED"
+        }
+      ],
+      "passportValidityRule": {
+        "minimumMonths": 6,
+        "minimumMonthsFrom": "ARRIVAL_DATE",
+        "rule": "SIX_MONTHS_FROM_ARRIVAL",
+        "blankPagesRequired": 1
+      },
+      "publicationVersion": "catalogue-v1-proof",
+      "publicationHash": "proof-uk-uae-pt-kr-tr-v1",
+      "publishedAt": "2026-06-26T00:00:00.000Z"
+    },
+    {
+      "id": "prod-portugal-schengen-tourist-90",
+      "status": "APPROVED",
+      "destination": "Portugal",
+      "destinationCode": "PT",
+      "name": "Portugal Schengen Tourist Visa - 90 Days",
+      "category": "STANDARD",
+      "entry": "Multiple",
+      "entryType": "MULTIPLE",
+      "visaKind": "STICKER_VISA",
+      "purpose": "Tourism",
+      "validity": "180 days",
+      "duration": "90 days",
+      "processingTime": "Estimated processing time: 15-21 working days",
+      "price": 12800,
+      "priceMinor": 1280000,
+      "currency": "INR",
+      "documents": [
+        "Passport front page",
+        "Recent photograph",
+        "Travel insurance",
+        "Bank statement",
+        "Accommodation proof"
+      ],
+      "documentRequirements": {
+        "mandatory": [
+          {
+            "id": "passport-front",
+            "label": "Passport front page *",
+            "documentCode": "PASSPORT_FRONT",
+            "documentName": "Passport front page",
+            "requirement": "MANDATORY",
+            "description": "Clear passport bio page scan.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          },
+          {
+            "id": "photo",
+            "label": "Recent photograph *",
+            "documentCode": "PHOTO",
+            "documentName": "Recent photograph",
+            "requirement": "MANDATORY",
+            "description": "Recent colour photograph as per destination specification.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          },
+          {
+            "id": "pt-travel-insurance",
+            "label": "Travel insurance *",
+            "documentCode": "PT_TRAVEL_INSURANCE",
+            "documentName": "Travel insurance",
+            "requirement": "MANDATORY",
+            "description": "Schengen travel insurance for the full travel period.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          },
+          {
+            "id": "pt-bank-statement",
+            "label": "Bank statement *",
+            "documentCode": "PT_BANK_STATEMENT",
+            "documentName": "Bank statement",
+            "requirement": "MANDATORY",
+            "description": "Recent financial evidence.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          },
+          {
+            "id": "pt-accommodation",
+            "label": "Accommodation proof *",
+            "documentCode": "PT_ACCOMMODATION",
+            "documentName": "Accommodation proof",
+            "requirement": "MANDATORY",
+            "description": "Hotel booking or invitation/accommodation details.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          }
+        ],
+        "conditional": [
+          {
+            "id": "pt-employment-proof",
+            "label": "Employment proof",
+            "documentCode": "PT_EMPLOYMENT_PROOF",
+            "documentName": "Employment proof",
+            "requirement": "CONDITIONAL",
+            "description": "Required based on occupation profile.",
+            "uploadRequired": true,
+            "isMandatory": false,
+            "isOptional": false
+          }
+        ],
+        "optional": [
+          {
+            "id": "pt-cover-letter",
+            "label": "Cover letter",
+            "documentCode": "PT_COVER_LETTER",
+            "documentName": "Cover letter",
+            "requirement": "OPTIONAL",
+            "description": "Optional cover letter to explain travel purpose.",
+            "uploadRequired": true,
+            "isMandatory": false,
+            "isOptional": true
+          }
+        ],
+        "informational": [
+          {
+            "id": "pt-biometrics",
+            "label": "Biometrics may be required",
+            "documentCode": "PT_BIOMETRICS",
+            "documentName": "Biometrics may be required",
+            "requirement": "INFORMATIONAL",
+            "description": "Applicant may need to attend the assigned visa centre.",
+            "uploadRequired": false,
+            "isMandatory": false,
+            "isOptional": false,
+            "biometricRelated": true
+          }
+        ]
+      },
+      "pricingLineItems": [
+        {
+          "id": "pt-visa-fee",
+          "label": "Visa Fee",
+          "type": "VISA_FEE",
+          "amount": 7800,
+          "amountMinor": 780000,
+          "currency": "INR",
+          "taxable": false
+        },
+        {
+          "id": "pt-service-fee",
+          "label": "Service Fee",
+          "type": "SERVICE_FEE",
+          "amount": 4237.29,
+          "amountMinor": 423729,
+          "currency": "INR",
+          "taxable": true
+        },
+        {
+          "id": "pt-gst",
+          "label": "GST (18%)",
+          "type": "GST",
+          "amount": 762.71,
+          "amountMinor": 76271,
+          "currency": "INR",
+          "taxable": false
+        }
+      ],
+      "pricing": {
+        "visaFeeMinor": 780000,
+        "vvisaServiceFeeMinor": 423729,
+        "courierFeeMinor": 0,
+        "insuranceFeeMinor": 0,
+        "convenienceFeeMinor": 0,
+        "otherFeeMinor": 0,
+        "discountMinor": 0,
+        "gstMinor": 76271,
+        "totalAmountMinor": 1280000,
+        "currency": "INR",
+        "lines": []
+      },
+      "jurisdictions": [
+        {
+          "id": "pt-west-india-mumbai",
+          "visaProductId": "prod-portugal-schengen-tourist-90",
+          "jurisdictionCode": "PT_MUMBAI",
+          "jurisdictionLabel": "Mumbai Jurisdiction",
+          "destinationCountry": "Portugal",
+          "applicantResidenceStates": [
+            "Maharashtra",
+            "Goa",
+            "Gujarat",
+            "Madhya Pradesh",
+            "Chhattisgarh"
+          ],
+          "submissionCentreName": "VFS Portugal Mumbai",
+          "submissionCentreType": "VFS",
+          "submissionCentreCity": "Mumbai",
+          "biometricCentreCity": "Mumbai",
+          "processingCentreCity": "Consulate General of Portugal",
+          "courierAvailable": true,
+          "physicalAppearanceRequired": true,
+          "priority": 10,
+          "isFallback": false,
+          "isActive": true,
+          "sourceText": "Portugal Schengen jurisdiction should be verified against official VFS/mission rules before final filing.",
+          "verificationStatus": "REVIEW_REQUIRED"
+        },
+        {
+          "id": "pt-india-manual",
+          "visaProductId": "prod-portugal-schengen-tourist-90",
+          "jurisdictionCode": "PT_MANUAL",
+          "jurisdictionLabel": "Manual Portugal Jurisdiction Review",
+          "destinationCountry": "Portugal",
+          "applicantResidenceCountries": [
+            "India"
+          ],
+          "submissionCentreName": "Manual review required",
+          "submissionCentreType": "VISA_APPLICATION_CENTRE",
+          "courierAvailable": false,
+          "physicalAppearanceRequired": true,
+          "priority": 999,
+          "isFallback": true,
+          "isActive": true,
+          "sourceText": "Fallback when state/city does not match a verified Portugal jurisdiction rule.",
+          "verificationStatus": "REVIEW_REQUIRED"
+        }
+      ],
+      "passportValidityRule": {
+        "minimumMonths": 3,
+        "minimumMonthsFrom": "DEPARTURE_DATE",
+        "rule": "THREE_MONTHS_FROM_DEPARTURE",
+        "blankPagesRequired": 2
+      },
+      "publicationVersion": "catalogue-v1-proof",
+      "publicationHash": "proof-uk-uae-pt-kr-tr-v1",
+      "publishedAt": "2026-06-26T00:00:00.000Z"
+    },
+    {
+      "id": "prod-south-korea-tourist-90",
+      "status": "APPROVED",
+      "destination": "South Korea",
+      "destinationCode": "KR",
+      "name": "South Korea Tourist Visa - 90 Days",
+      "category": "STANDARD",
+      "entry": "Single",
+      "entryType": "SINGLE",
+      "visaKind": "STICKER_VISA",
+      "purpose": "Tourism",
+      "validity": "90 days",
+      "duration": "90 days",
+      "processingTime": "Estimated processing time: 10-15 working days",
+      "price": 11200,
+      "priceMinor": 1120000,
+      "currency": "INR",
+      "documents": [
+        "Passport front page",
+        "Recent photograph",
+        "Bank statement",
+        "Employment proof"
+      ],
+      "documentRequirements": {
+        "mandatory": [
+          {
+            "id": "passport-front",
+            "label": "Passport front page *",
+            "documentCode": "PASSPORT_FRONT",
+            "documentName": "Passport front page",
+            "requirement": "MANDATORY",
+            "description": "Clear passport bio page scan.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          },
+          {
+            "id": "photo",
+            "label": "Recent photograph *",
+            "documentCode": "PHOTO",
+            "documentName": "Recent photograph",
+            "requirement": "MANDATORY",
+            "description": "Recent colour photograph as per destination specification.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          },
+          {
+            "id": "kr-bank-statement",
+            "label": "Bank statement *",
+            "documentCode": "KR_BANK_STATEMENT",
+            "documentName": "Bank statement",
+            "requirement": "MANDATORY",
+            "description": "Financial evidence for the trip.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          }
+        ],
+        "conditional": [
+          {
+            "id": "kr-employment-proof",
+            "label": "Employment proof",
+            "documentCode": "KR_EMPLOYMENT_PROOF",
+            "documentName": "Employment proof",
+            "requirement": "CONDITIONAL",
+            "description": "Required for employed applicants.",
+            "uploadRequired": true,
+            "isMandatory": false,
+            "isOptional": false
+          }
+        ],
+        "optional": [
+          {
+            "id": "kr-itinerary",
+            "label": "Travel itinerary",
+            "documentCode": "KR_ITINERARY",
+            "documentName": "Travel itinerary",
+            "requirement": "OPTIONAL",
+            "description": "Optional travel plan.",
+            "uploadRequired": true,
+            "isMandatory": false,
+            "isOptional": true
+          }
+        ],
+        "informational": [
+          {
+            "id": "kr-centre-info",
+            "label": "Submission centre varies by residence",
+            "documentCode": "KR_CENTRE_INFO",
+            "documentName": "Submission centre varies by residence",
+            "requirement": "INFORMATIONAL",
+            "description": "Residence city/state may affect submission centre.",
+            "uploadRequired": false,
+            "isMandatory": false,
+            "isOptional": false
+          }
+        ]
+      },
+      "pricingLineItems": [
+        {
+          "id": "kr-visa-fee",
+          "label": "Visa Fee",
+          "type": "VISA_FEE",
+          "amount": 6200,
+          "amountMinor": 620000,
+          "currency": "INR",
+          "taxable": false
+        },
+        {
+          "id": "kr-service-fee",
+          "label": "Service Fee",
+          "type": "SERVICE_FEE",
+          "amount": 4237.29,
+          "amountMinor": 423729,
+          "currency": "INR",
+          "taxable": true
+        },
+        {
+          "id": "kr-gst",
+          "label": "GST (18%)",
+          "type": "GST",
+          "amount": 762.71,
+          "amountMinor": 76271,
+          "currency": "INR",
+          "taxable": false
+        }
+      ],
+      "pricing": {
+        "visaFeeMinor": 620000,
+        "vvisaServiceFeeMinor": 423729,
+        "courierFeeMinor": 0,
+        "insuranceFeeMinor": 0,
+        "convenienceFeeMinor": 0,
+        "otherFeeMinor": 0,
+        "discountMinor": 0,
+        "gstMinor": 76271,
+        "totalAmountMinor": 1120000,
+        "currency": "INR",
+        "lines": []
+      },
+      "jurisdictions": [
+        {
+          "id": "kr-south-india-chennai",
+          "visaProductId": "prod-south-korea-tourist-90",
+          "jurisdictionCode": "KR_CHENNAI",
+          "jurisdictionLabel": "Chennai Jurisdiction",
+          "destinationCountry": "South Korea",
+          "applicantResidenceStates": [
+            "Tamil Nadu",
+            "Karnataka",
+            "Kerala",
+            "Telangana",
+            "Andhra Pradesh"
+          ],
+          "submissionCentreName": "Korea Visa Application Centre",
+          "submissionCentreType": "VISA_APPLICATION_CENTRE",
+          "submissionCentreCity": "Chennai",
+          "processingCentreCity": "Consulate General",
+          "courierAvailable": true,
+          "physicalAppearanceRequired": false,
+          "priority": 10,
+          "isFallback": false,
+          "isActive": true,
+          "sourceText": "South Korea city and jurisdiction variations require official confirmation before final filing.",
+          "verificationStatus": "REVIEW_REQUIRED"
+        }
+      ],
+      "passportValidityRule": {
+        "minimumMonths": 6,
+        "minimumMonthsFrom": "ARRIVAL_DATE",
+        "rule": "SIX_MONTHS_FROM_ARRIVAL",
+        "blankPagesRequired": 2
+      },
+      "publicationVersion": "catalogue-v1-proof",
+      "publicationHash": "proof-uk-uae-pt-kr-tr-v1",
+      "publishedAt": "2026-06-26T00:00:00.000Z"
+    },
+    {
+      "id": "prod-turkey-evisa-30",
+      "status": "APPROVED",
+      "destination": "Turkey",
+      "destinationCode": "TR",
+      "name": "Turkey E-Visa - 30 Days",
+      "category": "STANDARD",
+      "entry": "Single",
+      "entryType": "SINGLE",
+      "visaKind": "E_VISA",
+      "purpose": "Tourism",
+      "validity": "180 days",
+      "duration": "30 days",
+      "processingTime": "Estimated processing time: 1-3 working days",
+      "price": 7200,
+      "priceMinor": 720000,
+      "currency": "INR",
+      "documents": [
+        "Passport front page",
+        "Recent photograph"
+      ],
+      "documentRequirements": {
+        "mandatory": [
+          {
+            "id": "passport-front",
+            "label": "Passport front page *",
+            "documentCode": "PASSPORT_FRONT",
+            "documentName": "Passport front page",
+            "requirement": "MANDATORY",
+            "description": "Clear passport bio page scan.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          },
+          {
+            "id": "photo",
+            "label": "Recent photograph *",
+            "documentCode": "PHOTO",
+            "documentName": "Recent photograph",
+            "requirement": "MANDATORY",
+            "description": "Recent colour photograph as per destination specification.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          }
+        ],
+        "conditional": [
+          {
+            "id": "tr-supporting-visa",
+            "label": "Supporting valid visa/residence permit",
+            "documentCode": "TR_SUPPORTING_VISA",
+            "documentName": "Supporting valid visa/residence permit",
+            "requirement": "CONDITIONAL",
+            "description": "May be required depending on traveller eligibility.",
+            "uploadRequired": true,
+            "isMandatory": false,
+            "isOptional": false
+          }
+        ],
+        "optional": [
+          {
+            "id": "tr-itinerary",
+            "label": "Travel itinerary",
+            "documentCode": "TR_ITINERARY",
+            "documentName": "Travel itinerary",
+            "requirement": "OPTIONAL",
+            "description": "Optional travel plan.",
+            "uploadRequired": true,
+            "isMandatory": false,
+            "isOptional": true
+          }
+        ],
+        "informational": [
+          {
+            "id": "tr-electronic-delivery",
+            "label": "Electronic visa delivery",
+            "documentCode": "TR_ELECTRONIC_DELIVERY",
+            "documentName": "Electronic visa delivery",
+            "requirement": "INFORMATIONAL",
+            "description": "No physical passport submission is expected for the eVisa variant.",
+            "uploadRequired": false,
+            "isMandatory": false,
+            "isOptional": false
+          }
+        ]
+      },
+      "pricingLineItems": [
+        {
+          "id": "tr-visa-fee",
+          "label": "Visa Fee",
+          "type": "VISA_FEE",
+          "amount": 4300,
+          "amountMinor": 430000,
+          "currency": "INR",
+          "taxable": false
+        },
+        {
+          "id": "tr-service-fee",
+          "label": "Service Fee",
+          "type": "SERVICE_FEE",
+          "amount": 2457.63,
+          "amountMinor": 245763,
+          "currency": "INR",
+          "taxable": true
+        },
+        {
+          "id": "tr-gst",
+          "label": "GST (18%)",
+          "type": "GST",
+          "amount": 442.37,
+          "amountMinor": 44237,
+          "currency": "INR",
+          "taxable": false
+        }
+      ],
+      "pricing": {
+        "visaFeeMinor": 430000,
+        "vvisaServiceFeeMinor": 245763,
+        "courierFeeMinor": 0,
+        "insuranceFeeMinor": 0,
+        "convenienceFeeMinor": 0,
+        "otherFeeMinor": 0,
+        "discountMinor": 0,
+        "gstMinor": 44237,
+        "totalAmountMinor": 720000,
+        "currency": "INR",
+        "lines": []
+      },
+      "jurisdictions": [
+        {
+          "id": "tr-online",
+          "visaProductId": "prod-turkey-evisa-30",
+          "jurisdictionCode": "TR_ONLINE",
+          "jurisdictionLabel": "Online eVisa",
+          "destinationCountry": "Turkey",
+          "applicantResidenceCountries": [
+            "India"
+          ],
+          "submissionCentreName": "Online application",
+          "submissionCentreType": "ONLINE",
+          "submissionCentreCity": "Online",
+          "courierAvailable": false,
+          "physicalAppearanceRequired": false,
+          "priority": 1,
+          "isFallback": true,
+          "isActive": true,
+          "sourceText": "Turkey eVisa handled online when eligibility criteria are met.",
+          "verificationStatus": "REVIEW_REQUIRED"
+        }
+      ],
+      "passportValidityRule": {
+        "minimumMonths": 6,
+        "minimumMonthsFrom": "ARRIVAL_DATE",
+        "rule": "SIX_MONTHS_FROM_ARRIVAL",
+        "blankPagesRequired": 1
+      },
+      "publicationVersion": "catalogue-v1-proof",
+      "publicationHash": "proof-uk-uae-pt-kr-tr-v1",
+      "publishedAt": "2026-06-26T00:00:00.000Z"
+    },
+    {
+      "id": "prod-turkey-sticker-90",
+      "status": "APPROVED",
+      "destination": "Turkey",
+      "destinationCode": "TR",
+      "name": "Turkey Sticker Visa - 90 Days",
+      "category": "STANDARD",
+      "entry": "Single",
+      "entryType": "SINGLE",
+      "visaKind": "STICKER_VISA",
+      "purpose": "Tourism",
+      "validity": "180 days",
+      "duration": "90 days",
+      "processingTime": "Estimated processing time: 7-15 working days",
+      "price": 9800,
+      "priceMinor": 980000,
+      "currency": "INR",
+      "documents": [
+        "Passport front page",
+        "Recent photograph",
+        "Bank statement"
+      ],
+      "documentRequirements": {
+        "mandatory": [
+          {
+            "id": "passport-front",
+            "label": "Passport front page *",
+            "documentCode": "PASSPORT_FRONT",
+            "documentName": "Passport front page",
+            "requirement": "MANDATORY",
+            "description": "Clear passport bio page scan.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          },
+          {
+            "id": "photo",
+            "label": "Recent photograph *",
+            "documentCode": "PHOTO",
+            "documentName": "Recent photograph",
+            "requirement": "MANDATORY",
+            "description": "Recent colour photograph as per destination specification.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          },
+          {
+            "id": "tr-sticker-bank-statement",
+            "label": "Bank statement *",
+            "documentCode": "TR_STICKER_BANK_STATEMENT",
+            "documentName": "Bank statement",
+            "requirement": "MANDATORY",
+            "description": "Financial evidence for the trip.",
+            "uploadRequired": true,
+            "isMandatory": true,
+            "isOptional": false
+          }
+        ],
+        "conditional": [],
+        "optional": [
+          {
+            "id": "tr-sticker-itinerary",
+            "label": "Travel itinerary",
+            "documentCode": "TR_STICKER_ITINERARY",
+            "documentName": "Travel itinerary",
+            "requirement": "OPTIONAL",
+            "description": "Optional travel plan.",
+            "uploadRequired": true,
+            "isMandatory": false,
+            "isOptional": true
+          }
+        ],
+        "informational": [
+          {
+            "id": "tr-sticker-submission",
+            "label": "Visa centre submission instruction",
+            "documentCode": "TR_STICKER_SUBMISSION",
+            "documentName": "Visa centre submission instruction",
+            "requirement": "INFORMATIONAL",
+            "description": "Physical passport submission may be required for the sticker variant.",
+            "uploadRequired": false,
+            "isMandatory": false,
+            "isOptional": false,
+            "physicalOriginalRequired": true,
+            "carryToAppointment": true
+          }
+        ]
+      },
+      "pricingLineItems": [
+        {
+          "id": "tr-sticker-visa-fee",
+          "label": "Visa Fee",
+          "type": "VISA_FEE",
+          "amount": 6100,
+          "amountMinor": 610000,
+          "currency": "INR",
+          "taxable": false
+        },
+        {
+          "id": "tr-sticker-service-fee",
+          "label": "Service Fee",
+          "type": "SERVICE_FEE",
+          "amount": 3135.59,
+          "amountMinor": 313559,
+          "currency": "INR",
+          "taxable": true
+        },
+        {
+          "id": "tr-sticker-gst",
+          "label": "GST (18%)",
+          "type": "GST",
+          "amount": 564.41,
+          "amountMinor": 56441,
+          "currency": "INR",
+          "taxable": false
+        }
+      ],
+      "pricing": {
+        "visaFeeMinor": 610000,
+        "vvisaServiceFeeMinor": 313559,
+        "courierFeeMinor": 0,
+        "insuranceFeeMinor": 0,
+        "convenienceFeeMinor": 0,
+        "otherFeeMinor": 0,
+        "discountMinor": 0,
+        "gstMinor": 56441,
+        "totalAmountMinor": 980000,
+        "currency": "INR",
+        "lines": []
+      },
+      "courierRules": {
+        "required": false,
+        "available": false,
+        "physicalSubmissionRequired": true,
+        "courierRequired": false,
+        "courierDirection": "NOT_SPECIFIED",
+        "submissionCentreName": "Turkey visa application centre",
+        "submissionCity": "Jurisdiction based",
+        "courierInstructions": "Submission centre and passport handling must be confirmed during jurisdiction review.",
+        "passportCollectionAvailable": true,
+        "routes": []
+      },
+      "jurisdictions": [
+        {
+          "id": "tr-sticker-india-manual",
+          "visaProductId": "prod-turkey-sticker-90",
+          "jurisdictionCode": "TR_STICKER_MANUAL",
+          "jurisdictionLabel": "Turkey Sticker Jurisdiction Review",
+          "destinationCountry": "Turkey",
+          "applicantResidenceCountries": [
+            "India"
+          ],
+          "submissionCentreName": "Manual jurisdiction review required",
+          "submissionCentreType": "VISA_APPLICATION_CENTRE",
+          "courierAvailable": false,
+          "physicalAppearanceRequired": true,
+          "priority": 100,
+          "isFallback": true,
+          "isActive": true,
+          "sourceText": "Turkey sticker visa jurisdiction and centre rules require official confirmation before final filing.",
+          "verificationStatus": "REVIEW_REQUIRED"
+        }
+      ],
+      "passportValidityRule": {
+        "minimumMonths": 6,
+        "minimumMonthsFrom": "ARRIVAL_DATE",
+        "rule": "SIX_MONTHS_FROM_ARRIVAL",
+        "blankPagesRequired": 1
+      },
+      "publicationVersion": "catalogue-v1-proof",
+      "publicationHash": "proof-uk-uae-pt-kr-tr-v1",
+      "publishedAt": "2026-06-26T00:00:00.000Z"
+    }
+  ]
+}

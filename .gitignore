@@ -1,3 +1,5 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
 # dependencies
 node_modules
 /.pnp
@@ -28,7 +30,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
+# env files (can opt-in for committing if needed)
 .env*
 !.env.example
 db/*.db
@@ -44,13 +46,29 @@ worklog.md
 *.tar
 *.tar.gz
 *.zip
-.runtime/
+.runtime/browser-sessions/
+.runtime/zoho-oauth/
 data/supplier-imports/raw/live-session/
 
 # vercel
 .vercel
 
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 local-*
+.claude
+.z-ai-config
+*.log
+dev.log
+dev.out.log
+test
+prompt
+
+server.log
+# Skills directory
+/skills/
+
+# Agent scratch files
+scratch/

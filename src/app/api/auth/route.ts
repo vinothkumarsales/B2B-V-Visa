@@ -1,0 +1,343 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { after } from 'next/server';
+import { randomUUID } from 'crypto';
+import { db } from '@/lib/db';
+import { verifyFirebaseIdToken } from '@/lib/firebase-verify';
+import { apiError, isApiResponse } from '@/lib/api-response';
+import { loginSchema } from '@/lib/auth/login-schema';
+import { createSession, getSession } from '@/server/auth/session';
+import { hashPassword, verifyPassword } from '@/server/auth/password';
+import { auditLog } from '@/server/audit/audit-log';
+import { isBootstrapAdminEmail } from '@/server/admin/permissions';
+import { queueTravelAgentCrmSync } from '@/server/integrations/zoho/travel-agent-sync';
+import { drainZohoCrmOutbox } from '@/server/integrations/zoho/crm-outbox-worker';
+import { serializeAgency } from '@/lib/uid';
+
+const BOOTSTRAP_LOCKOUT_MS = 15 * 60 * 1000;
+const BOOTSTRAP_MAX_FAILURES = 5;
+
+const bootstrapAttempts = globalThis as typeof globalThis & {
+  vvisaAdminBootstrapAttempts?: Map<string, { failures: number; lockedUntil: number }>;
+};
+
+function getBootstrapAttemptStore() {
+  if (!bootstrapAttempts.vvisaAdminBootstrapAttempts) {
+    bootstrapAttempts.vvisaAdminBootstrapAttempts = new Map();
+  }
+  return bootstrapAttempts.vvisaAdminBootstrapAttempts;
+}
+
+function isBootstrapEnabled() {
+  return process.env.ADMIN_BOOTSTRAP_LOGIN_ENABLED?.trim().toLowerCase() === 'true';
+}
+
+function verifyBootstrapSecret(password: string) {
+  const configuredHash = process.env.ADMIN_BOOTSTRAP_PASSWORD_HASH?.trim();
+  if (configuredHash) return verifyPassword(password, configuredHash);
+
+  const configuredPassword = process.env.ADMIN_BOOTSTRAP_PASSWORD;
+  return Boolean(configuredPassword) && password === configuredPassword;
+}
+
+function loginError(code: string, message: string, status: number, fields?: unknown) {
+  return NextResponse.json({ error: { code, message, fields } }, { status });
+}
+
+function hasRuntimeAuthConfig() {
+  return Boolean(
+    process.env.DATABASE_URL ||
+      process.env.DATABASE_POSTGRES_PRISMA_URL ||
+      process.env.DATABASE_POSTGRES_POSTGRES_PRISMA_URL ||
+      process.env.DATABASE_POSTGRES_POSTGRES_URL ||
+      process.env.POSTGRES_PRISMA_URL ||
+      process.env.POSTGRES_URL,
+  );
+}
+
+function hasValidBootstrapConfig() {
+  const configuredHash = process.env.ADMIN_BOOTSTRAP_PASSWORD_HASH?.trim();
+  const configuredPassword = process.env.ADMIN_BOOTSTRAP_PASSWORD;
+  return Boolean(
+    (configuredHash && configuredHash.startsWith('pbkdf2$')) ||
+      configuredPassword,
+  );
+}
+
+async function recordBootstrapFailure(input: { email: string; userId?: string | null; reason: string }) {
+  const store = getBootstrapAttemptStore();
+  const current = store.get(input.email) ?? { failures: 0, lockedUntil: 0 };
+  const failures = current.failures + 1;
+  const lockedUntil = failures >= BOOTSTRAP_MAX_FAILURES ? Date.now() + BOOTSTRAP_LOCKOUT_MS : current.lockedUntil;
+  store.set(input.email, { failures, lockedUntil });
+
+  await auditLog({
+    actorUserId: input.userId ?? null,
+    action: 'ADMIN_BOOTSTRAP_LOGIN_FAILED',
+    resourceType: 'User',
+    resourceId: input.email,
+    metadata: {
+      reason: input.reason,
+      failures,
+      locked: lockedUntil > Date.now(),
+    },
+  });
+}
+
+function clearBootstrapFailures(email: string) {
+  getBootstrapAttemptStore().delete(email);
+}
+
+function isBootstrapLocked(email: string) {
+  const attempt = getBootstrapAttemptStore().get(email);
+  return Boolean(attempt && attempt.lockedUntil > Date.now());
+}
+
+export async function GET() {
+  const session = await getSession();
+  if (!session) return apiError('AUTH_REQUIRED', 'Authentication required', 401);
+
+  return NextResponse.json({
+    user: {
+      id: session.user.id,
+      name: session.user.name,
+      email: session.user.email,
+    },
+    agency: serializeAgency(session.activeMembership?.agency ?? null),
+    role: session.role,
+  });
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    let body: any;
+    try {
+      body = await request.json();
+    } catch {
+      return loginError('INVALID_JSON', 'The request body must be valid JSON.', 400);
+    }
+
+    // Firebase Authentication Token Flow
+    if (body && typeof body === 'object' && 'token' in body) {
+      const token = body.token;
+      const decodedToken = await verifyFirebaseIdToken(token);
+      const email = decodedToken.email?.toLowerCase();
+      if (!email) return loginError('INVALID_TOKEN', 'Token has no email address', 400);
+
+      let user = await db.user.findUnique({
+        where: { email },
+        include: { memberships: { include: { agency: true } } },
+      });
+
+      if (!user) {
+        const name = decodedToken.name ?? email.split('@')[0];
+        user = await db.$transaction(async (tx) => {
+          const u = await tx.user.create({
+            data: {
+              name,
+              email,
+              phone: decodedToken.phone_number ?? null,
+              passwordHash: '',
+            },
+          });
+          const agency = await tx.agency.create({
+            data: {
+              name: `${name}'s Agency`,
+              email,
+              status: 'DRAFT',
+              memberships: {
+                create: {
+                  userId: u.id,
+                  role: 'AGENCY_OWNER',
+                  isDefault: true,
+                },
+              },
+              wallets: {
+                create: { currency: 'INR' },
+              },
+            },
+          });
+          return tx.user.findUniqueOrThrow({
+            where: { id: u.id },
+            include: { memberships: { include: { agency: true } } },
+          });
+        });
+      }
+
+      await createSession(user.id);
+      const membership = user.memberships[0] ?? null;
+
+      after(async () => {
+        try {
+          await auditLog({
+            agencyId: membership?.agencyId,
+            actorUserId: user.id,
+            action: 'LOGIN',
+            resourceType: 'User',
+            resourceId: user.id,
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      });
+
+      return NextResponse.json({
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        },
+        agency: serializeAgency(membership?.agency ?? null),
+        role: membership?.role ?? null,
+        message: 'Login successful',
+      });
+    }
+
+    const parsed = loginSchema.safeParse(body);
+    if (!parsed.success) {
+      return loginError(
+        'INVALID_REQUEST_BODY',
+        'Please enter a valid email and password.',
+        400,
+        parsed.error.flatten().fieldErrors,
+      );
+    }
+
+    const identifier = parsed.data.identifier.trim();
+    const normalizedPhone = identifier.replace(/[^0-9+]/g, '');
+    const isEmailIdentifier = identifier.includes('@');
+    const phoneDigits = normalizedPhone.replace(/\D/g, '');
+    const localPhone = phoneDigits.length > 10 ? phoneDigits.slice(-10) : phoneDigits;
+    const phoneVariants = [...new Set([normalizedPhone, localPhone, `+91${localPhone}`, `91${localPhone}`])];
+    const identity = await db.user.findFirst({
+      where: isEmailIdentifier
+        ? { email: identifier.toLowerCase() }
+        : { phone: { in: phoneVariants } },
+      select: { email: true },
+    });
+    const email = identity?.email ?? (isEmailIdentifier ? identifier.toLowerCase() : '');
+    const isAdminBootstrapCandidate = isBootstrapAdminEmail(email);
+
+    if (!hasRuntimeAuthConfig()) {
+      return loginError(
+        'AUTH_CONFIGURATION_REQUIRED',
+        'Login is temporarily unavailable. Server authentication is not fully configured.',
+        503,
+      );
+    }
+
+    if (isAdminBootstrapCandidate && isBootstrapEnabled() && !hasValidBootstrapConfig()) {
+      return loginError(
+        'BOOTSTRAP_SECRET_MISCONFIGURED',
+        'Admin bootstrap login is not configured correctly.',
+        503,
+      );
+    }
+
+    let user = email ? await db.user.findUnique({
+      where: { email },
+      include: { memberships: { include: { agency: true } } },
+    }) : null;
+
+    let isAdminBootstrapLogin = false;
+    if (isAdminBootstrapCandidate && !user) {
+      if (!isBootstrapEnabled()) {
+        await recordBootstrapFailure({ email, reason: 'bootstrap_disabled' });
+        return loginError('BOOTSTRAP_LOGIN_DISABLED', 'Admin bootstrap login is currently unavailable.', 403);
+      }
+      if (isBootstrapLocked(email)) {
+        await recordBootstrapFailure({ email, reason: 'bootstrap_locked' });
+        return loginError('ACCOUNT_LOCKED', 'Too many failed attempts. Try again later.', 423);
+      }
+      if (!verifyBootstrapSecret(parsed.data.password)) {
+        await recordBootstrapFailure({ email, reason: 'invalid_bootstrap_secret' });
+        return loginError('INVALID_CREDENTIALS', 'The email or password is incorrect.', 401);
+      }
+
+      isAdminBootstrapLogin = true;
+      user = await db.user.create({
+        data: {
+          name: 'V-VISA Admin',
+          email,
+          passwordHash: hashPassword(parsed.data.password),
+        },
+        include: { memberships: { include: { agency: true } } },
+      });
+    }
+
+    const passwordAccepted = user ? verifyPassword(parsed.data.password, user.passwordHash) : false;
+    if (user && isAdminBootstrapCandidate && !passwordAccepted && !isAdminBootstrapLogin) {
+      if (!isBootstrapEnabled()) {
+        await recordBootstrapFailure({ email, userId: user.id, reason: 'bootstrap_disabled' });
+        return loginError('BOOTSTRAP_LOGIN_DISABLED', 'Admin bootstrap login is currently unavailable.', 403);
+      } else if (isBootstrapLocked(email)) {
+        await recordBootstrapFailure({ email, userId: user.id, reason: 'bootstrap_locked' });
+        return loginError('ACCOUNT_LOCKED', 'Too many failed attempts. Try again later.', 423);
+      } else if (verifyBootstrapSecret(parsed.data.password)) {
+        isAdminBootstrapLogin = true;
+      } else {
+        await recordBootstrapFailure({ email, userId: user.id, reason: 'invalid_bootstrap_secret' });
+      }
+    }
+
+    if (!user || (!passwordAccepted && !isAdminBootstrapLogin)) {
+      return loginError('INVALID_CREDENTIALS', 'The email or password is incorrect.', 401);
+    }
+    if (isAdminBootstrapLogin) clearBootstrapFailures(email);
+
+    if (isAdminBootstrapCandidate && !user.memberships[0]) {
+      const adminUserId = user.id;
+      const adminUserName = user.name;
+      await db.$transaction(async (tx) => {
+        const existingAgency = await tx.agency.findUnique({ where: { email } });
+        const portalAgency = existingAgency ?? await tx.agency.create({
+          data: { name: adminUserName ? `${adminUserName}'s Agency` : 'V-VISA Admin Agency', email, status: 'DRAFT' },
+        });
+        await tx.agencyMembership.upsert({
+          where: { userId_agencyId: { userId: adminUserId, agencyId: portalAgency.id } },
+          update: { isDefault: true },
+          create: { userId: adminUserId, agencyId: portalAgency.id, role: 'AGENCY_OWNER', isDefault: true },
+        });
+        await tx.wallet.upsert({
+          where: { agencyId_currency: { agencyId: portalAgency.id, currency: 'INR' } },
+          update: {},
+          create: { agencyId: portalAgency.id, currency: 'INR' },
+        });
+      });
+      const refreshedUser = await db.user.findUnique({
+        where: { id: user.id },
+        include: { memberships: { include: { agency: true }, orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }] } },
+      });
+      if (refreshedUser) user = refreshedUser;
+    }
+
+    await createSession(user.id);
+    const membership = user.memberships[0] ?? null;
+
+    after(async () => {
+      try {
+        await auditLog({ agencyId: membership?.agencyId, actorUserId: user.id, action: isAdminBootstrapLogin ? 'ADMIN_BOOTSTRAP_LOGIN' : 'LOGIN', resourceType: 'User', resourceId: user.id, metadata: isAdminBootstrapLogin ? { adminBootstrap: true } : undefined });
+        if (membership?.agencyId) {
+          await queueTravelAgentCrmSync({ agencyId: membership.agencyId, idempotencySuffix: randomUUID() });
+          await drainZohoCrmOutbox(5);
+        }
+      } catch (error) {
+        console.error('LOGIN_DEFERRED_SYNC_FAILED', error instanceof Error ? error.message : 'Deferred sync failed');
+      }
+    });
+
+    return NextResponse.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
+      agency: serializeAgency(membership?.agency ?? null),
+      role: membership?.role ?? null,
+      message: 'Login successful',
+    });
+  } catch (error) {
+    if (isApiResponse(error)) return error;
+    console.error('LOGIN_FAILED', error instanceof Error ? error.message : 'Unknown login error');
+    return loginError('LOGIN_FAILED', 'Login failed. Please try again.', 500);
+  }
+}
