@@ -36,6 +36,9 @@ export async function ensureDatabaseSchema(): Promise<void> {
         `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "lastName" TEXT`,
         `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "gender" TEXT`,
         `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "designation" TEXT`,
+        `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "aadhaarNumber" TEXT`,
+        `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "aadhaarName" TEXT`,
+        `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "aadhaarAddress" TEXT`,
       ];
 
       for (const stmt of statements) {
