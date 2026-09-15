@@ -8,7 +8,7 @@
  * Idempotent via upsert({ where: { id } }).
  * Run with --dry-run to preview. Run without to execute.
  */
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, type Prisma } from '@prisma/client';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -173,12 +173,16 @@ function loadVvisasSource(): CatalogueProduct[] {
 
 // ── Country cache ──────────────────────────────────────────────────────────────
 const countryCache = new Map<string, string>();
-async function getOrCreateCountry(name: string, code: string): Promise<string> {
+async function getOrCreateCountry(tx: Prisma.TransactionClient, name: string, code: string): Promise<string> {
   if (countryCache.has(name)) return countryCache.get(name)!;
-  const existing = await db.country.findFirst({ where: { OR: [{ name }, { code }] } });
-  const id = existing?.id ?? (await db.country.create({ data: { code, name, isActive: true } })).id;
-  countryCache.set(name, id);
-  return id;
+  const existing = await tx.country.findFirst({ where: { OR: [{ name }, { code }] } });
+  if (existing) {
+    countryCache.set(name, existing.id);
+    return existing.id;
+  }
+  const created = await tx.country.create({ data: { code, name, isActive: true } });
+  countryCache.set(name, created.id);
+  return created.id;
 }
 
 // ── Upsert single product ─────────────────────────────────────────────────────
@@ -188,67 +192,70 @@ async function upsertProduct(p: CatalogueProduct, order: number, stats: { ok: nu
     const category = normCat(p.category ?? '', p.name ?? '');
     const amountMinor = p.amountMinor ?? Math.round((p.price ?? 0) * 100);
     const countryCode = (p.destinationCode ?? destination.replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 6));
-    const countryId = await getOrCreateCountry(destination, countryCode);
 
-    const shared = {
-      countryId, destination, destinationCode: p.destinationCode ?? null,
-      name: p.name, publicTitle: p.name, category,
-      entry: p.entry ?? 'Single', entryType: p.entryType ?? null,
-      visaKind: p.visaKind ?? null, purpose: null,
-      validity: p.validity ?? '', duration: p.duration ?? '',
-      processingTime: p.processingTime ?? '',
-      currency: p.currency ?? 'INR', amountMinor,
-      documents: p.documents ?? [],
-      badges: p.badges ? (p.badges as any) : undefined,
-      shortDescription: p.shortDescription ?? null,
-      displayOrder: order,
-      pricingVersion: 'migration-v2',
-      isActive: p.status !== 'INACTIVE',
-    };
+    await db.$transaction(async (tx) => {
+      const countryId = await getOrCreateCountry(tx, destination, countryCode);
 
-    await db.visaProduct.upsert({ where: { id: p.id }, update: shared, create: { id: p.id, ...shared } });
-
-    // Pricing
-    const pr = p.pricing;
-    const priceId = `${p.id}-price`;
-    const priceData = {
-      visaProductId: p.id,
-      currency: pr?.currency ?? 'INR',
-      visaFeeMinor: pr?.visaFeeMinor ?? 0,
-      vvisaServiceFeeMinor: pr?.vvisaServiceFeeMinor ?? 0,
-      courierFeeMinor: pr?.courierFeeMinor ?? 0,
-      insuranceFeeMinor: pr?.insuranceFeeMinor ?? 0,
-      convenienceFeeMinor: pr?.convenienceFeeMinor ?? 0,
-      otherFeeMinor: pr?.otherFeeMinor ?? 0,
-      discountMinor: pr?.discountMinor ?? 0,
-      gstMinor: pr?.gstMinor ?? 0,
-      totalAmountMinor: pr?.totalAmountMinor ?? amountMinor,
-      isActive: true,
-    };
-    await db.visaPrice.upsert({ where: { id: priceId }, update: priceData, create: { id: priceId, ...priceData } });
-
-    // Documents
-    const allDocs = [
-      ...(p.documentRequirements?.mandatory ?? []).map(d => ({ ...d, kind: 'required' as const })),
-      ...(p.documentRequirements?.conditional ?? []).map(d => ({ ...d, kind: 'conditional' as const })),
-      ...(p.documentRequirements?.optional ?? []).map(d => ({ ...d, kind: 'optional' as const })),
-    ];
-    for (const [i, doc] of allDocs.entries()) {
-      const docId = `${p.id}-${doc.id ?? doc.documentCode ?? `d${i}`}`;
-      const docData = {
-        visaProductId: p.id,
-        documentCode: (doc.documentCode ?? `DOC_${i}`).slice(0, 50),
-        documentName: (doc.documentName ?? doc.label ?? `Document ${i + 1}`).slice(0, 200),
-        description: doc.description ?? null,
-        isMandatory: doc.kind === 'required',
-        isOptional: doc.kind === 'optional',
-        uploadRequired: doc.uploadRequired ?? true,
-        requirementStatus: 'PUBLISHED' as const,
-        requirementType: doc.kind,
-        displayOrder: doc.sortOrder ?? i,
+      const shared = {
+        countryId, destination, destinationCode: p.destinationCode ?? null,
+        name: p.name, publicTitle: p.name, category,
+        entry: p.entry ?? 'Single', entryType: p.entryType ?? null,
+        visaKind: p.visaKind ?? null, purpose: null,
+        validity: p.validity ?? '', duration: p.duration ?? '',
+        processingTime: p.processingTime ?? '',
+        currency: p.currency ?? 'INR', amountMinor,
+        documents: p.documents ?? [],
+        badges: p.badges ? (p.badges as any) : undefined,
+        shortDescription: p.shortDescription ?? null,
+        displayOrder: order,
+        pricingVersion: 'migration-v2',
+        isActive: p.status !== 'INACTIVE',
       };
-      await db.visaDocumentRequirement.upsert({ where: { id: docId }, update: docData, create: { id: docId, ...docData } });
-    }
+
+      await tx.visaProduct.upsert({ where: { id: p.id }, update: shared, create: { id: p.id, ...shared } });
+
+      // Pricing
+      const pr = p.pricing;
+      const priceId = `${p.id}-price`;
+      const priceData = {
+        visaProductId: p.id,
+        currency: pr?.currency ?? 'INR',
+        visaFeeMinor: pr?.visaFeeMinor ?? 0,
+        vvisaServiceFeeMinor: pr?.vvisaServiceFeeMinor ?? 0,
+        courierFeeMinor: pr?.courierFeeMinor ?? 0,
+        insuranceFeeMinor: pr?.insuranceFeeMinor ?? 0,
+        convenienceFeeMinor: pr?.convenienceFeeMinor ?? 0,
+        otherFeeMinor: pr?.otherFeeMinor ?? 0,
+        discountMinor: pr?.discountMinor ?? 0,
+        gstMinor: pr?.gstMinor ?? 0,
+        totalAmountMinor: pr?.totalAmountMinor ?? amountMinor,
+        isActive: true,
+      };
+      await tx.visaPrice.upsert({ where: { id: priceId }, update: priceData, create: { id: priceId, ...priceData } });
+
+      // Documents
+      const allDocs = [
+        ...(p.documentRequirements?.mandatory ?? []).map(d => ({ ...d, kind: 'required' as const })),
+        ...(p.documentRequirements?.conditional ?? []).map(d => ({ ...d, kind: 'conditional' as const })),
+        ...(p.documentRequirements?.optional ?? []).map(d => ({ ...d, kind: 'optional' as const })),
+      ];
+      for (const [i, doc] of allDocs.entries()) {
+        const docId = `${p.id}-${doc.id ?? doc.documentCode ?? `d${i}`}`;
+        const docData = {
+          visaProductId: p.id,
+          documentCode: (doc.documentCode ?? `DOC_${i}`).slice(0, 50),
+          documentName: (doc.documentName ?? doc.label ?? `Document ${i + 1}`).slice(0, 200),
+          description: doc.description ?? null,
+          isMandatory: doc.kind === 'required',
+          isOptional: doc.kind === 'optional',
+          uploadRequired: doc.uploadRequired ?? true,
+          requirementStatus: 'PUBLISHED' as const,
+          requirementType: doc.kind,
+          displayOrder: doc.sortOrder ?? i,
+        };
+        await tx.visaDocumentRequirement.upsert({ where: { id: docId }, update: docData, create: { id: docId, ...docData } });
+      }
+    });
 
     stats.ok++;
   } catch (e) {
