@@ -271,12 +271,18 @@ export async function* streamHermesCompletion(input: HermesStreamInput): AsyncGe
 
   const endpoint = `${config.baseUrl}/chat/completions`;
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${config.apiKey}`,
+  };
+  if (config.provider === 'openrouter') {
+    headers['HTTP-Referer'] = 'https://business.vvisa.in';
+    headers['X-Title'] = 'V-Visa B2B Arjun';
+  }
+
   const response = await fetch(endpoint, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${config.apiKey}`,
-    },
+    headers,
     body: JSON.stringify({
       model: config.model,
       messages: input.messages,
