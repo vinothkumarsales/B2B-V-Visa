@@ -144,8 +144,8 @@ export default function WalletView() {
             </p>
           </div>
         </div>
-        <Card className="vv-surface-elevated shrink-0 rounded-xl border">
-          <CardContent className="px-5 py-3 text-right">
+        <Card className="vv-surface-elevated shrink-0 rounded-xl border w-full sm:w-auto">
+          <CardContent className="px-4 py-3 sm:px-5 text-left sm:text-right">
             <p className="text-xs text-vvisa-text-muted">Current Balance</p>
             <p className="vv-tabular text-2xl font-bold text-foreground">{formatINR(walletBalance)}</p>
           </CardContent>
@@ -153,22 +153,22 @@ export default function WalletView() {
       </div>
 
       <Tabs defaultValue="deposit">
-        <TabsList className="h-auto rounded-lg border border-vvisa-border-subtle bg-vvisa-surface p-1 shadow-[var(--vvisa-shadow-sm)]">
+        <TabsList className="grid grid-cols-3 w-full sm:w-auto sm:inline-flex h-auto rounded-lg border border-vvisa-border-subtle bg-vvisa-surface p-1 shadow-[var(--vvisa-shadow-sm)]">
           <TabsTrigger
             value="deposit"
-            className="data-[state=active]:bg-vvisa-surface-2 data-[state=active]:text-foreground text-vvisa-text-muted rounded-md px-4 py-2 text-sm"
+            className="data-[state=active]:bg-vvisa-surface-2 data-[state=active]:text-foreground text-vvisa-text-muted rounded-md px-3 sm:px-4 py-2 text-xs sm:text-sm text-center"
           >
             Deposit
           </TabsTrigger>
           <TabsTrigger
             value="withdraw"
-            className="data-[state=active]:bg-vvisa-surface-2 data-[state=active]:text-foreground text-vvisa-text-muted rounded-md px-4 py-2 text-sm"
+            className="data-[state=active]:bg-vvisa-surface-2 data-[state=active]:text-foreground text-vvisa-text-muted rounded-md px-3 sm:px-4 py-2 text-xs sm:text-sm text-center"
           >
             Withdraw
           </TabsTrigger>
           <TabsTrigger
             value="transactions"
-            className="data-[state=active]:bg-vvisa-surface-2 data-[state=active]:text-foreground text-vvisa-text-muted rounded-md px-4 py-2 text-sm"
+            className="data-[state=active]:bg-vvisa-surface-2 data-[state=active]:text-foreground text-vvisa-text-muted rounded-md px-3 sm:px-4 py-2 text-xs sm:text-sm text-center"
           >
             Transactions
           </TabsTrigger>

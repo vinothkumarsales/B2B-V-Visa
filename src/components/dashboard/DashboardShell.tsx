@@ -192,7 +192,7 @@ function SidebarContent({
     { label: 'Wallet', icon: Wallet, route: 'wallet', badge: `INR ${walletBalance.toLocaleString('en-IN')}` },
     { label: 'Referral Program', icon: Handshake, route: 'referrals' },
     { label: 'List Your Products', icon: Store, route: 'partner-marketplace' },
-    { label: 'Clarify AI', icon: Sparkles, route: 'clarify' },
+    { label: '✦ Arjun', icon: Sparkles, route: 'clarify' },
     { label: 'Community — Coming Soon', icon: Users, route: 'community', disabled: true, badge: 'Soon' },
     { label: 'Overstay', icon: FileText, route: 'overstay' },
     { label: 'Change Password', icon: Lock, route: 'change-password' },
@@ -418,7 +418,7 @@ export default function DashboardShell({ children, basePath = '' }: { children: 
     referrals: 'Referral Program',
     alliance: 'Referral Program',
     'partner-marketplace': 'List Your Products',
-    clarify: 'Clarify AI',
+    clarify: 'Arjun',
     community: 'Partner Community',
     overstay: 'Overstay Cases',
     profile: 'Agency Profile',
@@ -452,21 +452,21 @@ export default function DashboardShell({ children, basePath = '' }: { children: 
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-vvisa-border-subtle bg-[var(--vvisa-backdrop)] px-4 backdrop-blur-xl lg:px-6">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 flex h-14 sm:h-16 shrink-0 items-center justify-between border-b border-vvisa-border-subtle bg-[var(--vvisa-backdrop)] px-3 sm:px-6 backdrop-blur-xl">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="cursor-pointer text-vvisa-text-secondary hover:bg-vvisa-surface-2 hover:text-foreground md:hidden"
+                  className="cursor-pointer text-vvisa-text-secondary hover:bg-vvisa-surface-2 hover:text-foreground md:hidden shrink-0"
                 >
                   <Menu className="size-5" />
                 </Button>
               </SheetTrigger>
               <SheetContent
                 side="left"
-                className="w-72 border-sidebar-border bg-sidebar p-0"
+                className="w-[280px] max-w-[85vw] border-sidebar-border bg-sidebar p-0"
               >
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <SidebarContent
@@ -478,17 +478,17 @@ export default function DashboardShell({ children, basePath = '' }: { children: 
               </SheetContent>
             </Sheet>
 
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="hidden text-[11px] font-medium uppercase tracking-[0.18em] text-vvisa-text-muted sm:block">
                 V-VISA B2B
               </p>
-              <h1 className="text-base font-semibold leading-tight text-foreground">
+              <h1 className="truncate text-sm sm:text-base font-semibold leading-tight text-foreground">
                 {title}
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {hasAdminAccess && (
               <Button variant="outline" size="sm" onClick={() => router.push('/admin')}>
                 <ShieldCheck className="mr-2 size-4" />
@@ -578,7 +578,7 @@ export default function DashboardShell({ children, basePath = '' }: { children: 
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="p-4 sm:p-5 lg:p-7"
+            className={currentView === 'clarify' ? 'h-full p-0 sm:p-4' : 'p-3 sm:p-5 lg:p-7'}
           >
             {children}
           </motion.div>

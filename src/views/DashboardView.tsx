@@ -95,7 +95,7 @@ export default function DashboardView() {
     >
       {/* Search Bar */}
       <Card className="bg-vvisa-surface border border-vvisa-border rounded-xl overflow-visible">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex flex-col lg:flex-row gap-3 items-end">
             {/* From */}
             <div className="flex-1 w-full lg:w-auto">
@@ -246,16 +246,19 @@ export default function DashboardView() {
 
           {/* Recent Applications */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-foreground">{String(recentApplicationsSection?.config.title ?? recentApplicationsSection?.name ?? 'Recent Applications')}</h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-base sm:text-lg font-semibold text-foreground truncate">
+                {String(recentApplicationsSection?.config.title ?? recentApplicationsSection?.name ?? 'Recent Applications')}
+              </h2>
               <button
                 onClick={() => {
                   navigate('applications');
                   router.push('/applications');
                 }}
-                className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+                className="text-xs sm:text-sm text-primary hover:text-primary/80 flex items-center gap-1 transition-colors shrink-0"
               >
-                View All Applications <ArrowRight className="h-3.5 w-3.5" />
+                <span>View All <span className="hidden sm:inline">Applications</span></span>
+                <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
             <div className="space-y-2">

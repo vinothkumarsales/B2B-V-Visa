@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { SalesIqLoader } from '@/components/SalesIqLoader';
+import { PwaInstallPrompt } from '@/components/pwa/PwaInstallPrompt';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -18,6 +19,13 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
 });
 
+export const viewport: Viewport = {
+  themeColor: '#0d9488',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export const metadata: Metadata = {
   title: {
     template: '%s | V-VISA Business',
@@ -25,6 +33,12 @@ export const metadata: Metadata = {
   },
   description: "India's most trusted B2B visa platform for travel agencies. 500,000+ visas delivered. 65 visa types. 5,000+ agents.",
   keywords: ['visa for travel agents', 'b2b visa platform', 'bulk visa applications', 'india visa services'],
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'V-VISA',
+  },
   openGraph: {
     siteName: 'V-VISA Business',
     locale: 'en_IN',
@@ -52,6 +66,7 @@ export default function RootLayout({
         >
           {children}
           <Toaster />
+          <PwaInstallPrompt />
         </ThemeProvider>
         <SalesIqLoader />
       </body>

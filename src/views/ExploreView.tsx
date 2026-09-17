@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback, memo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app.store';
@@ -16,7 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PriceBreakdownPopover } from '@/components/pricing/PriceBreakdownPopover';
 import { VisaAttributeBadges } from '@/components/visa/VisaAttributeBadges';
-import { Search, ArrowRight, MapPin, Plane, Calendar, Zap, Clock, FileText, ChevronDown, Globe, Briefcase, GraduationCap, TrendingUp, Users, Heart, HelpCircle, Compass } from 'lucide-react';
+import { Search, ArrowRight, MapPin, Plane, Calendar, Zap, Clock, FileText, ChevronDown, Globe } from 'lucide-react';
 import type { VisaStickerRoute } from '@/types';
 
 const pageVariants = {
@@ -26,7 +26,18 @@ const pageVariants = {
 };
 
 const PAGE_SIZE = 12;
-const purposeOptions = ['All', 'Tourist', 'Business', 'Transit'] as const;
+const purposeOptions = [
+  'All',
+  'Tourist',
+  'Business',
+  'Transit',
+  'Work',
+  'Study',
+  'PR',
+  'Job Seeker',
+] as const;
+
+type PurposeOption = (typeof purposeOptions)[number];
 
 const categoryConfig: Record<string, { icon: React.ReactNode; color: string; bgColor: string; borderColor: string }> = {
   LIGHTNING_FAST: {
@@ -61,6 +72,117 @@ function getEstimatedArrival(processingTime: string): string {
 function getStickerRoutes(visa: VisaType): VisaStickerRoute[] {
   return visa.stickerRoutes?.length ? visa.stickerRoutes : visa.courierRules?.routes ?? [];
 }
+
+interface VisaCardItemProps {
+  visa: VisaType;
+  onSelectVisa: (visa: VisaType) => void;
+  onViewDocs: (visa: VisaType) => void;
+}
+
+const VisaCardItem = memo(function VisaCardItem({
+  visa,
+  onSelectVisa,
+  onViewDocs,
+}: VisaCardItemProps) {
+  const cat = categoryConfig[visa.category] || categoryConfig.STANDARD;
+  const estArrival = getEstimatedArrival(visa.processingTime);
+  const stickerRoutes = getStickerRoutes(visa);
+  const isStickerVisa = visa.visaKind === 'STICKER_VISA';
+  const pricingResult = resolveVisaPricing(visa);
+
+  return (
+    <Card className={`vv-interactive overflow-hidden rounded-xl border ${cat.borderColor}`}>
+      {/* Category Header */}
+      <div className={`${cat.bgColor} px-5 py-3.5 border-b ${cat.borderColor}`}>
+        <div className="flex items-center gap-2">
+          <span className={cat.color}>{cat.icon}</span>
+          <span className={`text-sm font-semibold ${cat.color}`}>
+            {visa.category === 'LIGHTNING_FAST'
+              ? `Lightning Fast (${visa.processingTime} - Apply Before ${visa.cutoffTime})`
+              : visa.category === 'MULTI_ENTRY'
+              ? 'Multiple Entry'
+              : 'Standard Processing'}
+          </span>
+        </div>
+        {visa.category === 'LIGHTNING_FAST' && (
+          <p className="text-xs text-vvisa-text-secondary mt-1 ml-6">
+            Estimated visa arrival by{' '}
+            <span className="text-primary font-medium">{estArrival}</span>
+          </p>
+        )}
+      </div>
+
+      {/* Card Body */}
+      <CardContent className="p-5">
+        {/* Visa Name */}
+        <div className="mb-4 space-y-3">
+          <h3 className="text-base font-semibold text-foreground">{visa.name}</h3>
+          <VisaAttributeBadges visa={visa} />
+        </div>
+
+        {/* Detail Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-y-3 gap-x-3 sm:gap-x-4 mb-4">
+          <div>
+            <p className="text-xs text-vvisa-text-muted">Entry</p>
+            <p className="text-sm text-foreground font-medium">{visa.entry}</p>
+          </div>
+          <div>
+            <p className="text-xs text-vvisa-text-muted">Validity</p>
+            <p className="text-sm text-foreground font-medium">{visa.validity}</p>
+          </div>
+          <div>
+            <p className="text-xs text-vvisa-text-muted">Duration</p>
+            <p className="text-sm text-foreground font-medium">{visa.duration}</p>
+          </div>
+          <div>
+            <p className="text-xs text-vvisa-text-muted">Documents</p>
+            <button
+              onClick={() => onViewDocs(visa)}
+              className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1 transition-colors"
+            >
+              View Here <ArrowRight className="h-3 w-3" />
+            </button>
+          </div>
+          <div>
+            <p className="text-xs text-vvisa-text-muted">Processing Time</p>
+            <p className="text-sm text-foreground font-medium">{visa.processingTime}</p>
+          </div>
+        </div>
+
+        {isStickerVisa && (
+          <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+            <p className="text-xs font-semibold text-amber-700 dark:text-amber-200">Passport origin city required</p>
+            <p className="mt-1 text-xs text-amber-700/80 dark:text-amber-200/80">
+              {stickerRoutes.length > 0
+                ? `Available route${stickerRoutes.length !== 1 ? 's' : ''}: ${stickerRoutes
+                    .map((route) => route.originCityLabel ?? route.origin)
+                    .filter(Boolean)
+                    .join(', ')}`
+                : 'No courier route is mapped yet. This visa will need manual quotation before confirmation.'}
+            </p>
+          </div>
+        )}
+
+        {/* Footer: Price + Select */}
+        <div className="flex items-center justify-between border-t border-vvisa-border-subtle pt-3">
+          <div className="flex items-center gap-1.5">
+            <span className="vv-tabular text-xl font-bold text-foreground">
+              {formatMoneyMinor(pricingResult.visibleTotalMinor, pricingResult.currency)}
+            </span>
+            <PriceBreakdownPopover amount={visa.price} currency={visa.currency} pricingResult={pricingResult} />
+          </div>
+          <Button
+            onClick={() => onSelectVisa(visa)}
+            variant="outline"
+            className="flex items-center gap-1.5 rounded-lg border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
+          >
+            Select <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+});
 
 function getSearchSessionId() {
   const key = 'V-VISA:crmSearchSessionId';
@@ -116,24 +238,10 @@ function trackProductIntent(input: {
   }).catch(() => undefined);
 }
 
-function getCategoryIcon(name: string) {
-  const norm = name.toLowerCase();
-  if (norm.includes('tourist') || norm.includes('standard')) return Plane;
-  if (norm.includes('business')) return Briefcase;
-  if (norm.includes('study') || norm.includes('student')) return GraduationCap;
-  if (norm.includes('work') || norm.includes('employment')) return Briefcase;
-  if (norm.includes('job seeker') || norm.includes('job-seeker')) return TrendingUp;
-  if (norm.includes('nomad')) return Globe;
-  if (norm.includes('transit')) return MapPin;
-  if (norm.includes('dependent') || norm.includes('family')) return Users;
-  if (norm.includes('medical') || norm.includes('health')) return Heart;
-  return HelpCircle;
-}
-
 export default function ExploreView() {
   const router = useRouter();
   const pathname = usePathname();
-  const { visaTypes, categories } = useVisaCatalogue();
+  const { visaTypes } = useVisaCatalogue();
   const { navigate, setSelectedVisaType, agency } = useAppStore();
 
   const disabledCategories = useMemo(() => {
@@ -147,8 +255,7 @@ export default function ExploreView() {
     }
   }, [agency]);
   const [goingTo, setGoingTo] = useState('');
-  const [purposeFilter, setPurposeFilter] = useState<(typeof purposeOptions)[number]>('All');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [purposeFilter, setPurposeFilter] = useState<PurposeOption>('All');
   const [travelDate, setTravelDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -189,23 +296,58 @@ export default function ExploreView() {
         !query ||
         visa.destination.toLowerCase().includes(query) ||
         visa.name.toLowerCase().includes(query);
-      const purposeText = `${visa.purpose ?? ''} ${visa.name}`.toLowerCase();
-      const matchesPurpose =
-        purposeFilter === 'All' ||
-        purposeText.includes(purposeFilter.toLowerCase()) ||
-        (purposeFilter === 'Tourist' && !purposeText.includes('business') && !purposeText.includes('transit'));
 
-      const matchesCategory =
-        !selectedCategory ||
-        visa.category === selectedCategory ||
-        (selectedCategory === 'Tourist' && visa.category === 'STANDARD');
+      if (!matchesQuery) return false;
+      if (purposeFilter === 'All') return true;
 
-      return matchesQuery && matchesPurpose && matchesCategory;
+      const name = (visa.name || '').toLowerCase();
+      const purpose = (visa.purpose || '').toLowerCase();
+      const cat: string = visa.category ?? '';
+      const text = `${purpose} ${name}`.toLowerCase();
+
+      if (purposeFilter === 'Business') {
+        return cat.toLowerCase() === 'business' || text.includes('business');
+      }
+      if (purposeFilter === 'Transit') {
+        return cat.toLowerCase() === 'transit' || text.includes('transit');
+      }
+      if (purposeFilter === 'Work') {
+        return cat === 'Work' || text.includes('work') || text.includes('employment');
+      }
+      if (purposeFilter === 'Study') {
+        return cat === 'Study' || text.includes('study') || text.includes('student');
+      }
+      if (purposeFilter === 'PR') {
+        return cat === 'PR' || text.includes('permanent residence') || text.includes('pr visa');
+      }
+      if (purposeFilter === 'Job Seeker') {
+        return cat === 'Job Seeker' || text.includes('job seeker') || text.includes('jobseeker');
+      }
+      if (purposeFilter === 'Tourist') {
+        const isOther =
+          ['Work', 'Study', 'PR', 'Job Seeker'].includes(cat) ||
+          text.includes('business') ||
+          text.includes('transit') ||
+          text.includes('work') ||
+          text.includes('study') ||
+          text.includes('job seeker');
+        if (isOther) return false;
+        return (
+          cat === 'Tourist' ||
+          cat === 'STANDARD' ||
+          cat === 'MULTI_ENTRY' ||
+          cat === 'LIGHTNING_FAST' ||
+          text.includes('tourist') ||
+          text.includes('visit')
+        );
+      }
+
+      return cat === (purposeFilter as string);
     });
-  }, [goingTo, purposeFilter, visaTypes, disabledCategories, selectedCategory]);
+  }, [goingTo, purposeFilter, visaTypes, disabledCategories]);
 
   const visibleVisas = filteredVisas.slice(0, visibleCount);
-  const hasActiveFilters = Boolean(goingTo.trim()) || purposeFilter !== 'All' || selectedCategory !== null;
+  const hasActiveFilters = Boolean(goingTo.trim()) || purposeFilter !== 'All';
 
   useEffect(() => {
     const hasDestinationContext = Boolean(goingTo.trim());
@@ -228,7 +370,6 @@ export default function ExploreView() {
   const clearFilters = () => {
     setGoingTo('');
     setPurposeFilter('All');
-    setSelectedCategory(null);
     setVisibleCount(PAGE_SIZE);
   };
 
@@ -257,7 +398,7 @@ export default function ExploreView() {
     return () => clearTimeout(timer);
   }, [goingTo, pathname]);
 
-  const handleApplyNow = (visa: VisaType) => {
+  const handleApplyNow = useCallback((visa: VisaType) => {
     trackProductIntent({ eventType: 'VISA_PRODUCT_CLICKED', country: visa.destination, visa });
     trackVisaInterest(visa, 'VISA_SELECTED');
     fetch('/api/portal/activity', {
@@ -278,11 +419,11 @@ export default function ExploreView() {
     navigate('apply');
     const adminUidMatch = pathname.match(/^\/admin\/([^/]+)/);
     router.push(adminUidMatch ? `/admin/${adminUidMatch[1]}/apply` : '/apply');
-  };
+  }, [pathname, router, setSelectedVisaType, navigate]);
 
   const handleSelectVisa = handleApplyNow;
 
-  const handleViewDocs = (visa: VisaType) => {
+  const handleViewDocs = useCallback((visa: VisaType) => {
     trackVisaInterest(visa, 'CHECKLIST_VIEWED');
     fetch('/api/portal/activity', {
       method: 'POST',
@@ -300,7 +441,7 @@ export default function ExploreView() {
     }).catch(() => {});
     setSelectedDocVisa(visa);
     setDocDialogOpen(true);
-  };
+  }, [pathname]);
 
   useEffect(() => {
     if (!selectedDocVisa || isDemoMode()) return;
@@ -328,7 +469,7 @@ export default function ExploreView() {
           <CardContent className="p-4">
             <div className="mb-4">
               <label className="block text-xs text-vvisa-text-secondary mb-2 font-semibold">Select Travel Purpose</label>
-              <div className="grid max-w-[640px] grid-cols-4 rounded-full border border-vvisa-border-subtle bg-white p-1 shadow-[var(--vvisa-shadow-sm)] dark:bg-vvisa-surface-2">
+              <div className="flex items-center gap-1 overflow-x-auto overflow-y-hidden overscroll-x-contain touch-pan-x rounded-full border border-vvisa-border-subtle bg-white p-1 shadow-[var(--vvisa-shadow-sm)] dark:bg-vvisa-surface-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden [-webkit-overflow-scrolling:touch]">
                 {purposeOptions.map((purpose) => {
                   const selected = purposeFilter === purpose;
                   return (
@@ -339,7 +480,7 @@ export default function ExploreView() {
                         setPurposeFilter(purpose);
                         setVisibleCount(PAGE_SIZE);
                       }}
-                      className={`h-10 rounded-full text-sm font-semibold transition-all duration-200 ${
+                      className={`h-9 px-4 shrink-0 rounded-full text-sm font-semibold whitespace-nowrap transition-colors duration-150 ${
                         selected
                           ? 'bg-neutral-950 text-white shadow-[var(--vvisa-shadow-sm)] dark:bg-white dark:text-neutral-950'
                           : 'text-vvisa-text-secondary hover:bg-vvisa-surface-2 hover:text-foreground'
@@ -451,41 +592,6 @@ export default function ExploreView() {
         </Card>
       </div>
 
-      {/* Categories Distribution Section */}
-      {categories && categories.length > 0 && (
-        <div className="space-y-4.5">
-          <h2 className="text-lg font-bold text-foreground">Categories Distribution</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
-            {categories.map((cat) => {
-              const isActive = selectedCategory === cat.name;
-              const IconComponent = getCategoryIcon(cat.name);
-              return (
-                <button
-                  key={cat.name}
-                  type="button"
-                  onClick={() => {
-                    setSelectedCategory((prev) => (prev === cat.name ? null : cat.name));
-                    setVisibleCount(PAGE_SIZE);
-                  }}
-                  className={`flex flex-col items-center justify-center p-4 rounded-xl border text-center transition-all duration-200 ${
-                    isActive
-                      ? 'bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-950 dark:border-white shadow-sm'
-                      : 'bg-white hover:bg-neutral-50 border-vvisa-border-subtle text-foreground dark:bg-vvisa-surface-2 dark:hover:bg-vvisa-surface/60'
-                  }`}
-                >
-                  <div className={`p-2.5 rounded-lg mb-2 ${isActive ? 'bg-white/20 text-white' : 'bg-vvisa-surface-2 text-vvisa-text-secondary'}`}>
-                    <IconComponent className="h-5 w-5" />
-                  </div>
-                  <span className="text-sm font-bold truncate max-w-full">{cat.name}</span>
-                  <span className={`text-[11px] mt-1 font-semibold ${isActive ? 'text-white/80' : 'text-vvisa-text-muted'}`}>
-                    {cat.count} option{cat.count !== 1 ? 's' : ''}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Available Destinations Section */}
       {destinationsWithCounts && destinationsWithCounts.length > 0 && (
@@ -546,113 +652,14 @@ export default function ExploreView() {
 
       {/* Visa Result Cards */}
       <div className="space-y-4">
-        {visibleVisas.map((visa) => {
-          const cat = categoryConfig[visa.category] || categoryConfig.STANDARD;
-          const estArrival = getEstimatedArrival(visa.processingTime);
-          const stickerRoutes = getStickerRoutes(visa);
-          const isStickerVisa = visa.visaKind === 'STICKER_VISA';
-          const pricingResult = resolveVisaPricing(visa);
-
-          return (
-            <motion.div
-              key={visa.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Card className={`vv-interactive overflow-hidden rounded-xl border ${cat.borderColor}`}>
-                {/* Category Header */}
-                <div className={`${cat.bgColor} px-5 py-3.5 border-b ${cat.borderColor}`}>
-                  <div className="flex items-center gap-2">
-                    <span className={cat.color}>{cat.icon}</span>
-                    <span className={`text-sm font-semibold ${cat.color}`}>
-                      {visa.category === 'LIGHTNING_FAST'
-                        ? `Lightning Fast (${visa.processingTime} - Apply Before ${visa.cutoffTime})`
-                        : visa.category === 'MULTI_ENTRY'
-                        ? 'Multiple Entry'
-                        : 'Standard Processing'}
-                    </span>
-                  </div>
-                  {visa.category === 'LIGHTNING_FAST' && (
-                    <p className="text-xs text-vvisa-text-secondary mt-1 ml-6">
-                      Estimated visa arrival by{' '}
-                      <span className="text-primary font-medium">{estArrival}</span>
-                    </p>
-                  )}
-                </div>
-
-                {/* Card Body */}
-                <CardContent className="p-5">
-                  {/* Visa Name */}
-                  <div className="mb-4 space-y-3">
-                    <h3 className="text-base font-semibold text-foreground">{visa.name}</h3>
-                    <VisaAttributeBadges visa={visa} />
-                  </div>
-
-                  {/* Detail Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-y-3 gap-x-4 mb-4">
-                    <div>
-                      <p className="text-xs text-vvisa-text-muted">Entry</p>
-                      <p className="text-sm text-foreground font-medium">{visa.entry}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-vvisa-text-muted">Validity</p>
-                      <p className="text-sm text-foreground font-medium">{visa.validity}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-vvisa-text-muted">Duration</p>
-                      <p className="text-sm text-foreground font-medium">{visa.duration}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-vvisa-text-muted">Documents</p>
-                      <button
-                        onClick={() => handleViewDocs(visa)}
-                        className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1 transition-colors"
-                      >
-                        View Here <ArrowRight className="h-3 w-3" />
-                      </button>
-                    </div>
-                    <div>
-                      <p className="text-xs text-vvisa-text-muted">Processing Time</p>
-                      <p className="text-sm text-foreground font-medium">{visa.processingTime}</p>
-                    </div>
-                  </div>
-
-                  {isStickerVisa && (
-                    <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
-                      <p className="text-xs font-semibold text-amber-700 dark:text-amber-200">Passport origin city required</p>
-                      <p className="mt-1 text-xs text-amber-700/80 dark:text-amber-200/80">
-                        {stickerRoutes.length > 0
-                          ? `Available route${stickerRoutes.length !== 1 ? 's' : ''}: ${stickerRoutes
-                              .map((route) => route.originCityLabel ?? route.origin)
-                              .filter(Boolean)
-                              .join(', ')}`
-                          : 'No courier route is mapped yet. This visa will need manual quotation before confirmation.'}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Footer: Price + Select */}
-                  <div className="flex items-center justify-between border-t border-vvisa-border-subtle pt-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className="vv-tabular text-xl font-bold text-foreground">
-                        {formatMoneyMinor(pricingResult.visibleTotalMinor, pricingResult.currency)}
-                      </span>
-                      <PriceBreakdownPopover amount={visa.price} currency={visa.currency} pricingResult={pricingResult} />
-                    </div>
-                    <Button
-                      onClick={() => handleSelectVisa(visa)}
-                      variant="outline"
-                      className="flex items-center gap-1.5 rounded-lg border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
-                    >
-                      Select <ArrowRight className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })}
+        {visibleVisas.map((visa) => (
+          <VisaCardItem
+            key={visa.id}
+            visa={visa}
+            onSelectVisa={handleSelectVisa}
+            onViewDocs={handleViewDocs}
+          />
+        ))}
 
         {filteredVisas.length === 0 && (
           <div className="rounded-xl border border-dashed border-vvisa-border bg-vvisa-surface py-16 text-center shadow-[var(--vvisa-shadow-sm)]">
@@ -684,7 +691,7 @@ export default function ExploreView() {
 
       {/* Document Dialog */}
       <Dialog open={docDialogOpen} onOpenChange={setDocDialogOpen}>
-        <DialogContent className="max-w-md rounded-xl border border-vvisa-border-subtle bg-vvisa-surface shadow-[var(--vvisa-shadow-lg)]">
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto rounded-xl border border-vvisa-border-subtle bg-vvisa-surface shadow-[var(--vvisa-shadow-lg)]">
           <DialogHeader>
             <DialogTitle className="text-foreground flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />

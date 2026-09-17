@@ -137,20 +137,20 @@ export default function ApplicationsView() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name or passport..."
-            className="bg-vvisa-surface border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-10"
+            className="bg-vvisa-surface border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-10 w-full"
           />
         </div>
-        <div className="relative">
+        <div className="relative w-full sm:w-48">
           <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-vvisa-text-muted" />
           <Input
             type="date"
             value={travelDate}
             onChange={(e) => setTravelDate(e.target.value)}
-            className="bg-vvisa-surface border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-10 w-48"
+            className="bg-vvisa-surface border border-vvisa-border focus:border-primary rounded-lg text-foreground pl-9 pr-3 h-10 w-full"
           />
         </div>
         <Select value={destination} onValueChange={setDestination}>
-          <SelectTrigger className="bg-vvisa-surface border border-vvisa-border rounded-lg text-foreground h-10 w-44">
+          <SelectTrigger className="bg-vvisa-surface border border-vvisa-border rounded-lg text-foreground h-10 w-full sm:w-44">
             <SelectValue placeholder="Destination" />
           </SelectTrigger>
           <SelectContent className="bg-vvisa-surface border border-vvisa-border">
@@ -164,13 +164,14 @@ export default function ApplicationsView() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabFilter)}>
-        <TabsList className="bg-vvisa-surface border border-vvisa-border rounded-lg p-1 h-auto">
-          <TabsTrigger
-            value="ALL"
-            className="data-[state=active]:bg-vvisa-surface-2 data-[state=active]:text-foreground text-vvisa-text-muted rounded-md px-3 py-2 text-xs sm:text-sm flex items-center gap-1.5"
-          >
-            All <Badge variant="secondary" className="bg-vvisa-border text-vvisa-text-secondary text-xs border-0">{tabCounts.ALL}</Badge>
-          </TabsTrigger>
+        <div className="overflow-x-auto no-scrollbar pb-0.5">
+          <TabsList className="bg-vvisa-surface border border-vvisa-border rounded-lg p-1 h-auto inline-flex flex-nowrap w-max sm:w-auto">
+            <TabsTrigger
+              value="ALL"
+              className="data-[state=active]:bg-vvisa-surface-2 data-[state=active]:text-foreground text-vvisa-text-muted rounded-md px-3 py-2 text-xs sm:text-sm flex items-center gap-1.5 shrink-0"
+            >
+              All <Badge variant="secondary" className="bg-vvisa-border text-vvisa-text-secondary text-xs border-0">{tabCounts.ALL}</Badge>
+            </TabsTrigger>
           <TabsTrigger
             value="APPROVED"
             className="data-[state=active]:bg-vvisa-surface-2 data-[state=active]:text-foreground text-vvisa-text-muted rounded-md px-3 py-2 text-xs sm:text-sm flex items-center gap-1.5"
@@ -196,6 +197,7 @@ export default function ApplicationsView() {
             Draft <Badge variant="secondary" className="bg-vvisa-surface-2 text-vvisa-text-muted text-xs border-0">{tabCounts.DRAFT}</Badge>
           </TabsTrigger>
         </TabsList>
+        </div>
       </Tabs>
 
       {/* Application Cards */}
