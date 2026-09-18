@@ -419,18 +419,34 @@ function TravelerCard({
         const data = await res.json().catch(() => ({}));
 
         if (data.success && Array.isArray(data.fields)) {
+          let populatedCount = 0;
           for (const f of data.fields) {
             if (!f || typeof f !== 'object') continue;
             if (!f.value) continue;
             const key = resolvePassportAutofillField(f.field);
             if (!key) continue;
             const value = normalizePassportAutofillValue(key, String(f.value));
-            if (value) onUpdate(traveler.id, key, value);
+            if (!value) continue;
+
+            // Preserve existing manual entry if already populated by the user
+            const existingValue = traveler[key as keyof TravelerData];
+            const isDefaultOrEmpty = !existingValue || (key === 'nationality' && existingValue === 'Indian');
+            if (isDefaultOrEmpty) {
+              onUpdate(traveler.id, key, value);
+              populatedCount++;
+            }
           }
           if (typeof data.providerRequestId === 'string') onUpdate(traveler.id, 'ocrProviderRequestId', data.providerRequestId);
           if (data.confidence === 'low' || data.confidence === 'medium' || data.confidence === 'high') onUpdate(traveler.id, 'ocrConfidence', data.confidence);
-          onUpdate(traveler.id, 'ocrStatus', 'done');
-          onDocumentUploaded();
+
+          if (populatedCount > 0) {
+            onUpdate(traveler.id, 'ocrStatus', 'done');
+            onUpdate(traveler.id, 'ocrError', '');
+            onDocumentUploaded();
+          } else {
+            onUpdate(traveler.id, 'ocrStatus', 'error');
+            onUpdate(traveler.id, 'ocrError', 'Could not extract passport details. Please verify the document image or enter details manually.');
+          }
         } else {
           onUpdate(traveler.id, 'ocrError', getOcrErrorMessage(data, res.ok ? 'OCR failed. Please enter details manually.' : 'V-Visa AI scan is unavailable. Please enter details manually.'));
           onUpdate(traveler.id, 'ocrStatus', 'error');
@@ -444,7 +460,7 @@ function TravelerCard({
       // Reset file input
       if (passportInputRef.current) passportInputRef.current.value = '';
     },
-    [traveler.id, onUpdate, onDocumentUploaded]
+    [traveler, onUpdate, onDocumentUploaded]
   );
 
   const handlePreviewPointerMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {

@@ -360,6 +360,11 @@ export async function verifyAndCompleteVendorOnboarding(params: {
   const isLiveDigio = Boolean(env.DIGIO_CLIENT_ID && env.DIGIO_CLIENT_SECRET);
   let isAuthoritativelyVerified = false;
   let rejectionReason: string | null = null;
+  let extractedPan = '';
+  let extractedName = '';
+  let extractedAddress = '';
+  let extractedCity = '';
+  let extractedState = '';
 
   if (isLiveDigio) {
     // 2. LIVE DIGIO SERVER-TO-SERVER VERIFICATION
@@ -378,6 +383,24 @@ export async function verifyAndCompleteVendorOnboarding(params: {
 
       const data = await res.json().catch(() => ({}));
       const rawStatus = String(data.status || data.kyc_status || '').toLowerCase();
+
+      if (Array.isArray(data.actions)) {
+        for (const action of data.actions) {
+          const d = (action?.details || action?.validation_result) as Record<string, any> | undefined;
+          if (!d) continue;
+          if (!extractedPan && (d.pan_no || d.id_number || d.pan)) {
+            extractedPan = String(d.pan_no || d.id_number || d.pan).toUpperCase();
+          }
+          if (!extractedName && (d.name || d.full_name)) {
+            extractedName = String(d.name || d.full_name);
+          }
+          if (!extractedAddress && (d.address || d.permanent_address)) {
+            extractedAddress = String(d.address || d.permanent_address);
+          }
+          if (!extractedCity && d.city) extractedCity = String(d.city);
+          if (!extractedState && d.state) extractedState = String(d.state);
+        }
+      }
 
       if (res.ok && (rawStatus === 'success' || rawStatus === 'approved' || rawStatus === 'completed' || rawStatus === 'approval_pending')) {
         // Cross-check customer identifier or reference_id
@@ -424,14 +447,14 @@ export async function verifyAndCompleteVendorOnboarding(params: {
       kycCompletedAt: new Date(),
       kycFailureReason: null,
       approvedAt: new Date(),
-      ...(businessDetails?.businessName ? { businessName: businessDetails.businessName } : {}),
+      ...(businessDetails?.businessName || extractedName ? { businessName: businessDetails?.businessName || extractedName } : {}),
       ...(businessDetails?.businessType ? { businessType: businessDetails.businessType } : {}),
       ...(businessDetails?.gstNumber ? { gstNumber: businessDetails.gstNumber } : {}),
-      ...(businessDetails?.panCard ? { panCard: businessDetails.panCard } : {}),
+      ...(businessDetails?.panCard || extractedPan ? { panCard: businessDetails?.panCard || extractedPan } : {}),
       ...(businessDetails?.categories ? { categories: businessDetails.categories } : {}),
-      ...(businessDetails?.city ? { city: businessDetails.city } : {}),
-      ...(businessDetails?.state ? { state: businessDetails.state } : {}),
-      ...(businessDetails?.addressLine1 ? { addressLine1: businessDetails.addressLine1 } : {}),
+      ...(businessDetails?.city || extractedCity ? { city: businessDetails?.city || extractedCity } : {}),
+      ...(businessDetails?.state || extractedState ? { state: businessDetails?.state || extractedState } : {}),
+      ...(businessDetails?.addressLine1 || extractedAddress ? { addressLine1: businessDetails?.addressLine1 || extractedAddress } : {}),
     },
   });
 }

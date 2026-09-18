@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
-import { env, isDemoMode } from '@/lib/env';
-import { normalizePassportDateForInput } from '@/lib/ocr/passport-fields';
+import { env, isDemoMode } from '../../../lib/env.ts';
+import { normalizePassportDateForInput } from '../../../lib/ocr/passport-fields.ts';
 
 export interface DocumentIntelligenceResult {
   provider: 'DIGIO';
@@ -71,7 +71,7 @@ export async function extractDocumentFields(input: {
       evidenceKeys: Object.keys(raw).filter((key) => !/image|file|passport/i.test(key)),
     },
     normalizedExtraction,
-    confidence: confidenceFromRaw(raw),
+    confidence: confidenceFromRaw(raw, normalizedExtraction),
   };
 }
 
@@ -105,24 +105,29 @@ async function callDigio(input: {
   const fileBlob = new Blob([base64ToBuffer(input.imageBase64)], { type: fileType });
   const fileName = fileNameFor(input.documentType, fileType);
 
-  const sessionRaw = await callDigioTemplateSession({
-    auth,
-    baseUrl,
-    providerRequestId: input.providerRequestId,
-    documentType: input.documentType,
-    fileBlob,
-    fileName,
-  });
-  if (sessionRaw) return sessionRaw;
-
-  return callDigioStatelessAnalyzer({
-    auth,
-    baseUrl,
-    providerRequestId: input.providerRequestId,
-    documentType: input.documentType,
-    fileBlob,
-    fileName,
-  });
+  // 1. Prioritize stateless ID analyzer for direct document file uploads
+  try {
+    return await callDigioStatelessAnalyzer({
+      auth,
+      baseUrl,
+      providerRequestId: input.providerRequestId,
+      documentType: input.documentType,
+      fileBlob,
+      fileName,
+    });
+  } catch (statelessError) {
+    // 2. Fall back to template session if configured
+    const sessionRaw = await callDigioTemplateSession({
+      auth,
+      baseUrl,
+      providerRequestId: input.providerRequestId,
+      documentType: input.documentType,
+      fileBlob,
+      fileName,
+    });
+    if (sessionRaw) return sessionRaw;
+    throw statelessError;
+  }
 }
 
 async function callDigioTemplateSession(input: {
@@ -254,25 +259,78 @@ function logDigioRejection(
     baseUrlHost: safeHost(baseUrl),
   });
 }
-function normalizeDigioFields(raw: Record<string, unknown>): Record<string, string> {
+export function normalizeDigioFields(raw: Record<string, unknown>): Record<string, string> {
   const source = flattenDigioPassportPayload(raw);
+
+  let firstName = stringField(pickField(source, 'first_name', 'firstName', 'given_name', 'givenName', 'given name'));
+  let lastName = stringField(pickField(source, 'last_name', 'lastName', 'surname', 'surname_name', 'family_name', 'familyName'));
+
+  if (!firstName && !lastName) {
+    const fullName = stringField(pickField(source, 'name', 'full_name', 'fullName', 'customer_name'));
+    if (fullName) {
+      const parts = fullName.split(/\s+/).filter(Boolean);
+      if (parts.length > 1) {
+        lastName = parts.pop()!;
+        firstName = parts.join(' ');
+      } else {
+        firstName = fullName;
+      }
+    }
+  } else if (firstName && !lastName) {
+    const parts = firstName.split(/\s+/).filter(Boolean);
+    if (parts.length > 1) {
+      lastName = parts.pop()!;
+      firstName = parts.join(' ');
+    }
+  }
+
   return {
-    passportNumber: upperField(pickField(source, 'passport_number', 'passportNumber', 'document_id', 'id_number', 'id no')),
-    firstName: stringField(pickField(source, 'first_name', 'firstName', 'given_name', 'givenName', 'given name', 'name')),
-    lastName: stringField(pickField(source, 'last_name', 'lastName', 'surname', 'surname_name')),
-    nationality: stringField(pickField(source, 'nationality', 'country_code', 'countryCode')),
+    passportNumber: upperField(
+      pickField(
+        source,
+        'passport_number',
+        'passportNumber',
+        'passport_no',
+        'passportNo',
+        'passport',
+        'document_id',
+        'documentId',
+        'document_number',
+        'documentNumber',
+        'id_number',
+        'idNumber',
+        'id_no',
+        'id no',
+        'idNo',
+        'doc_number',
+        'doc_no',
+        'id_card_no',
+        'id_card_number',
+      ),
+    ),
+    firstName,
+    lastName,
+    nationality: normalizeNationality(
+      pickField(source, 'nationality', 'country_code', 'countryCode', 'country', 'citizenship'),
+    ),
     sex: normalizeSex(pickField(source, 'sex', 'gender')),
-    dateOfBirth: dateField(pickField(source, 'date_of_birth', 'dateOfBirth', 'date of birth', 'dob')),
+    dateOfBirth: dateField(pickField(source, 'date_of_birth', 'dateOfBirth', 'date of birth', 'dob', 'birth_date', 'birthDate')),
     fatherFirstName: stringField(pickField(source, 'father_first_name', 'fatherFirstName', 'fathers name', 'fathers_name', 'father_name', 'father')),
     fatherLastName: stringField(pickField(source, 'father_last_name', 'fatherLastName')),
     motherName: stringField(pickField(source, 'mother_name', 'motherName', 'mothers name', 'mothers_name', 'mother_name', 'mother')),
-    addressLine1: stringField(pickField(source, 'address_line_1', 'addressLine1', 'address1', 'address', 'permanent address', 'present address')),
+    addressLine1: stringField(pickField(source, 'address_line_1', 'addressLine1', 'address1', 'address', 'permanent address', 'present address', 'full_address')),
     addressLine2: stringField(pickField(source, 'address_line_2', 'addressLine2', 'address2')),
-    placeOfBirth: stringField(pickField(source, 'place_of_birth', 'placeOfBirth', 'place of birth', 'birth_place')),
-    placeOfIssue: stringField(pickField(source, 'place_of_issue', 'placeOfIssue', 'place of issue', 'issue_place')),
+    placeOfBirth: stringField(pickField(source, 'place_of_birth', 'placeOfBirth', 'place of birth', 'birth_place', 'birthPlace', 'pob')),
+    placeOfIssue: stringField(pickField(source, 'place_of_issue', 'placeOfIssue', 'place of issue', 'issue_place', 'issuePlace', 'poi')),
     dateOfIssue: dateField(pickField(source, 'date_of_issue', 'dateOfIssue', 'date of issue', 'issue_date', 'issueDate', 'doi')),
-    dateOfExpiry: dateField(pickField(source, 'date_of_expiry', 'dateOfExpiry', 'date of expiry', 'expiry_date', 'expiryDate', 'doe')),
+    dateOfExpiry: dateField(pickField(source, 'date_of_expiry', 'dateOfExpiry', 'date of expiry', 'expiry_date', 'expiryDate', 'doe', 'expiration_date', 'valid_until')),
   };
+}
+
+function normalizeNationality(value: unknown) {
+  const raw = stringField(value);
+  if (/^(ind|indian|in)$/i.test(raw)) return 'Indian';
+  return raw;
 }
 
 function pickField(source: Record<string, unknown>, ...keys: string[]) {
@@ -319,20 +377,31 @@ function safeHost(value: string) {
     return 'invalid-url';
   }
 }
+
 function stringField(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
 }
-
 
 function dateField(value: unknown) {
   const raw = stringField(value);
   return raw ? normalizePassportDateForInput(raw) || raw : '';
 }
-function confidenceFromRaw(raw: Record<string, unknown>): 'low' | 'medium' | 'high' {
+
+function confidenceFromRaw(raw: Record<string, unknown>, normalized?: Record<string, string>): 'low' | 'medium' | 'high' {
   const source = flattenDigioPassportPayload(raw);
   const score = Number(source.confidence_score ?? source.confidence ?? raw.confidence_score ?? raw.confidence ?? 0);
   if (score >= 0.85) return 'high';
   if (score >= 0.55) return 'medium';
+
+  const fields = normalized ?? normalizeDigioFields(raw);
+  const hasPassport = Boolean(fields.passportNumber);
+  const hasName = Boolean(fields.firstName);
+  const hasDob = Boolean(fields.dateOfBirth);
+  const isApproved = source.status === true || source.status === 'success' || source.status === 'approved';
+
+  if (hasPassport && hasName && hasDob) return 'high';
+  if (hasPassport && (hasName || hasDob)) return 'medium';
+  if (isApproved && (hasPassport || hasName)) return 'medium';
   return 'low';
 }
 
@@ -344,6 +413,7 @@ function fileNameFor(documentType: string, mimeType: string) {
   const ext = mimeType.includes('png') ? 'png' : mimeType.includes('pdf') ? 'pdf' : 'jpg';
   return `${documentType || 'document'}-front.${ext}`;
 }
+
 function stripDataUrl(value: string) {
   const marker = ';base64,';
   const index = value.indexOf(marker);
@@ -355,20 +425,87 @@ function mimeTypeFromDataUrl(value: string) {
   return match?.[1];
 }
 
-function flattenDigioPassportPayload(raw: Record<string, unknown>): Record<string, unknown> {
-  const candidates = [
-    raw,
-    recordField(raw.result),
-    recordField(raw.response),
-    recordField(raw.data),
-    recordField(raw.extracted_data),
-    recordField(raw.extractedData),
-    recordField(recordField(raw.result)?.extracted_data),
-    recordField(recordField(raw.result)?.data),
-    recordField(recordField(raw.data)?.extracted_data),
-    recordField(recordField(raw.data)?.passport),
-    recordField(raw.passport),
-  ].filter(Boolean) as Record<string, unknown>[];
+export function flattenDigioPassportPayload(raw: Record<string, unknown>): Record<string, unknown> {
+  const candidates: Record<string, unknown>[] = [];
+
+  const addCandidate = (val: unknown) => {
+    if (val && typeof val === 'object' && !Array.isArray(val)) {
+      candidates.push(val as Record<string, unknown>);
+    }
+  };
+
+  addCandidate(raw);
+  addCandidate(raw.details);
+  addCandidate(raw.id_analysis);
+  addCandidate(raw.result);
+  addCandidate(raw.response);
+  addCandidate(raw.data);
+  addCandidate(raw.extracted_data);
+  addCandidate(raw.extractedData);
+  addCandidate(raw.passport);
+  addCandidate(raw.customer_identity_details);
+  addCandidate(raw.validation_result);
+
+  if (raw.result && typeof raw.result === 'object') {
+    const res = raw.result as Record<string, unknown>;
+    addCandidate(res.details);
+    addCandidate(res.extracted_data);
+    addCandidate(res.extractedData);
+    addCandidate(res.data);
+    addCandidate(res.id_analysis);
+  }
+
+  if (raw.data && typeof raw.data === 'object') {
+    const d = raw.data as Record<string, unknown>;
+    addCandidate(d.details);
+    addCandidate(d.extracted_data);
+    addCandidate(d.extractedData);
+    addCandidate(d.passport);
+    addCandidate(d.id_analysis);
+  }
+
+  if (raw.response && typeof raw.response === 'object') {
+    const resp = raw.response as Record<string, unknown>;
+    addCandidate(resp.details);
+    addCandidate(resp.extracted_data);
+    addCandidate(resp.data);
+  }
+
+  if (Array.isArray(raw.id_cards)) {
+    for (const card of raw.id_cards) {
+      if (card && typeof card === 'object') {
+        const c = card as Record<string, unknown>;
+        addCandidate(c);
+        addCandidate(c.details);
+        addCandidate(c.id_analysis);
+        addCandidate(c.extracted_data);
+        addCandidate(c.validation_result);
+      }
+    }
+  }
+
+  if (Array.isArray(raw.actions)) {
+    for (const action of raw.actions) {
+      if (action && typeof action === 'object') {
+        const a = action as Record<string, unknown>;
+        addCandidate(a);
+        addCandidate(a.details);
+        addCandidate(a.validation_result);
+        addCandidate(a.extracted_data);
+        addCandidate(a.data);
+      }
+    }
+  }
+
+  if (Array.isArray(raw.detections)) {
+    for (const det of raw.detections) {
+      if (det && typeof det === 'object') {
+        const d = det as Record<string, unknown>;
+        addCandidate(d);
+        addCandidate(d.details);
+      }
+    }
+  }
 
   return Object.assign({}, ...candidates);
 }

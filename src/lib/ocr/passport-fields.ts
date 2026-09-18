@@ -1,4 +1,4 @@
-﻿export type PassportAutofillField =
+export type PassportAutofillField =
   | 'passportNumber'
   | 'firstName'
   | 'lastName'
@@ -23,6 +23,12 @@ const FIELD_ALIASES: Record<string, PassportAutofillField> = {
   id_number: 'passportNumber',
   idno: 'passportNumber',
   id_no: 'passportNumber',
+  doc_number: 'passportNumber',
+  docnumber: 'passportNumber',
+  document_number: 'passportNumber',
+  documentnumber: 'passportNumber',
+  id_card_no: 'passportNumber',
+  idcardno: 'passportNumber',
   firstname: 'firstName',
   first_name: 'firstName',
   givenname: 'firstName',
@@ -30,10 +36,14 @@ const FIELD_ALIASES: Record<string, PassportAutofillField> = {
   givenames: 'firstName',
   givennames: 'firstName',
   name: 'firstName',
+  fullname: 'firstName',
+  full_name: 'firstName',
   lastname: 'lastName',
   last_name: 'lastName',
   surname: 'lastName',
   surname_name: 'lastName',
+  familyname: 'lastName',
+  family_name: 'lastName',
   nationality: 'nationality',
   countrycode: 'nationality',
   country_code: 'nationality',
@@ -42,12 +52,16 @@ const FIELD_ALIASES: Record<string, PassportAutofillField> = {
   dateofbirth: 'dateOfBirth',
   date_of_birth: 'dateOfBirth',
   dob: 'dateOfBirth',
+  birthdate: 'dateOfBirth',
+  birth_date: 'dateOfBirth',
   placeofbirth: 'placeOfBirth',
   place_of_birth: 'placeOfBirth',
   birth_place: 'placeOfBirth',
+  birthplace: 'placeOfBirth',
   placeofissue: 'placeOfIssue',
   place_of_issue: 'placeOfIssue',
   issue_place: 'placeOfIssue',
+  issueplace: 'placeOfIssue',
   maritalstatus: 'maritalStatus',
   marital_status: 'maritalStatus',
   dateofissue: 'dateOfIssue',
@@ -60,6 +74,8 @@ const FIELD_ALIASES: Record<string, PassportAutofillField> = {
   expirydate: 'dateOfExpiry',
   expiry_date: 'dateOfExpiry',
   doe: 'dateOfExpiry',
+  expirationdate: 'dateOfExpiry',
+  expiration_date: 'dateOfExpiry',
 };
 
 const DATE_FIELDS = new Set<PassportAutofillField>(['dateOfBirth', 'dateOfIssue', 'dateOfExpiry']);
