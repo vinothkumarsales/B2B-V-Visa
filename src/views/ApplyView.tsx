@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Separator } from '@/components/ui/separator';
 import { PriceBreakdownPopover } from '@/components/pricing/PriceBreakdownPopover';
@@ -24,9 +25,11 @@ import { normalizePassportAutofillValue, resolvePassportAutofillField } from '@/
 import {
   Upload, AlertTriangle, Plus, ArrowRight, Check, Circle, Scan,
   Loader2, X, FileCheck, ChevronDown, ChevronUp, Image as ImageIcon,
-  Trash2, FileText, Copy, CheckCircle2, Receipt, Clock,
+  Trash2, FileText, Copy, CheckCircle2, Receipt, Clock, Eye, RefreshCw,
 } from 'lucide-react';
 import type { Traveler, VisaDocumentRequirement, VisaPricingLineItem, VisaStickerRoute, VisaType } from '@/types';
+import { resolveIndianPassportLocation } from '@/lib/ocr/passport-location-resolver';
+import { getStandardStickerRoutesForVisa, resolveStickerSubmissionRoute } from '@/lib/sticker-routing';
 
 type PassportPreviewState = {
   url: string;
@@ -34,6 +37,8 @@ type PassportPreviewState = {
   name: string;
   renderedUrl?: string;
   renderError?: string;
+  pageCount?: number;
+  currentPage?: number;
 };
 
 const pageVariants = {
@@ -44,6 +49,22 @@ const pageVariants = {
 
 function formatINR(amount: number): string {
   return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+}
+
+export interface UploadedAdditionalDoc {
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  uploadedAt: string;
+  documentType: string;
+  dataUrl: string;
+  pageCount?: number;
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 interface TravelerData {
@@ -69,6 +90,7 @@ interface TravelerData {
   ocrStatus: 'idle' | 'scanning' | 'done' | 'error';
   ocrError: string;
   additionalDocs: { [key: string]: string | null };
+  additionalDocDetails?: { [key: string]: UploadedAdditionalDoc | null };
   expanded: boolean;
 }
 
@@ -209,6 +231,7 @@ function createEmptyTraveler(index: number, requiredDocKeys: string[]): Traveler
     ocrStatus: 'idle',
     ocrError: '',
     additionalDocs: Object.fromEntries(requiredDocKeys.map((k) => [k, null])),
+    additionalDocDetails: Object.fromEntries(requiredDocKeys.map((k) => [k, null])),
     expanded: index === 0,
   };
 }
@@ -240,6 +263,9 @@ function buildPassportCrmFields(traveler: TravelerData) {
     }).filter(([, value]) => typeof value === 'string' && value.trim().length > 0),
   );
 }
+
+import { isTouristVisa, validateTravelDates } from '@/lib/visa-rules';
+export { isTouristVisa, validateTravelDates };
 
 function validateApplicants(travelers: TravelerData[], travelDate: string): ApplicantValidationIssue[] {
   const ageReferenceDate = getAgeReferenceDate(travelDate);
@@ -359,10 +385,14 @@ function TravelerCard({
   travelDate: string;
 }) {
   const passportInputRef = useRef<HTMLInputElement>(null);
+  const activeTransactionRef = useRef<string>('');
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+  const previewImgRef = useRef<HTMLImageElement>(null);
   const [showAddDocs, setShowAddDocs] = useState(false);
   const [passportPreview, setPassportPreview] = useState<PassportPreviewState | null>(null);
-  const [lensPosition, setLensPosition] = useState({ x: 50, y: 50 });
-  const [showLens, setShowLens] = useState(false);
+  const [storedPdfFile, setStoredPdfFile] = useState<File | null>(null);
+  const [renderingPage, setRenderingPage] = useState(false);
+  const [lens, setLens] = useState({ visible: false, x: 0, y: 0, bgX: 0, bgY: 0, bgWidth: 0, bgHeight: 0 });
   const docInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
@@ -372,10 +402,37 @@ function TravelerCard({
     };
   }, [passportPreview?.url, passportPreview?.renderedUrl]);
 
+  const changePdfPage = useCallback(
+    async (newPage: number) => {
+      if (!storedPdfFile) return;
+      setRenderingPage(true);
+      try {
+        const { dataUrl, pageCount } = await renderPdfPage(storedPdfFile, newPage);
+        setPassportPreview((current) =>
+          current ? { ...current, renderedUrl: dataUrl, currentPage: newPage, pageCount } : current
+        );
+      } catch (err) {
+        console.warn('[PDF] Page navigation error:', err);
+      } finally {
+        setRenderingPage(false);
+      }
+    },
+    [storedPdfFile]
+  );
+
   const handlePassportUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
+
+      // Always reset file input value so selecting the same file triggers onChange reliably
+      e.target.value = '';
+
+      // 1. Create a NEW unique transaction ID for each upload
+      const transactionId = `tx-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      activeTransactionRef.current = transactionId;
+      console.log('[Digio] new transaction created: PRESENT');
+      console.log('[Digio] active transaction:', transactionId);
 
       // Validate file size (5MB)
       if (file.size > 5 * 1024 * 1024) {
@@ -384,9 +441,26 @@ function TravelerCard({
         return;
       }
 
-      // Update file name
+      // 2. RESET STATE BEFORE STARTING NEW TRANSACTION
+      onUpdate(traveler.id, 'ocrStatus', 'scanning');
+      onUpdate(traveler.id, 'ocrError', '');
+      onUpdate(traveler.id, 'ocrConfidence', '');
+      onUpdate(traveler.id, 'ocrProviderRequestId', '');
       onUpdate(traveler.id, 'passportFileName', file.name);
       onUpdate(traveler.id, 'passportMimeType', file.type);
+      // Cleanly reset previous passport details so Person A data does NOT bleed into Person B
+      onUpdate(traveler.id, 'passportNumber', '');
+      onUpdate(traveler.id, 'firstName', '');
+      onUpdate(traveler.id, 'lastName', '');
+      onUpdate(traveler.id, 'dateOfBirth', '');
+      onUpdate(traveler.id, 'dateOfExpiry', '');
+      onUpdate(traveler.id, 'dateOfIssue', '');
+      onUpdate(traveler.id, 'placeOfBirth', '');
+      onUpdate(traveler.id, 'placeOfIssue', '');
+      onUpdate(traveler.id, 'sex', '');
+      onUpdate(traveler.id, 'nationality', 'Indian');
+
+      // 3. Reset preview state with page 1
       setPassportPreview((current) => {
         if (current?.url) URL.revokeObjectURL(current.url);
         if (current?.renderedUrl) URL.revokeObjectURL(current.renderedUrl);
@@ -394,50 +468,81 @@ function TravelerCard({
           url: URL.createObjectURL(file),
           type: file.type === 'application/pdf' ? 'pdf' : file.type.startsWith('image/') ? 'image' : '',
           name: file.name,
+          currentPage: 1,
+          pageCount: 1,
         };
       });
-      onUpdate(traveler.id, 'ocrStatus', 'scanning');
-      onUpdate(traveler.id, 'ocrError', '');
+      setStoredPdfFile(file.type === 'application/pdf' ? file : null);
+      setLens((prev) => ({ ...prev, visible: false }));
 
       try {
+        let base64ForOcr: string;
+        let mimeTypeForOcr = file.type;
+
         if (file.type === 'application/pdf') {
-          renderPdfFirstPage(file)
-            .then((renderedUrl) => {
-              setPassportPreview((current) => current?.name === file.name ? { ...current, renderedUrl } : current);
-            })
-            .catch(() => {
-              setPassportPreview((current) => current?.name === file.name ? { ...current, renderError: 'PDF preview unavailable' } : current);
-            });
+          try {
+            const { dataUrl, pageCount } = await renderPdfPage(file, 1);
+            if (activeTransactionRef.current === transactionId) {
+              setPassportPreview((current) =>
+                current?.name === file.name
+                  ? { ...current, renderedUrl: dataUrl, pageCount, currentPage: 1 }
+                  : current
+              );
+            }
+            base64ForOcr = dataUrl;
+            mimeTypeForOcr = 'image/png';
+          } catch (renderErr) {
+            console.warn('[OCR] PDF preview/render failed, falling back to raw file:', renderErr);
+            if (activeTransactionRef.current === transactionId) {
+              setPassportPreview((current) =>
+                current?.name === file.name ? { ...current, renderError: 'PDF preview unavailable' } : current
+              );
+            }
+            base64ForOcr = await fileToBase64(file);
+          }
+        } else {
+          base64ForOcr = await fileToBase64(file);
         }
-        const base64 = await fileToBase64(file);
-        onUpdate(traveler.id, 'passportFileBase64', base64);
+
+        // Guard: Out-of-order check before network call
+        if (activeTransactionRef.current !== transactionId) {
+          console.log('[Digio] transaction matches: FALSE - upload superseded');
+          return;
+        }
+
+        onUpdate(traveler.id, 'passportFileBase64', base64ForOcr);
         const res = await fetch('/api/ocr', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageBase64: base64, documentType: 'passport', mimeType: file.type }),
+          body: JSON.stringify({
+            imageBase64: base64ForOcr,
+            documentType: 'passport',
+            mimeType: mimeTypeForOcr,
+            transactionId,
+          }),
         });
         const data = await res.json().catch(() => ({}));
 
-        if (data.success && Array.isArray(data.fields)) {
-          let populatedCount = 0;
-          for (const f of data.fields) {
-            if (!f || typeof f !== 'object') continue;
-            if (!f.value) continue;
-            const key = resolvePassportAutofillField(f.field);
-            if (!key) continue;
-            const value = normalizePassportAutofillValue(key, String(f.value));
-            if (!value) continue;
+        // Guard: Out-of-order result check
+        const isCurrent = activeTransactionRef.current === transactionId;
+        console.log('[Digio] result transaction:', data.transactionId || transactionId);
+        console.log('[Digio] transaction matches:', isCurrent ? 'TRUE' : 'FALSE');
 
-            // Preserve existing manual entry if already populated by the user
-            const existingValue = traveler[key as keyof TravelerData];
-            const isDefaultOrEmpty = !existingValue || (key === 'nationality' && existingValue === 'Indian');
-            if (isDefaultOrEmpty) {
-              onUpdate(traveler.id, key, value);
-              populatedCount++;
-            }
+        if (!isCurrent) {
+          console.warn('[Digio] Stale OCR result discarded for transaction:', transactionId);
+          return;
+        }
+
+        if (data.success && Array.isArray(data.fields)) {
+          const populatedCount = populatePassportFromOCR(traveler.id, data.fields, onUpdate);
+          console.log('[Digio] OCR fields:', populatedCount);
+
+          if (typeof data.providerRequestId === 'string') {
+            onUpdate(traveler.id, 'ocrProviderRequestId', data.providerRequestId);
           }
-          if (typeof data.providerRequestId === 'string') onUpdate(traveler.id, 'ocrProviderRequestId', data.providerRequestId);
-          if (data.confidence === 'low' || data.confidence === 'medium' || data.confidence === 'high') onUpdate(traveler.id, 'ocrConfidence', data.confidence);
+          if (data.confidence === 'low' || data.confidence === 'medium' || data.confidence === 'high') {
+            onUpdate(traveler.id, 'ocrConfidence', data.confidence);
+          }
 
           if (populatedCount > 0) {
             onUpdate(traveler.id, 'ocrStatus', 'done');
@@ -445,57 +550,190 @@ function TravelerCard({
             onDocumentUploaded();
           } else {
             onUpdate(traveler.id, 'ocrStatus', 'error');
-            onUpdate(traveler.id, 'ocrError', 'Could not extract passport details. Please verify the document image or enter details manually.');
+            onUpdate(
+              traveler.id,
+              'ocrError',
+              'Could not extract passport details. Please verify the document image or enter details manually.'
+            );
           }
         } else {
-          onUpdate(traveler.id, 'ocrError', getOcrErrorMessage(data, res.ok ? 'OCR failed. Please enter details manually.' : 'V-Visa AI scan is unavailable. Please enter details manually.'));
+          onUpdate(
+            traveler.id,
+            'ocrError',
+            getOcrErrorMessage(
+              data,
+              res.ok ? 'OCR failed. Please enter details manually.' : 'V-Visa AI scan is unavailable. Please enter details manually.'
+            )
+          );
           onUpdate(traveler.id, 'ocrStatus', 'error');
         }
       } catch (err) {
-        console.error('OCR upload error:', err);
-        onUpdate(traveler.id, 'ocrError', 'Network error. Please try again.');
-        onUpdate(traveler.id, 'ocrStatus', 'error');
+        if (activeTransactionRef.current === transactionId) {
+          console.error('OCR upload error:', err);
+          onUpdate(traveler.id, 'ocrError', 'Network error. Please try again.');
+          onUpdate(traveler.id, 'ocrStatus', 'error');
+        }
       }
 
       // Reset file input
       if (passportInputRef.current) passportInputRef.current.value = '';
     },
-    [traveler, onUpdate, onDocumentUploaded]
+    [traveler.id, onUpdate, onDocumentUploaded]
   );
 
   const handlePreviewPointerMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
-    const y = Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100));
-    setLensPosition({ x, y });
+    const container = previewContainerRef.current;
+    const img = previewImgRef.current;
+    if (!container || !img) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const imgRect = img.getBoundingClientRect();
+
+    const cursorX = event.clientX - containerRect.left;
+    const cursorY = event.clientY - containerRect.top;
+
+    const imgX = event.clientX - imgRect.left;
+    const imgY = event.clientY - imgRect.top;
+
+    const clampedX = Math.max(0, Math.min(imgRect.width, imgX));
+    const clampedY = Math.max(0, Math.min(imgRect.height, imgY));
+
+    const zoom = 2.4;
+    const lensRadius = 64;
+
+    setLens({
+      visible: true,
+      x: cursorX,
+      y: cursorY,
+      bgWidth: imgRect.width * zoom,
+      bgHeight: imgRect.height * zoom,
+      bgX: -(clampedX * zoom - lensRadius),
+      bgY: -(clampedY * zoom - lensRadius),
+    });
   }, []);
+
+  const [uploadingDocKeys, setUploadingDocKeys] = useState<{ [key: string]: boolean }>({});
+  const [docPreviewModal, setDocPreviewModal] = useState<UploadedAdditionalDoc | null>(null);
+  const [docPreviewPage, setDocPreviewPage] = useState<number>(1);
+  const [docPreviewRenderedUrl, setDocPreviewRenderedUrl] = useState<string>('');
+  const [docPreviewTotalPages, setDocPreviewTotalPages] = useState<number>(1);
+  const [storedDocPdfFiles, setStoredDocPdfFiles] = useState<{ [key: string]: File }>({});
 
   const handleDocUpload = useCallback(
     async (docKey: string, e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      if (file.size > 5 * 1024 * 1024) return;
+      // Always reset file input value so selecting the same file triggers onChange reliably
+      e.target.value = '';
 
-      try {
-        const base64 = await fileToBase64(file);
-        const res = await fetch('/api/ocr', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageBase64: base64, documentType: docKey }),
-        });
-        const data = await res.json();
-        if (data.success) {
-          onUpdate(traveler.id, 'additionalDocs', { ...traveler.additionalDocs, [docKey]: file.name });
-          onDocumentUploaded();
-        }
-      } catch {
-        // Silently fail for additional docs
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size exceeds 10 MB limit');
+        return;
       }
 
-      if (docInputRefs.current[docKey]) docInputRefs.current[docKey]!.value = '';
+      setUploadingDocKeys((prev) => ({ ...prev, [docKey]: true }));
+
+      try {
+        let previewDataUrl: string;
+        let pageCount = 1;
+
+        if (file.type === 'application/pdf') {
+          setStoredDocPdfFiles((prev) => ({ ...prev, [docKey]: file }));
+          try {
+            const rendered = await renderPdfPage(file, 1);
+            previewDataUrl = rendered.dataUrl;
+            pageCount = rendered.pageCount;
+          } catch {
+            previewDataUrl = await fileToBase64(file);
+          }
+        } else {
+          previewDataUrl = await fileToBase64(file);
+        }
+
+        const docRecord: UploadedAdditionalDoc = {
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type,
+          uploadedAt: new Date().toISOString(),
+          documentType: docKey,
+          dataUrl: previewDataUrl,
+          pageCount,
+        };
+
+        onUpdate(traveler.id, 'additionalDocs', {
+          ...traveler.additionalDocs,
+          [docKey]: file.name,
+        });
+
+        const currentDetails = traveler.additionalDocDetails || {};
+        onUpdate(traveler.id, 'additionalDocDetails', {
+          ...currentDetails,
+          [docKey]: docRecord,
+        });
+
+        onDocumentUploaded();
+      } catch (err) {
+        console.error('Failed to process additional document upload:', err);
+      } finally {
+        setUploadingDocKeys((prev) => ({ ...prev, [docKey]: false }));
+      }
     },
-    [traveler.id, traveler.additionalDocs, onUpdate, onDocumentUploaded]
+    [traveler.id, traveler.additionalDocs, traveler.additionalDocDetails, onUpdate, onDocumentUploaded]
+  );
+
+  const handleRemoveDoc = useCallback(
+    (docKey: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      const updatedDocs = { ...traveler.additionalDocs };
+      delete updatedDocs[docKey];
+      onUpdate(traveler.id, 'additionalDocs', updatedDocs);
+
+      const updatedDetails = { ...(traveler.additionalDocDetails || {}) };
+      delete updatedDetails[docKey];
+      onUpdate(traveler.id, 'additionalDocDetails', updatedDetails);
+    },
+    [traveler.id, traveler.additionalDocs, traveler.additionalDocDetails, onUpdate]
+  );
+
+  const handleOpenDocPreview = useCallback(
+    async (docRecord: UploadedAdditionalDoc, docKey: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      setDocPreviewModal(docRecord);
+      setDocPreviewPage(1);
+      setDocPreviewTotalPages(docRecord.pageCount || 1);
+      setDocPreviewRenderedUrl(docRecord.dataUrl);
+
+      const pdfFile = storedDocPdfFiles[docKey];
+      if (pdfFile) {
+        try {
+          const rendered = await renderPdfPage(pdfFile, 1);
+          setDocPreviewRenderedUrl(rendered.dataUrl);
+          setDocPreviewTotalPages(rendered.pageCount);
+        } catch {}
+      }
+    },
+    [storedDocPdfFiles]
+  );
+
+  const handleDocPreviewPageChange = useCallback(
+    async (delta: number) => {
+      if (!docPreviewModal) return;
+      const pdfFile = storedDocPdfFiles[docPreviewModal.documentType];
+      if (!pdfFile) return;
+
+      const nextPage = Math.max(1, Math.min(docPreviewTotalPages, docPreviewPage + delta));
+      if (nextPage === docPreviewPage) return;
+
+      try {
+        const rendered = await renderPdfPage(pdfFile, nextPage);
+        setDocPreviewPage(nextPage);
+        setDocPreviewRenderedUrl(rendered.dataUrl);
+      } catch (err) {
+        console.error('Failed to change preview page:', err);
+      }
+    },
+    [docPreviewModal, docPreviewPage, docPreviewTotalPages, storedDocPdfFiles]
   );
 
   const toggleExpand = () => {
@@ -531,12 +769,24 @@ function TravelerCard({
               {index + 1}
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-foreground">
-                Traveler {index + 1}
-                {traveler.firstName && (
-                  <span className="text-vvisa-text-secondary font-normal"> - {traveler.firstName} {traveler.lastName}</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Traveler {index + 1}
+                  {traveler.firstName && (
+                    <span className="text-vvisa-text-secondary font-normal"> - {traveler.firstName} {traveler.lastName}</span>
+                  )}
+                </h3>
+                {travelers.length > 1 && index === 0 && (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25">
+                    Lead Traveler / Primary
+                  </span>
                 )}
-              </h3>
+                {travelers.length > 1 && index > 0 && (
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-vvisa-surface-2 text-vvisa-text-secondary border border-vvisa-border">
+                    Co-Traveler #{index + 1}
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-2 mt-0.5">
                 {traveler.ocrStatus === 'done' && (
                   <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-300">
@@ -614,62 +864,133 @@ function TravelerCard({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Upload Zone */}
                 <div
-                  className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center transition-all min-h-[200px] cursor-pointer
+                  className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center transition-all min-h-[200px]
                     ${traveler.ocrStatus === 'scanning'
-                      ? 'border-primary bg-primary/5'
+                      ? 'border-primary bg-primary/5 cursor-wait pointer-events-none'
                       : traveler.ocrStatus === 'done'
-                        ? 'border-emerald-500/50 bg-emerald-500/8 dark:bg-emerald-400/10'
-                        : 'border-vvisa-border hover:border-primary/50'
+                        ? 'border-emerald-500/50 bg-emerald-500/8 dark:bg-emerald-400/10 cursor-pointer'
+                        : 'border-vvisa-border hover:border-primary/50 cursor-pointer'
                     }`}
-                  onClick={() => passportInputRef.current?.click()}
+                  onClick={() => {
+                    if (traveler.ocrStatus !== 'scanning') {
+                      passportInputRef.current?.click();
+                    }
+                  }}
                 >
                   <input
                     ref={passportInputRef}
                     type="file"
                     accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
                     className="hidden"
+                    disabled={traveler.ocrStatus === 'scanning'}
                     onChange={handlePassportUpload}
                   />
 
                   {passportPreviewImageUrl && traveler.ocrStatus !== 'scanning' ? (
-                    <>
+                    <div className="w-full flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
                       <div
-                        className="relative mb-3 w-full max-w-[280px] overflow-hidden rounded-lg border border-vvisa-border bg-vvisa-bg"
-                        onMouseEnter={() => setShowLens(true)}
-                        onMouseLeave={() => setShowLens(false)}
+                        ref={previewContainerRef}
+                        className="relative w-full overflow-hidden rounded-xl border border-vvisa-border bg-slate-950/40 p-2 flex items-center justify-center cursor-crosshair select-none min-h-[260px] max-h-[420px]"
+                        onMouseEnter={() => setLens((prev) => ({ ...prev, visible: true }))}
+                        onMouseLeave={() => setLens((prev) => ({ ...prev, visible: false }))}
                         onMouseMove={handlePreviewPointerMove}
                       >
                         <img
+                          ref={previewImgRef}
                           src={passportPreviewImageUrl}
                           alt={`${passportPreview?.name || 'Passport'} preview`}
-                          className="h-40 w-full object-contain"
+                          className="w-full h-auto max-h-[390px] object-contain block mx-auto pointer-events-none rounded-lg"
                         />
-                        {showLens && (
+                        {lens.visible && (
                           <div
-                            className="pointer-events-none absolute h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/90 shadow-2xl ring-2 ring-primary/40"
+                            className="pointer-events-none absolute h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/90 shadow-[0_10px_35px_rgba(0,0,0,0.6)] ring-4 ring-black/40"
                             style={{
-                              left: `${lensPosition.x}%`,
-                              top: `${lensPosition.y}%`,
+                              left: `${lens.x}px`,
+                              top: `${lens.y}px`,
                               backgroundImage: `url(${passportPreviewImageUrl})`,
                               backgroundRepeat: 'no-repeat',
-                              backgroundSize: '280% 280%',
-                              backgroundPosition: `${lensPosition.x}% ${lensPosition.y}%`,
+                              backgroundSize: `${lens.bgWidth}px ${lens.bgHeight}px`,
+                              backgroundPosition: `${lens.bgX}px ${lens.bgY}px`,
                             }}
                             aria-hidden="true"
-                          />
+                          >
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="h-1.5 w-1.5 rounded-full bg-primary/80 ring-1 ring-white/70" />
+                            </div>
+                          </div>
                         )}
                       </div>
-                      <p className="max-w-full truncate text-sm font-medium text-foreground">{passportPreview?.name}</p>
-                      <p className="text-xs text-vvisa-text-muted">{traveler.ocrStatus === 'done' ? 'Preview ready. Hover to magnify, click to replace.' : 'Preview ready. Hover to magnify and review details.'}</p>
-                    </>
+
+                      {/* Multi-Page Navigation for PDF Documents */}
+                      {(passportPreview?.pageCount ?? 1) > 1 && (
+                        <div className="mt-2.5 flex items-center justify-between w-full px-3 py-1.5 rounded-lg bg-vvisa-surface-2 border border-vvisa-border text-xs text-vvisa-text-secondary">
+                          <button
+                            type="button"
+                            disabled={renderingPage || (passportPreview?.currentPage ?? 1) <= 1}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              changePdfPage((passportPreview?.currentPage ?? 1) - 1);
+                            }}
+                            className="px-2.5 py-1 rounded hover:bg-primary/10 hover:text-primary disabled:opacity-40 disabled:hover:bg-transparent font-medium flex items-center gap-1 transition-colors"
+                          >
+                            ← Prev
+                          </button>
+                          <span className="font-medium text-foreground">
+                            Page {passportPreview?.currentPage ?? 1} of {passportPreview?.pageCount}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={renderingPage || (passportPreview?.currentPage ?? 1) >= (passportPreview?.pageCount ?? 1)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              changePdfPage((passportPreview?.currentPage ?? 1) + 1);
+                            }}
+                            className="px-2.5 py-1 rounded hover:bg-primary/10 hover:text-primary disabled:opacity-40 disabled:hover:bg-transparent font-medium flex items-center gap-1 transition-colors"
+                          >
+                            Next →
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="mt-2.5 text-center w-full px-2">
+                        <p className="max-w-full truncate text-xs font-medium text-foreground">{passportPreview?.name}</p>
+                        <div className="flex items-center justify-center gap-2 mt-1">
+                          <span className="inline-flex items-center gap-1 text-[11px] text-primary font-medium">
+                            🔍 2.4x Lens Active
+                          </span>
+                          <span className="text-[11px] text-vvisa-text-muted">·</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              passportInputRef.current?.click();
+                            }}
+                            className="text-[11px] text-primary hover:underline font-medium"
+                          >
+                            Replace Document
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   ) : passportPreview?.url && passportPreview.type === 'pdf' && traveler.ocrStatus !== 'scanning' ? (
-                    <>
+                    <div className="w-full flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
                       <div className="mb-3 flex h-24 w-24 items-center justify-center rounded-xl border border-vvisa-border bg-vvisa-bg">
                         <FileText className="h-10 w-10 text-primary" />
                       </div>
                       <p className="max-w-full truncate text-sm font-medium text-foreground">{passportPreview?.name}</p>
-                      <p className="text-xs text-vvisa-text-muted">{passportPreview.renderError ?? 'Preparing PDF preview. Click to replace.'}</p>
-                    </>
+                      <p className="text-xs text-vvisa-text-muted mb-2">{passportPreview.renderError ?? 'Preparing PDF preview...'}</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          passportInputRef.current?.click();
+                        }}
+                      >
+                        Replace Document
+                      </Button>
+                    </div>
                   ) : traveler.ocrStatus === 'scanning' ? (
                     <>
                       <Loader2 className="h-8 w-8 text-primary animate-spin mb-3" />
@@ -790,12 +1111,15 @@ function TravelerCard({
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <Label className="text-xs text-vvisa-text-muted">Marital Status</Label>
-                      <Input
+                      <select
                         value={traveler.maritalStatus}
                         onChange={(e) => onUpdate(traveler.id, 'maritalStatus', e.target.value)}
-                        placeholder="Single"
-                        className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1"
-                      />
+                        className="w-full bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1 px-3"
+                      >
+                        <option value="">Select marital status</option>
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                      </select>
                     </div>
                     {isMinor && (
                       <>
@@ -897,54 +1221,164 @@ function TravelerCard({
                     >
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {requiredDocs.map((doc) => {
-                        const uploadedName = traveler.additionalDocs[doc.key];
-                        return (
-                          <div key={doc.key} className="space-y-1.5">
-                            <Label className="text-sm text-foreground font-medium">{doc.title}</Label>
-                            <p className="text-xs text-vvisa-text-muted">{doc.helper}</p>
-                            <input
-                              ref={(el) => { docInputRefs.current[doc.key] = el; }}
-                              type="file"
-                              accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
-                              className="hidden"
-                              onChange={(e) => handleDocUpload(doc.key, e)}
-                            />
-                            <div
-                              className={`border border-dashed rounded-lg p-3 flex flex-col items-center justify-center text-center transition-colors cursor-pointer h-20
-                                ${uploadedName
-                                  ? 'border-emerald-500/50 bg-emerald-500/8 dark:bg-emerald-400/10'
-                                  : 'border-vvisa-border hover:border-primary/50'
-                                }`}
-                              onClick={() => docInputRefs.current[doc.key]?.click()}
-                            >
-                              {uploadedName ? (
-                                <>
-                                  <FileCheck className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300 mb-1" />
-                                  <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium truncate max-w-full px-2">{uploadedName}</p>
-                                  <span className="text-[9px] text-vvisa-text-muted mt-0.5">Click to replace</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Scan className="h-3.5 w-3.5 text-vvisa-text-muted mb-1" />
-                                  <p className="text-xs text-vvisa-text-muted">Click to upload</p>
-                                  <span className="inline-flex items-center gap-0.5 text-[9px] text-primary mt-0.5">
-                                    <Scan className="h-2.5 w-2.5" /> V-Visa AI ready
-                                  </span>
-                                </>
-                              )}
+                          const uploadedName = traveler.additionalDocs[doc.key];
+                          const docDetail = traveler.additionalDocDetails?.[doc.key];
+                          const isUploading = Boolean(uploadingDocKeys[doc.key]);
+
+                          return (
+                            <div key={doc.key} className="space-y-1.5">
+                              <Label className="text-sm text-foreground font-medium">{doc.title}</Label>
+                              <p className="text-xs text-vvisa-text-muted">{doc.helper}</p>
+                              <input
+                                ref={(el) => { docInputRefs.current[doc.key] = el; }}
+                                type="file"
+                                accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+                                className="hidden"
+                                disabled={isUploading}
+                                onChange={(e) => handleDocUpload(doc.key, e)}
+                              />
+                              <div
+                                className={`border rounded-lg p-3 flex flex-col justify-between transition-colors min-h-[92px]
+                                  ${uploadedName
+                                    ? 'border-emerald-500/50 bg-emerald-500/8 dark:bg-emerald-400/10'
+                                    : 'border-dashed border-vvisa-border hover:border-primary/50 bg-vvisa-surface cursor-pointer'
+                                  }`}
+                                onClick={() => {
+                                  if (!uploadedName && !isUploading) {
+                                    docInputRefs.current[doc.key]?.click();
+                                  }
+                                }}
+                              >
+                                {isUploading ? (
+                                  <div className="flex flex-col items-center justify-center h-full py-2">
+                                    <Loader2 className="h-4 w-4 text-primary animate-spin mb-1" />
+                                    <p className="text-xs text-primary font-medium">Uploading...</p>
+                                  </div>
+                                ) : uploadedName ? (
+                                  <div className="flex flex-col justify-between h-full gap-2">
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="flex items-center gap-2 min-w-0">
+                                        <FileCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                        <div className="min-w-0">
+                                          <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 truncate max-w-[200px]" title={uploadedName}>
+                                            {uploadedName}
+                                          </p>
+                                          {docDetail?.fileSize && (
+                                            <span className="text-[10px] text-vvisa-text-muted">
+                                              {formatFileSize(docDetail.fileSize)} • Uploaded ✓
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => handleRemoveDoc(doc.key, e)}
+                                        className="text-vvisa-text-muted hover:text-red-500 p-1 rounded transition-colors"
+                                        title="Remove document"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </button>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 pt-1 border-t border-emerald-500/20 text-xs">
+                                      {docDetail?.dataUrl && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => handleOpenDocPreview(docDetail, doc.key, e)}
+                                          className="flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                                        >
+                                          <Eye className="h-3 w-3" /> View Preview
+                                        </button>
+                                      )}
+                                      <span className="text-vvisa-border text-[10px]">•</span>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          docInputRefs.current[doc.key]?.click();
+                                        }}
+                                        className="flex items-center gap-1 text-[11px] text-vvisa-text-secondary hover:text-foreground hover:underline"
+                                      >
+                                        <RefreshCw className="h-3 w-3" /> Replace
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col items-center justify-center h-full py-1">
+                                    <Upload className="h-4 w-4 text-vvisa-text-muted mb-1" />
+                                    <p className="text-xs text-vvisa-text-secondary font-medium">Click to upload document</p>
+                                    <span className="text-[10px] text-vvisa-text-muted">PDF, JPG, PNG (Max 10MB)</span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Additional Document Preview Dialog */}
+      <Dialog open={Boolean(docPreviewModal)} onOpenChange={(open) => { if (!open) setDocPreviewModal(null); }}>
+        <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto rounded-xl border border-vvisa-border-subtle bg-vvisa-surface shadow-[var(--vvisa-shadow-lg)] p-5">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center justify-between text-base">
+              <span className="truncate max-w-[400px]">{docPreviewModal?.fileName}</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-3 flex flex-col items-center">
+            {docPreviewModal?.fileType === 'application/pdf' && docPreviewTotalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 mb-3 bg-vvisa-surface-2 px-3 py-1.5 rounded-lg text-xs">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={docPreviewPage <= 1}
+                  onClick={() => handleDocPreviewPageChange(-1)}
+                  className="h-7 px-2 text-xs"
+                >
+                  ← Prev
+                </Button>
+                <span className="text-foreground font-medium">
+                  Page {docPreviewPage} of {docPreviewTotalPages}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={docPreviewPage >= docPreviewTotalPages}
+                  onClick={() => handleDocPreviewPageChange(1)}
+                  className="h-7 px-2 text-xs"
+                >
+                  Next →
+                </Button>
+              </div>
+            )}
+
+            <div className="w-full flex items-center justify-center border border-vvisa-border rounded-xl bg-slate-950/40 p-2 overflow-hidden min-h-[300px] max-h-[500px]">
+              {docPreviewRenderedUrl ? (
+                <img
+                  src={docPreviewRenderedUrl}
+                  alt={docPreviewModal?.fileName || 'Document preview'}
+                  className="w-full h-auto max-h-[480px] object-contain block mx-auto rounded-lg select-none"
+                />
+              ) : (
+                <div className="py-12 text-center text-vvisa-text-muted text-sm">
+                  <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>Document preview unavailable</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
@@ -984,11 +1418,13 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-async function renderPdfFirstPage(file: File): Promise<string> {
+async function renderPdfPage(file: File, pageNumber = 1): Promise<{ dataUrl: string; pageCount: number }> {
   const pdfjs = await import('pdfjs-dist');
   pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url).toString();
   const pdf = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
-  const page = await pdf.getPage(1);
+  const pageCount = pdf.numPages || 1;
+  const safePage = Math.max(1, Math.min(pageNumber, pageCount));
+  const page = await pdf.getPage(safePage);
   const viewport = page.getViewport({ scale: 1.7 });
   const canvas = window.document.createElement('canvas');
   const context = canvas.getContext('2d');
@@ -996,7 +1432,34 @@ async function renderPdfFirstPage(file: File): Promise<string> {
   canvas.width = Math.floor(viewport.width);
   canvas.height = Math.floor(viewport.height);
   await page.render({ canvas, canvasContext: context, viewport }).promise;
-  return canvas.toDataURL('image/png');
+  return {
+    dataUrl: canvas.toDataURL('image/png'),
+    pageCount,
+  };
+}
+
+export function populatePassportFromOCR(
+  travelerId: string,
+  fields: Array<{ field?: unknown; value?: unknown }>,
+  onUpdate: (id: string, field: keyof TravelerData, value: TravelerData[keyof TravelerData]) => void
+): number {
+  let count = 0;
+  for (const f of fields) {
+    if (!f || typeof f !== 'object') continue;
+    const rawField = (f as { field?: unknown }).field;
+    const rawValue = (f as { value?: unknown }).value;
+    if (!rawValue) continue;
+
+    const key = resolvePassportAutofillField(String(rawField));
+    if (!key) continue;
+
+    const value = normalizePassportAutofillValue(key, String(rawValue));
+    if (!value) continue;
+
+    onUpdate(travelerId, key as keyof TravelerData, value);
+    count++;
+  }
+  return count;
 }
 
 /* --- Progress Stepper Component --- */
@@ -1069,6 +1532,7 @@ export default function ApplyView() {
   const [walletPaymentLoading, setWalletPaymentLoading] = useState(false);
   const [copiedTxn, setCopiedTxn] = useState(false);
   const [passportOriginCity, setPassportOriginCity] = useState('');
+  const [userSelectedCityManually, setUserSelectedCityManually] = useState(false);
   const [residenceState, setResidenceState] = useState('');
   const [residenceCity, setResidenceCity] = useState('');
   const [postalCode, setPostalCode] = useState('');
@@ -1079,8 +1543,49 @@ export default function ApplyView() {
   }, [activeVisaType]);
 
   const requiredDocKeys = useMemo(() => requiredDocs.map((d) => d.key), [requiredDocs]);
-  const stickerRoutes = useMemo(() => activeVisaType ? getStickerRoutes(activeVisaType) : [], [activeVisaType]);
   const isStickerVisa = activeVisaType?.visaKind === 'STICKER_VISA';
+  const stickerRoutes = useMemo(() => {
+    if (!activeVisaType || !isStickerVisa) return [];
+    return getStandardStickerRoutesForVisa(activeVisaType);
+  }, [activeVisaType, isStickerVisa]);
+
+  const [travelers, setTravelers] = useState<TravelerData[]>(() => [createEmptyTraveler(0, requiredDocKeys)]);
+
+  // Individual -> Group: 1 traveler -> Individual, 2+ travelers -> automatically switch to Group
+  // Removing travelers switches back to Individual when only 1 traveler remains
+  useEffect(() => {
+    if (travelers.length >= 2 && appType !== 'group') {
+      setAppType('group');
+    } else if (travelers.length <= 1 && appType !== 'individual') {
+      setAppType('individual');
+    }
+  }, [travelers.length, appType]);
+
+  // Route city to passport origin city extracted from OCR (Lead Traveler)
+  useEffect(() => {
+    const leadTravelerPlace = travelers[0]?.placeOfIssue;
+    if (leadTravelerPlace && isStickerVisa && !userSelectedCityManually) {
+      const resolved = resolveIndianPassportLocation(leadTravelerPlace);
+      if (resolved?.normalizedCity) {
+        setPassportOriginCity(resolved.normalizedCity);
+      }
+    }
+  }, [travelers, isStickerVisa, userSelectedCityManually]);
+
+  const resolvedPassportLoc = useMemo(
+    () => resolveIndianPassportLocation(passportOriginCity || travelers[0]?.placeOfIssue),
+    [passportOriginCity, travelers]
+  );
+
+  const resolvedStickerRoute = useMemo(() => {
+    if (!activeVisaType || !isStickerVisa) return null;
+    return resolveStickerSubmissionRoute(activeVisaType, {
+      passportOriginCity: passportOriginCity || travelers[0]?.placeOfIssue || undefined,
+      residenceCity,
+      residenceState,
+    });
+  }, [activeVisaType, isStickerVisa, passportOriginCity, travelers, residenceCity, residenceState]);
+
   const jurisdictionRequired = Boolean(activeVisaType?.jurisdictions?.length);
   const jurisdictionResolution = useMemo(
     () => resolveVisaJurisdiction(activeVisaType, {
@@ -1088,20 +1593,22 @@ export default function ApplyView() {
       residenceState,
       residenceCity,
       postalCode,
+      passportIssueCity: resolvedPassportLoc?.normalizedCity,
+      passportIssueState: resolvedPassportLoc?.state,
     }),
-    [activeVisaType, postalCode, residenceCity, residenceState]
+    [activeVisaType, postalCode, residenceCity, residenceState, resolvedPassportLoc]
   );
   const jurisdictionBlocksSubmit = jurisdictionResolution.status === 'MANUAL_REVIEW';
-  const selectedPassportOriginCity = passportOriginCity;
+  const selectedPassportOriginCity = passportOriginCity || resolvedPassportLoc?.normalizedCity || '';
 
-  const [travelers, setTravelers] = useState<TravelerData[]>(() => [createEmptyTraveler(0, requiredDocKeys)]);
+  const pricingRouteKey = selectedPassportOriginCity || undefined;
   const pricingResult = useMemo(
-    () => resolveVisaPricing(activeVisaType, { quantity: travelers.length, routeKey: selectedPassportOriginCity || undefined }),
-    [activeVisaType, selectedPassportOriginCity, travelers.length]
+    () => resolveVisaPricing(activeVisaType, { quantity: travelers.length, routeKey: pricingRouteKey }),
+    [activeVisaType, pricingRouteKey, travelers.length]
   );
   const singleTravelerPricingResult = useMemo(
-    () => resolveVisaPricing(activeVisaType, { quantity: 1, routeKey: selectedPassportOriginCity || undefined }),
-    [activeVisaType, selectedPassportOriginCity]
+    () => resolveVisaPricing(activeVisaType, { quantity: 1, routeKey: pricingRouteKey }),
+    [activeVisaType, pricingRouteKey]
   );
 
   useEffect(() => {
@@ -1117,7 +1624,19 @@ export default function ApplyView() {
   const pricePerTraveler = Math.round(singleTravelerPricingResult.visibleTotalMinor / 100);
   const total = Math.round(pricingResult.visibleTotalMinor / 100);
 
-  const validationIssues = useMemo(() => validateApplicants(travelers, travelDate), [travelers, travelDate]);
+  const isTourist = useMemo(() => isTouristVisa(activeVisaType), [activeVisaType]);
+  const dateValidationIssues = useMemo(
+    () => validateTravelDates(activeVisaType, travelDate, returnDate),
+    [activeVisaType, travelDate, returnDate]
+  );
+  const applicantValidationIssues = useMemo(
+    () => validateApplicants(travelers, travelDate),
+    [travelers, travelDate]
+  );
+  const validationIssues = useMemo(
+    () => [...dateValidationIssues, ...applicantValidationIssues],
+    [dateValidationIssues, applicantValidationIssues]
+  );
   const blockingValidationIssues = useMemo(
     () => validationIssues.filter((issue) => issue.blocksSubmit),
     [validationIssues]
@@ -1190,15 +1709,25 @@ export default function ApplyView() {
   );
 
   const handleRemoveTraveler = useCallback((id: string) => {
-    setTravelers((prev) =>
-      prev
+    setTravelers((prev) => {
+      const next = prev
         .filter((t) => t.id !== id)
-        .map((t) => (t.guardianApplicantId === id ? { ...t, guardianApplicantId: '' } : t))
-    );
+        .map((t) => (t.guardianApplicantId === id ? { ...t, guardianApplicantId: '' } : t));
+      if (next.length <= 1) {
+        setAppType('individual');
+      }
+      return next;
+    });
   }, []);
 
   const handleAddTraveler = () => {
-    setTravelers((prev) => [...prev, createEmptyTraveler(prev.length, requiredDocKeys)]);
+    setTravelers((prev) => {
+      const next = [...prev, createEmptyTraveler(prev.length, requiredDocKeys)];
+      if (next.length >= 2) {
+        setAppType('group');
+      }
+      return next;
+    });
   };
 
   const handleDocumentUploaded = useCallback(() => {
@@ -1406,13 +1935,18 @@ export default function ApplyView() {
         <CardContent className="p-5">
           <div className="flex flex-col sm:flex-row sm:items-end gap-4">
             <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs text-vvisa-text-secondary mb-1.5 block font-medium">Are You Applying For</Label>
+              <div className="flex items-center justify-between mb-1.5">
+                <Label className="text-xs text-vvisa-text-secondary font-medium">Are You Applying For</Label>
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                  {appType === 'group' ? `Group (${travelers.length} Travelers)` : 'Individual (1 Traveler)'}
+                </span>
               </div>
               <ToggleGroup
                 type="single"
                 value={appType}
-                onValueChange={(val) => val && setAppType(val as 'individual' | 'group')}
+                onValueChange={(val) => {
+                  if (val) setAppType(val as 'individual' | 'group');
+                }}
                 className="bg-vvisa-bg border border-vvisa-border rounded-lg p-1"
               >
                 <ToggleGroupItem
@@ -1425,7 +1959,7 @@ export default function ApplyView() {
                   value="group"
                   className="data-[state=on]:bg-primary data-[state=on]:text-white text-vvisa-text-secondary rounded-md px-4 h-9 text-sm"
                 >
-                  Group
+                  Group {travelers.length > 1 ? `(${travelers.length})` : ''}
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
@@ -1444,28 +1978,53 @@ export default function ApplyView() {
                 <Input
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
-                  placeholder="e.g. SAPNA CHHAJER"
+                  placeholder={`e.g. Tour Group (${travelers.length} Travelers)`}
                   className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
                 />
               </div>
             )}
             <div className="flex-1">
-              <Label className="text-xs text-vvisa-text-secondary mb-1.5 block font-medium">Travel Date</Label>
+              <div className="flex items-center justify-between mb-1.5">
+                <Label className="text-xs text-vvisa-text-secondary font-medium">
+                  Travelling / Departure Date {isTourist && <span className="text-red-500 font-bold">*</span>}
+                </Label>
+                {!isTourist && (
+                  <span className="text-[10px] text-vvisa-text-muted">Optional</span>
+                )}
+              </div>
               <Input
                 type="date"
                 value={travelDate}
                 onChange={(e) => handleTravelDateChange(e.target.value)}
-                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
+                className={`bg-vvisa-bg border rounded-lg text-foreground h-10 ${
+                  isTourist && !travelDate ? 'border-amber-500/60 focus:border-amber-500' : 'border-vvisa-border focus:border-primary'
+                }`}
               />
+              {isTourist && !travelDate && (
+                <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">Mandatory for tourist visa</p>
+              )}
             </div>
             <div className="flex-1">
-              <Label className="text-xs text-vvisa-text-secondary mb-1.5 block font-medium">Return Date</Label>
+              <div className="flex items-center justify-between mb-1.5">
+                <Label className="text-xs text-vvisa-text-secondary font-medium">
+                  Return Date {isTourist && <span className="text-red-500 font-bold">*</span>}
+                </Label>
+                {!isTourist && (
+                  <span className="text-[10px] text-vvisa-text-muted">Optional</span>
+                )}
+              </div>
               <Input
                 type="date"
                 value={returnDate}
                 onChange={(e) => setReturnDate(e.target.value)}
-                className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-10"
+                min={travelDate || undefined}
+                className={`bg-vvisa-bg border rounded-lg text-foreground h-10 ${
+                  isTourist && !returnDate ? 'border-amber-500/60 focus:border-amber-500' : 'border-vvisa-border focus:border-primary'
+                }`}
               />
+              {isTourist && !returnDate && (
+                <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">Mandatory for tourist visa</p>
+              )}
             </div>
           </div>
 
@@ -1544,40 +2103,86 @@ export default function ApplyView() {
           )}
 
           {activeVisaType && isStickerVisa && (
-            <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1.2fr] sm:items-end">
-                <div>
-                  <Label className="text-xs text-amber-700 dark:text-amber-200 mb-1.5 block font-semibold">Passport Origin City</Label>
-                  <select
-                    value={selectedPassportOriginCity}
-                    onChange={(event) => setPassportOriginCity(event.target.value)}
-                    disabled={stickerRoutes.length === 0}
-                    className="h-10 w-full rounded-lg border border-amber-500/30 bg-vvisa-surface px-3 text-sm text-foreground shadow-[var(--vvisa-shadow-sm)] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {stickerRoutes.length > 0 ? (
-                      <>
-                        <option value="">Other India / choose city</option>
-                        {stickerRoutes.map((route) => (
-                          <option key={route.id} value={route.id}>
-                            {route.originCityLabel ?? route.origin}
-                          </option>
-                        ))}
-                      </>
-                    ) : (
-                      <option value="">Manual quotation required</option>
-                    )}
-                  </select>
+            <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                    VAC
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-foreground">
+                      Passport Origin City & Physical Submission Hub
+                    </h4>
+                    <p className="text-[11px] text-vvisa-text-secondary">
+                      Sticker visas require physical passport submission and biometric appointment at the assigned centre.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs leading-5 text-amber-700/80 dark:text-amber-200/80">
-                  {stickerRoutes.length > 0
-                    ? 'Sticker visas require passport handover. Pricing uses the selected route when mapped, falls back to other India, or needs manual quotation.'
-                    : 'No passport route is mapped for this sticker visa yet. Save the application for manual quotation before final confirmation.'}
-                </p>
-                {pricingResult.manualQuotationRequired && (
-                  <p className="mt-2 text-xs font-semibold text-amber-700 dark:text-amber-200">
-                    Manual quotation required before final confirmation.
-                  </p>
+                {resolvedStickerRoute?.isVerified && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 shrink-0">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                    Route Verified ✓
+                  </span>
                 )}
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <Label className="text-xs text-foreground mb-1.5 block font-medium">
+                    Passport Origin City (Place of Issue)
+                  </Label>
+                  <select
+                    value={passportOriginCity}
+                    onChange={(event) => {
+                      setUserSelectedCityManually(true);
+                      setPassportOriginCity(event.target.value);
+                    }}
+                    className="h-10 w-full rounded-lg border border-vvisa-border bg-vvisa-surface px-3 text-sm text-foreground shadow-[var(--vvisa-shadow-sm)] focus:border-primary focus:outline-none"
+                  >
+                    <option value="">Auto-detect from OCR / Choose city</option>
+                    {stickerRoutes.map((route) => (
+                      <option key={route.id} value={route.origin}>
+                        {route.originCityLabel ?? route.origin}
+                      </option>
+                    ))}
+                  </select>
+                  {resolvedPassportLoc && (
+                    <p className="mt-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                      <Check className="h-3 w-3 inline" />
+                      Detected from passport: {resolvedPassportLoc.normalizedCity}
+                      {resolvedPassportLoc.state !== 'Other India' ? `, ${resolvedPassportLoc.state}` : ''}
+                      {resolvedPassportLoc.rpo ? ` (RPO: ${resolvedPassportLoc.rpo})` : ''}
+                    </p>
+                  )}
+                </div>
+
+                <div className="rounded-lg border border-vvisa-border bg-vvisa-surface/80 p-3 text-xs space-y-1.5">
+                  {resolvedStickerRoute ? (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-vvisa-text-muted">Assigned Centre:</span>
+                        <span className="font-semibold text-foreground text-right">{resolvedStickerRoute.submissionCentreName}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-vvisa-text-muted">Submission City:</span>
+                        <span className="font-medium text-foreground">{resolvedStickerRoute.submissionCity}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-vvisa-text-muted">Routing Policy:</span>
+                        <span className="font-medium text-foreground capitalize">
+                          {resolvedStickerRoute.routingBasis.toLowerCase().replace(/_/g, ' ')}
+                        </span>
+                      </div>
+                      {resolvedStickerRoute.submissionCentreAddress && (
+                        <p className="text-[11px] text-vvisa-text-secondary pt-1 border-t border-vvisa-border/60">
+                          📍 {resolvedStickerRoute.submissionCentreAddress}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-xs text-vvisa-text-muted">Select an origin city or scan passport to preview assigned submission centre.</p>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -1666,6 +2271,9 @@ export default function ApplyView() {
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-semibold text-foreground">Price Summary</h3>
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                    {appType === 'group' ? `Group (${travelers.length} Travelers)` : 'Individual'}
+                  </span>
                 </div>
 
                 <div className="space-y-3 mb-4 max-h-48 overflow-y-auto">

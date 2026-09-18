@@ -11,6 +11,7 @@ import { queueTravelAgentCrmSync } from '@/server/integrations/zoho/travel-agent
 import { drainZohoCrmOutbox } from '@/server/integrations/zoho/crm-outbox-worker';
 import { findZohoTravelAgentByEmail } from '@/server/integrations/zoho/find-travel-agent';
 import { generateAgencyUid, serializeAgency } from '@/lib/uid';
+import { isEmailVerified } from '@/server/auth/verification-token';
 
 const registerSchema = z.object({
   token: z.string(),
@@ -54,12 +55,13 @@ export async function POST(request: NextRequest) {
 
     // Verify Firebase Token
     const decodedToken = await verifyFirebaseIdToken(token);
-    if (!decodedToken.email_verified) {
-      return apiError('FORBIDDEN', 'Your email address is not verified yet.', 403);
-    }
-
     const email = decodedToken.email?.toLowerCase().trim();
     if (!email) return apiError('INVALID_INPUT', 'Invalid auth token', 400);
+
+    const emailVerified = Boolean(decodedToken.email_verified) || (await isEmailVerified(email));
+    if (!emailVerified) {
+      return apiError('FORBIDDEN', 'Your email address is not verified yet.', 403);
+    }
 
     // ── SYNCHRONOUS ZOHO EMAIL LOOKUP ──────────────────────────────────────
     let zohoMatch: { zohoRecordId: string; vvisaUid: string | null } | null = null;

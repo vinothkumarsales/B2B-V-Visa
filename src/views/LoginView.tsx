@@ -131,8 +131,19 @@ export default function LoginView() {
       
       // Check verification
       if (!userCredential.user.emailVerified) {
-        router.push('/register');
-        return;
+        let isVerified = false;
+        try {
+          const statusRes = await fetch(`/api/auth/verify-email?check=true&email=${encodeURIComponent(userCredential.user.email || '')}`);
+          const statusData = await statusRes.json().catch(() => ({}));
+          isVerified = Boolean(statusData?.verified);
+        } catch {
+          // ignore network failure and fall back
+        }
+
+        if (!isVerified) {
+          router.push('/register');
+          return;
+        }
       }
 
       const token = await userCredential.user.getIdToken();

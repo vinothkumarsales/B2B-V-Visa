@@ -39,6 +39,11 @@ export async function ensureDatabaseSchema(): Promise<void> {
         `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "aadhaarNumber" TEXT`,
         `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "aadhaarName" TEXT`,
         `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "aadhaarAddress" TEXT`,
+
+        // Email verification tokens
+        `CREATE TABLE IF NOT EXISTS "EmailVerificationToken" ("id" TEXT NOT NULL PRIMARY KEY, "email" TEXT NOT NULL, "token" TEXT NOT NULL UNIQUE, "code" TEXT NOT NULL, "expiresAt" TIMESTAMP(3) NOT NULL, "verifiedAt" TIMESTAMP(3), "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP)`,
+        `CREATE INDEX IF NOT EXISTS "EmailVerificationToken_email_idx" ON "EmailVerificationToken"("email")`,
+        `CREATE UNIQUE INDEX IF NOT EXISTS "EmailVerificationToken_token_key" ON "EmailVerificationToken"("token")`,
       ];
 
       for (const stmt of statements) {

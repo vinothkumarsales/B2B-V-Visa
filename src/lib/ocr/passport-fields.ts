@@ -109,7 +109,15 @@ export function normalizePassportDateForInput(value: string): string {
 }
 
 export function normalizePassportAutofillValue(field: PassportAutofillField, value: string): string {
-  return DATE_FIELDS.has(field) ? normalizePassportDateForInput(value) : value.trim();
+  if (DATE_FIELDS.has(field)) {
+    return normalizePassportDateForInput(value);
+  }
+  if (field === 'maritalStatus') {
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed === 'single' || trimmed === 'unmarried' || trimmed === 'un-married') return 'Single';
+    if (trimmed === 'married') return 'Married';
+  }
+  return value.trim();
 }
 
 function normalizeKey(value: string) {

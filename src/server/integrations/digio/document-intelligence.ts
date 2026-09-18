@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { env, isDemoMode } from '../../../lib/env.ts';
+import { env } from '../../../lib/env.ts';
 import { normalizePassportDateForInput } from '../../../lib/ocr/passport-fields.ts';
 
 export interface DocumentIntelligenceResult {
@@ -15,64 +15,25 @@ export async function extractDocumentFields(input: {
   imageBase64: string;
   mimeType?: string;
 }): Promise<DocumentIntelligenceResult> {
-  const isSandboxEnv = env.DIGIO_ENVIRONMENT === 'sandbox' || env.DIGIO_BASE_URL.includes('ext.digio.in');
-
-  if (isDemoMode) {
-    return getSandboxPassportExtraction(input.documentType, 'demo');
-  }
-
   if (!env.DIGIO_CLIENT_ID || !env.DIGIO_CLIENT_SECRET) {
-    if (isSandboxEnv) {
-      return getSandboxPassportExtraction(input.documentType, 'sandbox-unconfigured');
-    }
     throw new Error('Digio is not configured');
   }
 
   const providerRequestId = `digio-${randomUUID()}`;
-  let raw: Record<string, unknown> | null = null;
-  let rawError: Error | null = null;
+  const raw = await callDigioWithRetry({
+    providerRequestId,
+    documentType: input.documentType,
+    imageBase64: input.imageBase64,
+    mimeType: input.mimeType,
+  });
 
-  try {
-    raw = await callDigioWithRetry({
-      providerRequestId,
-      documentType: input.documentType,
-      imageBase64: input.imageBase64,
-      mimeType: input.mimeType,
-    });
-  } catch (error) {
-    rawError = error instanceof Error ? error : new Error('Digio provider failed');
-    console.warn('[DIGIO OCR] Live OCR attempt failed:', rawError.message);
-  }
-
-  const normalizedExtraction = raw ? normalizeDigioFields(raw) : {};
+  const normalizedExtraction = normalizeDigioFields(raw);
   const hasExtractedFields = Boolean(
     normalizedExtraction.passportNumber || normalizedExtraction.firstName || normalizedExtraction.dateOfBirth,
   );
 
-  if (raw && hasExtractedFields) {
-    return {
-      provider: 'DIGIO',
-      providerRequestId,
-      rawExtraction: {
-        provider: 'DIGIO',
-        providerRequestId,
-        evidenceKeys: Object.keys(raw).filter((key) => !/image|file|passport/i.test(key)),
-      },
-      normalizedExtraction,
-      confidence: confidenceFromRaw(raw, normalizedExtraction),
-    };
-  }
-
-  // Sandbox / Ext environment fallback
-  // In sandbox, Digio's testing environment does not perform live OCR on arbitrary passport photos
-  // Providing the standard sandbox prototype prevents partner testing on staging/sandbox from blocking
-  if (isSandboxEnv) {
-    console.info('[DIGIO OCR] Sandbox/Ext environment active; returning sandbox prototype extraction.');
-    return getSandboxPassportExtraction(input.documentType, raw ? 'sandbox-fallback' : 'sandbox-error');
-  }
-
-  if (rawError) {
-    throw rawError;
+  if (input.documentType === 'passport' && !hasExtractedFields) {
+    throw new Error('Could not extract passport details. Please upload a clear photo of the passport details page or enter manually.');
   }
 
   return {
@@ -81,44 +42,10 @@ export async function extractDocumentFields(input: {
     rawExtraction: {
       provider: 'DIGIO',
       providerRequestId,
-      evidenceKeys: raw ? Object.keys(raw).filter((key) => !/image|file|passport/i.test(key)) : [],
+      evidenceKeys: Object.keys(raw).filter((key) => !/image|file|passport/i.test(key)),
     },
     normalizedExtraction,
-    confidence: 'low',
-  };
-}
-
-function getSandboxPassportExtraction(documentType: string, mode = 'demo'): DocumentIntelligenceResult {
-  const sandboxPassport = {
-    passportNumber: 'J8151861',
-    firstName: 'Aarav',
-    lastName: 'Sharma',
-    nationality: 'Indian',
-    sex: 'Male',
-    dateOfBirth: '1992-08-14',
-    placeOfBirth: 'Bengaluru',
-    placeOfIssue: 'Bengaluru',
-    maritalStatus: 'Single',
-    dateOfIssue: '2021-02-10',
-    dateOfExpiry: '2031-02-09',
-  };
-
-  return {
-    provider: 'DIGIO',
-    providerRequestId: `sandbox-digio-${randomUUID()}`,
-    confidence: 'high',
-    rawExtraction: {
-      documentType,
-      mode,
-      note: 'Digio sandbox/demo response for prototype autofill',
-    },
-    normalizedExtraction:
-      documentType === 'passport'
-        ? sandboxPassport
-        : {
-            documentType,
-            extractedText: `${documentType} uploaded and ready for manual review.`,
-          },
+    confidence: confidenceFromRaw(raw, normalizedExtraction),
   };
 }
 
@@ -129,12 +56,18 @@ async function callDigioWithRetry(input: {
   mimeType?: string;
 }) {
   let lastError: Error | null = null;
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
-      return await callDigio(input);
+      const attemptRequestId = attempt === 1 ? input.providerRequestId : `${input.providerRequestId}-r${attempt}-${Date.now().toString(36)}`;
+      return await callDigio({ ...input, providerRequestId: attemptRequestId });
     } catch (error) {
       lastError = error instanceof Error ? error : new Error('Digio provider failed');
-      if (attempt === 2) break;
+      if (attempt === maxAttempts) break;
+      // Exponential backoff with jitter: 1000ms, 2000ms + 0-300ms random jitter
+      const delayMs = Math.min(1000 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 300), 4000);
+      console.warn(`[Digio] Attempt ${attempt} failed, retrying in ${delayMs}ms:`, lastError.message);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
   throw lastError ?? new Error('Digio provider failed');
@@ -572,6 +505,8 @@ export function flattenDigioPassportPayload(raw: Record<string, unknown>): Recor
         const d = det as Record<string, unknown>;
         addCandidate(d);
         addCandidate(d.details);
+        addCandidate(d.id_attributes);
+        addCandidate(d.extracted_data);
       }
     }
   }

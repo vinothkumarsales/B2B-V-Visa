@@ -1,4 +1,5 @@
 import type { VisaPrice, VisaPricingLineItem, VisaPricingResult, VisaStickerRouteKey, VisaType } from '@/types';
+import { resolveStickerSubmissionRoute } from './sticker-routing.ts';
 
 export const GST_RATE_BPS = 1800;
 
@@ -192,6 +193,17 @@ function resolveStickerRoute(visa: VisaType, routeKey?: VisaStickerRouteKey) {
 
   const otherIndia = routes.find((route) => route.routeKey === 'OTHER_INDIA' || route.originCityCode === 'OTHER_INDIA');
   if (otherIndia) return { route: otherIndia, manual: false };
+
+  // Use verified VAC submission resolver based on destination and passport origin city
+  const submissionRoute = resolveStickerSubmissionRoute(visa, { passportOriginCity: routeKey || undefined });
+  if (submissionRoute && submissionRoute.isVerified) {
+    return { route: submissionRoute.asStickerRoute, manual: false };
+  }
+
+  const hasBasePrice = (visa.price && visa.price > 0) || Boolean(visa.pricing) || Boolean(visa.pricingLineItems?.length);
+  if (hasBasePrice) {
+    return { route: undefined, manual: false };
+  }
 
   return { route: undefined, manual: true };
 }

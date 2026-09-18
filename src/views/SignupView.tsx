@@ -7,6 +7,8 @@ import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   signOut,
+  applyActionCode,
+  signInWithEmailAndPassword,
 } from 'firebase/auth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -101,6 +103,10 @@ export default function SignupView() {
   const [step, setStep] = useState<SignupStep>('REGISTER');
   const [firebaseUser, setFirebaseUser] = useState<any>(null);
   const [selectedBillingType, setSelectedBillingType] = useState<'GST' | 'NON_GST'>('NON_GST');
+  const [otpCode, setOtpCode] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendSuccess, setResendSuccess] = useState('');
+  const [verificationSuccessMessage, setVerificationSuccessMessage] = useState('');
 
   // Step 1 Form Handler
   const {
@@ -138,6 +144,91 @@ export default function SignupView() {
     },
   });
 
+  // Process incoming email verification links (Firebase oobCode or backend token)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const oobCode = params.get('oobCode');
+    const mode = params.get('mode');
+    const verifyToken = params.get('verifyToken') || params.get('token');
+    const isVerifiedParam = params.get('verified') === 'true';
+
+    const processLink = async () => {
+      if (oobCode && (!mode || mode === 'verifyEmail')) {
+        try {
+          setSubmitting(true);
+          await applyActionCode(auth, oobCode);
+          if (auth.currentUser) {
+            await auth.currentUser.reload();
+            setFirebaseUser(auth.currentUser);
+          }
+          setVerificationSuccessMessage('Email verified successfully! Complete your business profile below.');
+          setStep('BUSINESS_ONBOARDING');
+        } catch (err: any) {
+          console.error('[AUTH_VERIFY_ACTION_CODE_ERROR]', err);
+          setServerError(err?.message || 'Invalid or expired email verification link.');
+        } finally {
+          setSubmitting(false);
+        }
+      } else if (verifyToken) {
+        try {
+          setSubmitting(true);
+          const emailParam = params.get('email') || auth.currentUser?.email;
+          const res = await fetch('/api/auth/verify-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: verifyToken, email: emailParam }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.verified) {
+            setVerificationSuccessMessage('Email verified successfully! Complete your business profile below.');
+            if (auth.currentUser) {
+              await auth.currentUser.reload().catch(() => {});
+              setFirebaseUser(auth.currentUser);
+            }
+            setStep('BUSINESS_ONBOARDING');
+          } else {
+            setServerError(data?.error?.message || 'Verification link is invalid or has expired.');
+          }
+        } catch (err: any) {
+          setServerError(err?.message || 'Failed checking verification token.');
+        } finally {
+          setSubmitting(false);
+        }
+      } else if (isVerifiedParam) {
+        setVerificationSuccessMessage('Email verified successfully!');
+        if (auth.currentUser) {
+          await auth.currentUser.reload().catch(() => {});
+          setFirebaseUser(auth.currentUser);
+        }
+        setStep('BUSINESS_ONBOARDING');
+      }
+    };
+
+    processLink();
+  }, []);
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => {
+      setResendCooldown((c) => c - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  // Helper to check DB verification status
+  const checkBackendVerification = async (email?: string | null): Promise<boolean> => {
+    if (!email) return false;
+    try {
+      const res = await fetch(`/api/auth/verify-email?check=true&email=${encodeURIComponent(email)}`);
+      const data = await res.json().catch(() => ({}));
+      return Boolean(data?.verified);
+    } catch {
+      return false;
+    }
+  };
+
   // Track Firebase User State
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -146,7 +237,13 @@ export default function SignupView() {
         setStep('REGISTER');
       } else {
         setFirebaseUser(user);
-        if (!user.emailVerified) {
+
+        let isVerified = user.emailVerified;
+        if (!isVerified && user.email) {
+          isVerified = await checkBackendVerification(user.email);
+        }
+
+        if (!isVerified) {
           setStep('VERIFY_EMAIL');
         } else {
           // Verify onboarding status
@@ -192,7 +289,7 @@ export default function SignupView() {
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, [router, login]);
 
   // Polling for email verification
   useEffect(() => {
@@ -203,7 +300,11 @@ export default function SignupView() {
         const user = auth.currentUser;
         if (user) {
           await user.reload();
-          if (user.emailVerified) {
+          let isVerified = user.emailVerified;
+          if (!isVerified && user.email) {
+            isVerified = await checkBackendVerification(user.email);
+          }
+          if (isVerified) {
             clearInterval(intervalId);
             setFirebaseUser(user);
             setStep('BUSINESS_ONBOARDING');
@@ -228,15 +329,55 @@ export default function SignupView() {
     if (!termsAccepted) return setServerError('Please accept the terms to continue.');
     setSubmitting(true);
     setServerError('');
+    setResendSuccess('');
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-      await sendEmailVerification(userCredential.user);
+      
+      // Send Firebase verification email with ActionCodeSettings redirecting back to app
+      const actionCodeSettings = {
+        url: `${window.location.origin}/register?verified=true`,
+        handleCodeInApp: true,
+      };
+      await sendEmailVerification(userCredential.user, actionCodeSettings).catch((err) => {
+        console.warn('Firebase sendEmailVerification warning:', err);
+      });
+
+      // Also generate backend token & 6-digit verification code
+      await fetch('/api/auth/send-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email }),
+      }).catch(() => {});
+
       setFirebaseUser(userCredential.user);
       setStep('VERIFY_EMAIL');
     } catch (error: any) {
       console.error('Registration Step 1 Failed:', error);
       if (error.code === 'auth/email-already-in-use') {
-        setServerError('This email address is already in use. Please sign in or use a different email.');
+        // If email already in use, attempt to sign in to resume flow seamlessly
+        try {
+          const cred = await signInWithEmailAndPassword(auth, data.email, data.password);
+          await fetch('/api/auth/send-verification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: data.email }),
+          }).catch(() => {});
+
+          setFirebaseUser(cred.user);
+          let isVerified = cred.user.emailVerified;
+          if (!isVerified) {
+            isVerified = await checkBackendVerification(cred.user.email);
+          }
+
+          if (isVerified) {
+            setStep('BUSINESS_ONBOARDING');
+          } else {
+            setStep('VERIFY_EMAIL');
+          }
+          return;
+        } catch {
+          setServerError('This email address is already registered. If you already have an account, please sign in.');
+        }
       } else {
         setServerError(error.message || 'Failed to create account.');
       }
@@ -245,19 +386,26 @@ export default function SignupView() {
     }
   };
 
-  // Step 2 Fallback: Check verification manually
+  // Step 2: Check verification manually
   const checkEmailVerification = async () => {
     const user = auth.currentUser;
-    if (user) {
+    const email = user?.email || firebaseUser?.email;
+    if (user || email) {
       setSubmitting(true);
       setServerError('');
       try {
-        await user.reload();
-        if (user.emailVerified) {
-          setFirebaseUser(user);
+        if (user) await user.reload();
+        let isVerified = Boolean(user?.emailVerified);
+
+        if (!isVerified && email) {
+          isVerified = await checkBackendVerification(email);
+        }
+
+        if (isVerified) {
+          if (user) setFirebaseUser(user);
           setStep('BUSINESS_ONBOARDING');
         } else {
-          setServerError('Email is not verified yet. Please check your inbox.');
+          setServerError('Email is not verified yet. Please check your inbox or enter the 6-digit verification code below.');
         }
       } catch (err: any) {
         setServerError(err.message || 'Verification check failed.');
@@ -267,20 +415,79 @@ export default function SignupView() {
     }
   };
 
-  // Step 2: Resend Verification Link
-  const handleResendVerification = async () => {
-    const user = auth.currentUser;
-    if (user) {
-      setSubmitting(true);
-      setServerError('');
-      try {
-        await sendEmailVerification(user);
-        alert('Verification email resent successfully.');
-      } catch (err: any) {
-        setServerError(err.message || 'Failed to resend verification.');
-      } finally {
-        setSubmitting(false);
+  // Step 2: Verify with 6-digit code
+  const handleVerifyCode = async () => {
+    const email = firebaseUser?.email || auth.currentUser?.email;
+    if (!email) return setServerError('No active email found. Please register again.');
+    if (!otpCode || otpCode.trim().length !== 6) {
+      return setServerError('Please enter a 6-digit verification code.');
+    }
+
+    setSubmitting(true);
+    setServerError('');
+    try {
+      const res = await fetch('/api/auth/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code: otpCode.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.verified) {
+        setServerError(data?.error?.message || 'Invalid or expired verification code.');
+      } else {
+        setVerificationSuccessMessage('Email verified successfully! Complete your business profile below.');
+        if (auth.currentUser) {
+          await auth.currentUser.reload().catch(() => {});
+          setFirebaseUser(auth.currentUser);
+        }
+        setStep('BUSINESS_ONBOARDING');
       }
+    } catch (err: any) {
+      setServerError(err.message || 'Verification check failed.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Step 2: Resend Verification Link & Code
+  const handleResendVerification = async () => {
+    if (resendCooldown > 0) return;
+    const user = auth.currentUser;
+    const email = user?.email || firebaseUser?.email;
+    if (!email) return;
+
+    setSubmitting(true);
+    setServerError('');
+    setResendSuccess('');
+    try {
+      if (user) {
+        const actionCodeSettings = {
+          url: `${window.location.origin}/register?verified=true`,
+          handleCodeInApp: true,
+        };
+        await sendEmailVerification(user, actionCodeSettings).catch((err) => {
+          console.warn('Firebase resend error:', err);
+        });
+      }
+
+      const res = await fetch('/api/auth/send-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok && data?.error?.code === 'RATE_LIMITED') {
+        setServerError(data.error.message);
+        setResendCooldown(data.error.retryAfter || 30);
+        return;
+      }
+
+      setResendSuccess(`Verification email and code resent to ${email}. Check your inbox and spam folder.`);
+      setResendCooldown(30);
+    } catch (err: any) {
+      setServerError(err.message || 'Failed to resend verification.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -543,38 +750,77 @@ export default function SignupView() {
                 <Button
                   onClick={checkEmailVerification}
                   disabled={submitting}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium h-11"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium h-11 cursor-pointer"
                 >
-                  {submitting ? 'Checking...' : 'I&apos;ve verified my email'}
+                  {submitting ? 'Checking...' : "I've verified my email"}
                 </Button>
-                
+
+                {/* Direct 6-digit Code Input */}
+                <div className="pt-3 border-t border-slate-100 text-left">
+                  <div className="text-xs font-semibold text-slate-700 mb-1.5 text-center">
+                    Or enter your 6-digit verification code:
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      maxLength={6}
+                      placeholder="000000"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                      className="h-10 text-center tracking-widest font-mono text-base border-slate-300"
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleVerifyCode}
+                      disabled={submitting || otpCode.trim().length !== 6}
+                      className="h-10 px-4 bg-slate-900 hover:bg-slate-800 text-white font-medium cursor-pointer"
+                    >
+                      {submitting ? 'Verifying...' : 'Verify'}
+                    </Button>
+                  </div>
+                </div>
+
                 <div className="flex justify-center gap-4 text-xs font-medium pt-2">
                   <button
+                    type="button"
                     onClick={handleResendVerification}
-                    className="text-blue-600 hover:underline"
+                    disabled={resendCooldown > 0 || submitting}
+                    className={`${resendCooldown > 0 ? 'text-slate-400 cursor-not-allowed' : 'text-blue-600 hover:underline cursor-pointer'}`}
                   >
-                    Resend verification email
+                    {resendCooldown > 0 ? `Resend email in ${resendCooldown}s` : 'Resend verification email'}
                   </button>
                   <span className="text-slate-300">|</span>
                   <button
+                    type="button"
                     onClick={async () => {
                       await signOut(auth);
                       setStep('REGISTER');
                     }}
-                    className="text-slate-500 hover:underline"
+                    className="text-slate-500 hover:underline cursor-pointer"
                   >
                     Use another email
                   </button>
                 </div>
               </div>
 
-              {serverError && <p className="text-sm text-red-600">{serverError}</p>}
+              {resendSuccess && (
+                <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-xs text-emerald-800 text-center">
+                  {resendSuccess}
+                </div>
+              )}
+
+              {serverError && <p className="text-sm text-red-600 text-center">{serverError}</p>}
             </div>
           )}
 
           {/* STEP 3: BUSINESS ONBOARDING */}
           {step === 'BUSINESS_ONBOARDING' && (
             <>
+              {verificationSuccessMessage && (
+                <div className="mb-4 rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-800 text-center font-medium">
+                  {verificationSuccessMessage}
+                </div>
+              )}
               <div className="mb-8">
                 <h2 className="text-2xl font-bold text-slate-950 text-center">Complete your Business Profile</h2>
                 <p className="mt-1.5 text-sm text-slate-500 text-center">We need a few details to set up your business account</p>

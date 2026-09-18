@@ -302,6 +302,19 @@ CREATE INDEX IF NOT EXISTS "MarketplaceOrder_buyerAgencyId_status_idx" ON "Marke
 CREATE INDEX IF NOT EXISTS "MarketplaceOrder_vendorProfileId_status_idx" ON "MarketplaceOrder"("vendorProfileId", "status");
 CREATE UNIQUE INDEX IF NOT EXISTS "VendorRating_orderId_key" ON "VendorRating"("orderId");
 CREATE INDEX IF NOT EXISTS "VendorRating_vendorProfileId_idx" ON "VendorRating"("vendorProfileId");
+
+-- Email Verification Token Table
+CREATE TABLE IF NOT EXISTS "EmailVerificationToken" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "email" TEXT NOT NULL,
+    "token" TEXT NOT NULL UNIQUE,
+    "code" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "verifiedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS "EmailVerificationToken_email_idx" ON "EmailVerificationToken"("email");
+CREATE UNIQUE INDEX IF NOT EXISTS "EmailVerificationToken_token_key" ON "EmailVerificationToken"("token");
 `;
 
 function splitSqlStatements(sql) {

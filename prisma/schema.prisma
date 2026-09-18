@@ -1806,3 +1806,15 @@ model VendorRating {
   @@index([vendorProfileId])
 }
 
+model EmailVerificationToken {
+  id         String    @id @default(cuid())
+  email      String
+  token      String    @unique
+  code       String
+  expiresAt  DateTime
+  verifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([email])
+}
+

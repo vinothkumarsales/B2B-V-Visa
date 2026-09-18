@@ -241,7 +241,7 @@ function trackProductIntent(input: {
 export default function ExploreView() {
   const router = useRouter();
   const pathname = usePathname();
-  const { visaTypes } = useVisaCatalogue();
+  const { visaTypes, loading } = useVisaCatalogue();
   const { navigate, setSelectedVisaType, agency } = useAppStore();
 
   const disabledCategories = useMemo(() => {
@@ -652,16 +652,42 @@ export default function ExploreView() {
 
       {/* Visa Result Cards */}
       <div className="space-y-4">
-        {visibleVisas.map((visa) => (
-          <VisaCardItem
-            key={visa.id}
-            visa={visa}
-            onSelectVisa={handleSelectVisa}
-            onViewDocs={handleViewDocs}
-          />
-        ))}
+        {loading && visibleVisas.length === 0 ? (
+          Array.from({ length: 4 }).map((_, idx) => (
+            <div
+              key={idx}
+              className="animate-pulse rounded-xl border border-vvisa-border bg-vvisa-surface overflow-hidden p-5 space-y-4 shadow-[var(--vvisa-shadow-sm)]"
+            >
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-4 rounded-full bg-vvisa-surface-2" />
+                <div className="h-4 w-36 rounded bg-vvisa-surface-2" />
+              </div>
+              <div className="h-5 w-1/3 rounded bg-vvisa-surface-2" />
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
+                <div className="h-4 rounded bg-vvisa-surface-2" />
+                <div className="h-4 rounded bg-vvisa-surface-2" />
+                <div className="h-4 rounded bg-vvisa-surface-2" />
+                <div className="h-4 rounded bg-vvisa-surface-2" />
+                <div className="h-4 rounded bg-vvisa-surface-2" />
+              </div>
+              <div className="flex justify-between items-center pt-3 border-t border-vvisa-border-subtle">
+                <div className="h-6 w-24 rounded bg-vvisa-surface-2" />
+                <div className="h-9 w-24 rounded bg-vvisa-surface-2" />
+              </div>
+            </div>
+          ))
+        ) : (
+          visibleVisas.map((visa) => (
+            <VisaCardItem
+              key={visa.id}
+              visa={visa}
+              onSelectVisa={handleSelectVisa}
+              onViewDocs={handleViewDocs}
+            />
+          ))
+        )}
 
-        {filteredVisas.length === 0 && (
+        {!loading && filteredVisas.length === 0 && (
           <div className="rounded-xl border border-dashed border-vvisa-border bg-vvisa-surface py-16 text-center shadow-[var(--vvisa-shadow-sm)]">
             <Search className="h-12 w-12 text-vvisa-border mx-auto mb-3" />
             <p className="text-foreground text-sm font-medium">No visa types found</p>

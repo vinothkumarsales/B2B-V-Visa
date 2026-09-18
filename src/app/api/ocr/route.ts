@@ -6,7 +6,7 @@ import { apiError, isApiResponse } from '@/lib/api-response';
 import { isDemoMode } from '@/lib/env';
 import { requireAgencyMembership } from '@/server/auth/session';
 import { auditLog } from '@/server/audit/audit-log';
-import { extractDocumentFields } from '@/server/integrations/digio/document-intelligence';
+import { extractDocumentFields, type DocumentIntelligenceResult } from '@/server/integrations/digio/document-intelligence';
 import { queueDocumentAttachmentSync } from '@/server/integrations/zoho/document-attachment-sync';
 import { queueDocumentOcrDataSync } from '@/server/integrations/zoho/document-ocr-data-sync';
 
@@ -15,17 +15,51 @@ const ocrSchema = z.object({
   documentType: z.string().min(1).max(80),
   mimeType: z.string().min(3).max(120).optional(),
   documentId: z.string().optional(),
+  transactionId: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
+  let requestTransactionId: string | undefined;
   try {
     const parsed = ocrSchema.safeParse(await request.json());
     if (!parsed.success) {
       return apiError('INVALID_INPUT', 'Invalid OCR request', 400);
     }
+    requestTransactionId = parsed.data.transactionId;
 
     const session = !isDemoMode && parsed.data.documentId ? await requireAgencyMembership() : null;
-    const result = await extractDocumentFields(parsed.data);
+    let result: DocumentIntelligenceResult;
+    try {
+      result = await extractDocumentFields(parsed.data);
+    } catch (ocrError) {
+      const message = ocrError instanceof Error ? ocrError.message : 'Could not extract passport details. Please upload a clear photo of the passport details page or enter manually.';
+      console.warn('[OCR API] Digio extraction failed:', message);
+      return NextResponse.json({
+        success: false,
+        provider: 'DIGIO',
+        transactionId: requestTransactionId,
+        error: message,
+        fields: [],
+      });
+    }
+
+    if (parsed.data.documentType === 'passport') {
+      const hasExtractedFields = Boolean(
+        result.normalizedExtraction.passportNumber ||
+        result.normalizedExtraction.firstName ||
+        result.normalizedExtraction.dateOfBirth,
+      );
+      if (!hasExtractedFields) {
+        return NextResponse.json({
+          success: false,
+          provider: 'DIGIO',
+          transactionId: requestTransactionId,
+          providerRequestId: result.providerRequestId,
+          error: 'Could not extract passport details. Please upload a clear photo of the passport details page or enter manually.',
+          fields: [],
+        });
+      }
+    }
 
     if (!isDemoMode && session && parsed.data.documentId) {
       const document = await db.applicationDocument.findFirst({
@@ -110,6 +144,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       provider: result.provider,
+      transactionId: requestTransactionId,
       providerRequestId: result.providerRequestId,
       confidence: result.confidence,
       fields: Object.entries(result.normalizedExtraction).map(([field, value]) => ({
@@ -122,6 +157,13 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     if (isApiResponse(error)) return error;
-    return apiError('PROVIDER_UNAVAILABLE', 'Document OCR is temporarily unavailable', 503);
+    const msg = error instanceof Error ? error.message : 'Could not extract passport details. Please upload a clear photo of the passport details page or enter manually.';
+    return NextResponse.json({
+      success: false,
+      provider: 'DIGIO',
+      transactionId: requestTransactionId,
+      error: msg,
+      fields: [],
+    });
   }
 }
