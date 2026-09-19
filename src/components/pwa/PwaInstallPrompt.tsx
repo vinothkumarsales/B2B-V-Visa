@@ -138,7 +138,7 @@ export function PwaInstallPrompt() {
 
           <div className="flex items-start gap-3.5 pr-6">
             <div className="size-11 shrink-0 rounded-xl overflow-hidden border border-vvisa-border bg-white shadow-xs flex items-center justify-center p-1">
-              <img src="/logo-vvisa-mark.png" alt="V-Visa" className="size-full object-contain" />
+              <img src="/icon.png" alt="V-Visa" className="size-full object-contain" />
             </div>
             <div className="min-w-0">
               <h4 className="text-sm font-semibold text-foreground leading-tight">

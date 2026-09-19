@@ -25,7 +25,7 @@ import { normalizePassportAutofillValue, resolvePassportAutofillField } from '@/
 import {
   Upload, AlertTriangle, Plus, ArrowRight, Check, Circle, Scan,
   Loader2, X, FileCheck, ChevronDown, ChevronUp, Image as ImageIcon,
-  Trash2, FileText, Copy, CheckCircle2, Receipt, Clock, Eye, RefreshCw,
+  Trash2, FileText, Copy, CheckCircle2, Receipt, Clock, Eye, RefreshCw, Sparkles,
 } from 'lucide-react';
 import type { Traveler, VisaDocumentRequirement, VisaPricingLineItem, VisaStickerRoute, VisaType } from '@/types';
 import { resolveIndianPassportLocation } from '@/lib/ocr/passport-location-resolver';
@@ -757,7 +757,7 @@ function TravelerCard({
     : passportPreview?.renderedUrl;
 
   return (
-    <Card className="vv-surface overflow-hidden rounded-xl border">
+    <Card id={`traveler-card-${traveler.id}`} className="vv-surface overflow-hidden rounded-xl border">
       {/* Traveler Header - Always visible */}
       <div
         className="p-4 sm:p-5 cursor-pointer hover:bg-vvisa-surface-2/50 transition-colors"
@@ -853,11 +853,11 @@ function TravelerCard({
                 </h4>
               </div>
 
-              {/* Warning Banner */}
-              <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
-                <AlertTriangle className="h-4 w-4 text-amber-700 dark:text-amber-300 shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-700/80 dark:text-amber-200/80">
-                  V-VISA uses <span className="text-primary font-medium">V-Visa AI</span> for passport scanning. Upload a clear passport image and details will be filled automatically. However, it is mandatory to review the information before submitting.
+              {/* Informational AI Scan Note */}
+              <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-vvisa-text-secondary">
+                <Sparkles className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <p>
+                  V-Visa AI automatically scans and fills traveler details from passport photos or PDFs. Please review all extracted details before submitting.
                 </p>
               </div>
 
@@ -1172,20 +1172,35 @@ function TravelerCard({
                         onChange={(e) => onUpdate(traveler.id, 'dateOfExpiry', e.target.value)}
                         className="bg-vvisa-bg border border-vvisa-border focus:border-primary rounded-lg text-foreground h-9 text-sm mt-1"
                       />
-                      {passportValidity.message && (
-                        <div className="mt-2 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] leading-4 text-amber-700 dark:text-amber-100">
-                          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-700 dark:text-amber-300" />
+                      {passportValidity.blocksProgress ? (
+                        <div className="mt-2 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-[11px] leading-4 text-red-700 dark:text-red-300">
+                          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-600 dark:text-red-400" />
+                          <span className="font-medium">{passportValidity.message}</span>
+                        </div>
+                      ) : passportValidity.message ? (
+                        <div className="mt-2 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] leading-4 text-amber-700 dark:text-amber-200">
+                          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
                           <span>{passportValidity.message}</span>
                         </div>
-                      )}
+                      ) : traveler.dateOfExpiry ? (
+                        <div className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                          <span>Valid for travel date</span>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
-                  {isMinor && (!traveler.guardianApplicantId || !traveler.guardianRelationship) && (
-                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-5 text-amber-700 dark:text-amber-100">
-                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
-                      <span>This traveller will be under 18 on the travel date. Link a parent or legal guardian travelling in the same application.</span>
+                  {isMinor && (!traveler.guardianApplicantId || !traveler.guardianRelationship) ? (
+                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs leading-5 text-amber-700 dark:text-amber-200">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                      <span>Action Required: Traveller is under 18. Please link a travelling parent or legal guardian below.</span>
                     </div>
-                  )}
+                  ) : isMinor && traveler.guardianApplicantId && traveler.guardianRelationship ? (
+                    <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-2 text-xs text-emerald-700 dark:text-emerald-300 font-medium">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      <span>Guardian linked for minor applicant ✓</span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -1737,6 +1752,13 @@ export default function ApplyView() {
   const handleSubmit = useCallback(async () => {
     if (!activeVisaType || submitting) return;
     if (blockingValidationIssues.length > 0) {
+      const firstIssue = blockingValidationIssues[0];
+      if (firstIssue) {
+        const el = document.getElementById(`traveler-card-${firstIssue.travelerId}`) || document.getElementById('application-setup-section');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
       setSubmitResult({ txnId: '', appId: '', error: blockingValidationIssues.map((issue) => issue.message).join(' ') });
       return;
     }
@@ -1931,7 +1953,7 @@ export default function ApplyView() {
       className="space-y-6"
     >
       {/* Application Setup */}
-      <Card className="vv-surface-elevated rounded-xl border">
+      <Card id="application-setup-section" className="vv-surface-elevated rounded-xl border">
         <CardContent className="p-5">
           <div className="flex flex-col sm:flex-row sm:items-end gap-4">
             <div className="flex-1">
@@ -2238,16 +2260,22 @@ export default function ApplyView() {
             </span>
           </Button>
 
-          {blockingValidationIssues.length > 0 && (
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-5 text-amber-700 dark:text-amber-100">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
-                <div className="space-y-1">
-                  {blockingValidationIssues.map((issue) => (
-                    <p key={`${issue.travelerId}-${issue.message}`}>{issue.message}</p>
-                  ))}
-                </div>
+          {blockingValidationIssues.length > 0 ? (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 space-y-2 text-xs text-amber-900 dark:text-amber-100">
+              <div className="flex items-center gap-2 font-semibold text-amber-800 dark:text-amber-200">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                <span>Action Required Before Review ({blockingValidationIssues.length})</span>
               </div>
+              <ul className="space-y-1 pl-6 list-disc text-[11px] leading-relaxed">
+                {blockingValidationIssues.map((issue) => (
+                  <li key={`${issue.travelerId}-${issue.message}`}>{issue.message}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-3 flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <span>All details verified & ready for review ✓</span>
             </div>
           )}
 
@@ -2312,16 +2340,22 @@ export default function ApplyView() {
 
                 <Separator className="bg-vvisa-border my-3" />
 
-                {blockingValidationIssues.length > 0 && (
-                  <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-5 text-amber-700 dark:text-amber-100">
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
-                      <div className="space-y-1">
-                        {blockingValidationIssues.map((issue) => (
-                          <p key={`${issue.travelerId}-${issue.message}`}>{issue.message}</p>
-                        ))}
-                      </div>
+                {blockingValidationIssues.length > 0 ? (
+                  <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 space-y-2 text-xs text-amber-900 dark:text-amber-100">
+                    <div className="flex items-center gap-2 font-semibold text-amber-800 dark:text-amber-200">
+                      <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                      <span>Action Required ({blockingValidationIssues.length})</span>
                     </div>
+                    <ul className="space-y-1 pl-5 list-disc text-[11px] leading-relaxed">
+                      {blockingValidationIssues.map((issue) => (
+                        <li key={`${issue.travelerId}-${issue.message}`}>{issue.message}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <div className="mb-4 rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-3 flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                    <span>Application Ready ✓</span>
                   </div>
                 )}
 

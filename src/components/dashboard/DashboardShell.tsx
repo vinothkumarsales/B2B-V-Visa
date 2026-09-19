@@ -578,7 +578,7 @@ export default function DashboardShell({ children, basePath = '' }: { children: 
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className={currentView === 'clarify' ? 'h-full p-0 sm:p-4' : 'p-3 sm:p-5 lg:p-7'}
+            className={currentView === 'clarify' ? 'h-full p-0 sm:p-4' : 'p-3 sm:p-5 lg:p-7 pb-16 sm:pb-5 lg:pb-7 pb-safe'}
           >
             {children}
           </motion.div>

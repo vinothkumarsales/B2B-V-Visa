@@ -828,3 +828,20 @@
 
 @keyframes mitto-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
 .mitto-float { animation:mitto-float 6s ease-in-out infinite; }
+
+/* Mobile UI/UX polish & iOS auto-zoom prevention */
+@media screen and (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+    touch-action: pan-y;
+  }
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+}
+

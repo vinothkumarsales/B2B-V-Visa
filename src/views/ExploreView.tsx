@@ -16,7 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PriceBreakdownPopover } from '@/components/pricing/PriceBreakdownPopover';
 import { VisaAttributeBadges } from '@/components/visa/VisaAttributeBadges';
-import { Search, ArrowRight, MapPin, Plane, Calendar, Zap, Clock, FileText, ChevronDown, Globe } from 'lucide-react';
+import { Search, ArrowRight, MapPin, Plane, Calendar, Zap, Clock, FileText, ChevronDown, Share2, Copy, Check } from 'lucide-react';
 import type { VisaStickerRoute } from '@/types';
 
 const pageVariants = {
@@ -238,6 +238,29 @@ function trackProductIntent(input: {
   }).catch(() => undefined);
 }
 
+function formatChecklistText(visa: VisaType): string {
+  const checklist = resolveVisaChecklist(visa);
+  const lines: string[] = [];
+  lines.push(`📄 *Documents Required for ${visa.name} (${visa.destination})*`);
+  lines.push('');
+
+  checklist.sections.forEach((section) => {
+    lines.push(`*${section.label}:*`);
+    section.items.forEach((item) => {
+      lines.push(`• ${item.documentName || item.label}`);
+    });
+    lines.push('');
+  });
+
+  const portalUrl = typeof window !== 'undefined' ? `${window.location.origin}/explore` : 'https://business.vvisa.in/explore';
+  lines.push('Apply online on V-Visa B2B Portal:');
+  lines.push(portalUrl);
+  lines.push('');
+  lines.push('— V-Visa B2B');
+
+  return lines.join('\n');
+}
+
 export default function ExploreView() {
   const router = useRouter();
   const pathname = usePathname();
@@ -272,17 +295,7 @@ export default function ExploreView() {
     d.toLowerCase().includes(goingTo.toLowerCase())
   );
 
-  const destinationsWithCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const visa of visaTypes) {
-      if (visa.category && disabledCategories.includes(visa.category)) continue;
-      counts[visa.destination] = (counts[visa.destination] || 0) + 1;
-    }
-    return Object.entries(counts)
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 8);
-  }, [visaTypes, disabledCategories]);
+  const [copiedChecklist, setCopiedChecklist] = useState(false);
 
   const filteredVisas = useMemo(() => {
     const query = goingTo.trim().toLowerCase();
@@ -455,6 +468,20 @@ export default function ExploreView() {
     return () => window.clearTimeout(timer);
   }, [selectedDocVisa]);
 
+  const handleCopyChecklist = useCallback((visa: VisaType) => {
+    const text = formatChecklistText(visa);
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedChecklist(true);
+      setTimeout(() => setCopiedChecklist(false), 2000);
+    }).catch(() => {});
+  }, []);
+
+  const handleShareWhatsApp = useCallback((visa: VisaType) => {
+    const text = formatChecklistText(visa);
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }, []);
+
   return (
     <motion.div
       variants={pageVariants}
@@ -593,39 +620,6 @@ export default function ExploreView() {
       </div>
 
 
-      {/* Available Destinations Section */}
-      {destinationsWithCounts && destinationsWithCounts.length > 0 && (
-        <div className="space-y-4.5">
-          <h2 className="text-lg font-bold text-foreground">Available Destinations</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {destinationsWithCounts.map((dest) => {
-              const isSelected = goingTo === dest.name;
-              return (
-                <button
-                  key={dest.name}
-                  type="button"
-                  onClick={() => {
-                    setGoingTo(dest.name);
-                    setVisibleCount(PAGE_SIZE);
-                    trackProductIntent({ eventType: 'COUNTRY_CARD_CLICKED', country: dest.name });
-                  }}
-                  className={`flex items-center gap-3.5 p-4 rounded-xl border bg-white border-vvisa-border-subtle hover:bg-neutral-50 text-left transition-all duration-200 dark:bg-vvisa-surface-2 dark:hover:bg-vvisa-surface/60 ${
-                    isSelected ? 'ring-2 ring-primary/30 border-primary' : ''
-                  }`}
-                >
-                  <div className="p-2.5 rounded-lg bg-primary/10 text-primary">
-                    <Globe className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-foreground truncate">{dest.name}</p>
-                    <p className="text-[11px] font-medium text-vvisa-text-muted mt-0.5">{dest.count} option{dest.count !== 1 ? 's' : ''}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Results Heading */}
       <div>
@@ -718,11 +712,45 @@ export default function ExploreView() {
       {/* Document Dialog */}
       <Dialog open={docDialogOpen} onOpenChange={setDocDialogOpen}>
         <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto rounded-xl border border-vvisa-border-subtle bg-vvisa-surface shadow-[var(--vvisa-shadow-lg)]">
-          <DialogHeader>
-            <DialogTitle className="text-foreground flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" />
-              Required Documents
-            </DialogTitle>
+          <DialogHeader className="space-y-3 pb-2 border-b border-vvisa-border-subtle">
+            <div className="flex items-center justify-between pr-6">
+              <DialogTitle className="text-foreground flex items-center gap-2 text-base font-bold">
+                <FileText className="h-5 w-5 text-primary" />
+                Required Documents
+              </DialogTitle>
+            </div>
+            {selectedDocVisa && (
+              <div className="flex items-center gap-2 pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCopyChecklist(selectedDocVisa)}
+                  className="h-8 flex-1 text-xs font-medium border-vvisa-border hover:bg-vvisa-surface-2 gap-1.5 cursor-pointer"
+                >
+                  {copiedChecklist ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      <span className="text-emerald-600 font-semibold">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5 text-vvisa-text-muted" />
+                      <span>Copy Checklist</span>
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => handleShareWhatsApp(selectedDocVisa)}
+                  className="h-8 flex-1 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                  <span>Share to WhatsApp</span>
+                </Button>
+              </div>
+            )}
           </DialogHeader>
           {selectedDocVisa && (
             <div className="space-y-2 mt-2">
